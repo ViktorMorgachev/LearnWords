@@ -23,7 +23,7 @@ fun LearnWordsApp(
     val currentScreen = LearningWordsScreens.valueOf(
         backStackEntry?.destination?.route ?: LearningWordsScreens.SCREEN_SHOW_WORDS.name
     )
-    // TODO: need to add floatingButton for add new data if user want 
+    // TODO: need to add floatingButton for add new data if user want
     MyNavHost(navController, startDestination = LearningWordsScreens.SCREEN_SHOW_WORDS.name, modifier = Modifier.fillMaxSize(), learningItemsViewModel = viewModel)
 }
 
