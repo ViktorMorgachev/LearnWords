@@ -31,6 +31,13 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -41,6 +48,10 @@ android {
     }
     buildFeatures {
         compose = true
+        aidl = false
+        buildConfig = true
+        renderScript = false
+        shaders = false
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -66,6 +77,7 @@ dependencies {
     // Hilt Deps Injection
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Compose
     implementation(libs.compose.ui)
@@ -73,6 +85,7 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.compose.icons.extended)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines)
@@ -81,13 +94,15 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
 
-
     // Testing Compose Layouts
     androidTestImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
 
     // Navigation
     implementation(libs.navigation.compose)
+
+    // Logging
+    implementation(libs.timber.logging)
 
     // Room Database
     implementation(libs.androidx.room.runtime)

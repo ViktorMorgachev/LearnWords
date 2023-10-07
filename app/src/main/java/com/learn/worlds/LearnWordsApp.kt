@@ -10,11 +10,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.learn.worlds.navigation.LearningWordsScreens
 import com.learn.worlds.navigation.MyNavHost
-import com.learn.worlds.ui.add_word.LearningItemsViewModel
+import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
 
 @Composable
 fun LearnWordsApp(
-    viewModel: LearningItemsViewModel =  viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     // Get current back stack entry
@@ -24,6 +23,6 @@ fun LearnWordsApp(
         backStackEntry?.destination?.route ?: LearningWordsScreens.SCREEN_SHOW_WORDS.name
     )
     // TODO: need to add floatingButton for add new data if user want
-    MyNavHost(navController, startDestination = LearningWordsScreens.SCREEN_SHOW_WORDS.name, modifier = Modifier.fillMaxSize(), learningItemsViewModel = viewModel)
+    MyNavHost(navController, startDestination = LearningWordsScreens.SCREEN_SHOW_WORDS.name, modifier = Modifier.fillMaxSize())
 }
 

@@ -26,4 +26,5 @@ object CoroutinesScopesModule {
     @MainImmediateDispatcher
     @Provides
     fun providesMainImmediateDispatcher(): CoroutineDispatcher = Dispatchers.Main.immediate
+
 }
