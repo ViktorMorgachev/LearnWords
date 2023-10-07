@@ -74,10 +74,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.compose.icons.extended)
 
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.test.ext.junit)
-    androidTestImplementation(libs.espresso.core)
+    // Coroutines
+    implementation(libs.kotlinx.coroutines)
 
     // Tooling
     implementation(libs.compose.ui.tooling.preview)
@@ -91,18 +89,9 @@ dependencies {
     // Navigation
     implementation(libs.navigation.compose)
 
-    /* // Core Android dependencies
-
-    // Arch Components
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
+    // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-
-
-    */
 }
