@@ -14,8 +14,7 @@ import com.learn.worlds.ui.show_words.ShowLearningWordsScreen
 @Composable
 fun MyNavHost(
     navHostController: NavHostController,
-    startDestination: String,
-    modifier: Modifier = Modifier
+    startDestination: String
 ) {
     NavHost(
         navController = navHostController,
@@ -26,11 +25,18 @@ fun MyNavHost(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
-                AddWordsScreen()
+                AddWordsScreen(navigateToBackAction = {
+                    navHostController.popBackStack()
+                })
             }
         }
         composable(route = LearningWordsScreens.SCREEN_SHOW_WORDS.name) {
-            ShowLearningWordsScreen()
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                ShowLearningWordsScreen()
+            }
         }
     }
 

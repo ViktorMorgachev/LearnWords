@@ -31,7 +31,7 @@ class ShowLearningItemsViewModel @Inject constructor(
         )
 
 
-    fun changeLearningState(newState: LearningStatus, itemID: Int) {
+    fun changeLearningState(newState: String, itemID: Int) {
         viewModelScope.launch {
             learningItemsRepository.changeState(newState, itemID)
         }

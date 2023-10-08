@@ -4,25 +4,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.learn.worlds.navigation.LearningWordsScreens
 import com.learn.worlds.navigation.MyNavHost
-import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
 
 @Composable
 fun LearnWordsApp(
     navController: NavHostController = rememberNavController()
 ) {
-    // Get current back stack entry
+   /* // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()
-    // Get the name of the current screen
+    // Get the name of the current screen for bottom navigation
     val currentScreen = LearningWordsScreens.valueOf(
         backStackEntry?.destination?.route ?: LearningWordsScreens.SCREEN_SHOW_WORDS.name
-    )
-    // TODO: need to add floatingButton for add new data if user want
-    MyNavHost(navController, startDestination = LearningWordsScreens.SCREEN_SHOW_WORDS.name, modifier = Modifier.fillMaxSize())
+    )*/
+
+    MyNavHost(navController, startDestination = LearningWordsScreens.SCREEN_SHOW_WORDS.name)
 }
 

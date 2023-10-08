@@ -32,7 +32,7 @@ import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
 import com.learn.worlds.ui.theme.LearnWordsTheme
 
 @Composable
-fun AddWordsScreen(modifier: Modifier = Modifier, viewModel: AddLearningItemsViewModel = hiltViewModel()) {
+fun AddWordsScreen(modifier: Modifier = Modifier, navigateToBackAction: ()->Unit,  viewModel: AddLearningItemsViewModel = hiltViewModel()) {
     var foreignData by remember { mutableStateOf("") }
     var nativeData by remember { mutableStateOf("") }
     val items by viewModel.uiState.collectAsStateWithLifecycle()
@@ -42,12 +42,12 @@ fun AddWordsScreen(modifier: Modifier = Modifier, viewModel: AddLearningItemsVie
             viewModel.addLearningItem(LearningItem(nativeData = nativeData, foreignData = foreignData))
         }
         is LearningItemsUIState.Success -> {
-            // TODO: Need close this screen and navigate to previous screen
+            navigateToBackAction.invoke()
         }
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -95,7 +95,7 @@ private fun AddWordsScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            AddWordsScreen()
+            AddWordsScreen(navigateToBackAction = {})
         }
     }
 }

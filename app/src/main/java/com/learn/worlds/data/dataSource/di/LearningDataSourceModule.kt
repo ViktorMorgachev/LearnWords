@@ -1,6 +1,7 @@
 package com.learn.worlds.data.dataSource.di
 
 import com.learn.worlds.data.dataSource.LearningItemsDataSource
+import com.learn.worlds.data.dataSource.LearningLocalItemsDataSource
 import com.learn.worlds.data.model.db.LearningItemDao
 import dagger.Binds
 import dagger.Module
@@ -13,7 +14,7 @@ import javax.inject.Singleton
 interface DataSourceModule {
     @Singleton
     @Binds
-    fun bindsLearningDataSource(
-         learningItemDao: LearningItemDao
+    fun bindsLearningLocalDataSource(
+         learningItemsDataSource: LearningLocalItemsDataSource
     ): LearningItemsDataSource
 }
