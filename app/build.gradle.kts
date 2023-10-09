@@ -1,9 +1,10 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.hiltGradle)
     alias(libs.plugins.ksp)
+
+
 }
 
 android {
@@ -31,6 +32,13 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -41,9 +49,13 @@ android {
     }
     buildFeatures {
         compose = true
+        aidl = false
+        buildConfig = true
+        renderScript = false
+        shaders = false
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     packaging {
         resources {
@@ -66,6 +78,8 @@ dependencies {
     // Hilt Deps Injection
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.dagger.compiler)
 
     // Compose
     implementation(libs.compose.ui)
@@ -73,16 +87,14 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.compose.icons.extended)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.test.ext.junit)
-    androidTestImplementation(libs.espresso.core)
+    // Coroutines
+    implementation(libs.kotlinx.coroutines)
 
     // Tooling
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
-
 
     // Testing Compose Layouts
     androidTestImplementation(libs.compose.ui.test.junit4)
@@ -91,18 +103,15 @@ dependencies {
     // Navigation
     implementation(libs.navigation.compose)
 
-    /* // Core Android dependencies
+    // Logging
+    implementation(libs.timber.logging)
 
-    // Arch Components
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
+    // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    // KSP helpers
+ //   implementation(libs.squareup.javapoet)
 
-
-    */
 }

@@ -22,15 +22,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.ui.LearningItemsUIState
+import com.learn.worlds.ui.common.LoadingDialog
+import com.learn.worlds.ui.common.SomethingWentWrongDialog
+import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
 import com.learn.worlds.ui.theme.LearnWordsTheme
 
 @Composable
-fun AddWordsScreen(modifier: Modifier = Modifier, onSaveAction: (LearningItem) -> Unit) {
+fun AddWordsScreen(modifier: Modifier = Modifier, navigateToBackAction: ()->Unit,  viewModel: AddLearningItemsViewModel = hiltViewModel()) {
     var foreignData by remember { mutableStateOf("") }
     var nativeData by remember { mutableStateOf("") }
+    val items by viewModel.uiState.collectAsStateWithLifecycle()
+    when(items){
+        is LearningItemsUIState.Loading-> LoadingDialog()
+        is LearningItemsUIState.Error -> SomethingWentWrongDialog {
+            viewModel.addLearningItem(LearningItem(nativeData = nativeData, foreignData = foreignData))
+        }
+        is LearningItemsUIState.Success -> {
+            navigateToBackAction.invoke()
+        }
+    }
+
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -47,10 +64,12 @@ fun AddWordsScreen(modifier: Modifier = Modifier, onSaveAction: (LearningItem) -
         Text(text = "Введите перевод", textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 8.dp))
         EditTextCustom(actualText = foreignData, modifier = Modifier.fillMaxWidth(), onValueChange = {foreignData = it})
         Spacer(Modifier.height(16.dp))
-        Button(onClick = {onSaveAction.invoke(LearningItem(nativeData = nativeData, foreignData = foreignData))}) {
+        Button(onClick = { viewModel.addLearningItem(LearningItem(nativeData = nativeData, foreignData = foreignData)) }) {
             Text(text = "Сохранить")
         }
     }
+
+
 }
 
 
@@ -76,7 +95,7 @@ private fun AddWordsScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            AddWordsScreen(onSaveAction = {})
+            AddWordsScreen(navigateToBackAction = {})
         }
     }
 }
