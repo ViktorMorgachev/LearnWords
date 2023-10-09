@@ -43,6 +43,28 @@ val md_theme_light_onSurfaceVariant = Color(0xFF494644)
 val md_theme_light_outline = Color(0xFF7A7674)
 val md_theme_light_inverseOnSurface = Color(0xFFF5F0EE)
 
+val md_theme_light_cardbg_switch_off_learned = Color(0xFF169961)
+val md_theme_light_cardbg_switch_off_learning= Color(0xFF26A6DA)
+val md_theme_light_cardbg_switch_on_learned = Color(0xFFB3654D)
+val md_theme_light_cardbg_switch_on_learning= Color(0xFF87A049)
+
+val md_theme_light_textColor_switch_off_learned = Color(0xFF000000)
+val md_theme_light_textColor_switch_off_learning= Color(0xFFF5F0EE)
+val md_theme_light_textColor_switch_on_learned = Color(0xFFF5F0EE)
+val md_theme_light_textColor_switch_on_learning= Color(0xFF070707)
+
+
+val md_theme_dark_cardbg_switch_off_learned = Color(0xFF136D46)
+val md_theme_dark_cardbg_switch_off_learning= Color(0xFF145670)
+val md_theme_dark_cardbg_switch_on_learned = Color(0xFF7E412F)
+val md_theme_dark_cardbg_switch_on_learning= Color(0xFF627435)
+
+val md_theme_dark_textColor_switch_off_learned = Color(0xFFFFFFFF)
+val md_theme_dark_textColor_switch_off_learning= Color(0xFFFFFFFF)
+val md_theme_dark_textColor_switch_on_learned = Color(0xFFF5F0EE)
+val md_theme_dark_textColor_switch_on_learning= Color(0xFFFFFFFF)
+
+
 val md_theme_dark_primary = Color(0xFFD7C3B1)
 val md_theme_dark_onPrimary = Color(0xFF3A2E22)
 val md_theme_dark_primaryContainer = Color(0xFF524437)

@@ -10,15 +10,16 @@ import org.junit.Assert.*
 
 /**
  * Instrumented test, which will execute on an Android device.
- *
+ *a
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-        // Context of the app under test.
+        // Context of the apps under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.learn.worlds", appContext.packageName)
     }
 }
+

@@ -1,37 +1,64 @@
 package com.learn.worlds.navigation
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.learn.worlds.ui.add_word.AddWordsScreen
-import com.learn.worlds.ui.add_word.LearningItemsViewModel
+import androidx.navigation.navigation
+import com.learn.worlds.ui.base.add_word.AddWordsScreen
+import com.learn.worlds.ui.base.show_words.ShowLearningWordsScreen
+import com.learn.worlds.ui.base.subscribe.SubscribeScreen
+import com.learn.worlds.ui.login.auth.AuthScreen
+import com.learn.worlds.ui.login.sync.SynchronizationScreen
+
+fun NavHostController.navigateSingleTopTo(route: String) =
+    this.navigate(route) { launchSingleTop = true }
 
 @Composable
-fun MyNavHost(navHostController: NavHostController, startDestination: String, modifier: Modifier = Modifier,  learningItemsViewModel: LearningItemsViewModel){
+fun MyNavHost(
+    navHostController: NavHostController,
+    modifier: Modifier
+) {
     NavHost(
         navController = navHostController,
-        startDestination = startDestination
+        startDestination = "MAIN",
+        route = "ROOT"
     ) {
-        composable(route =  LearningWordsScreens.SCREEN_ADD_NEW_WORDS.name){
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = MaterialTheme.colorScheme.background
-            ) {
-                AddWordsScreen(onSaveAction = { learningItem->
-                    learningItemsViewModel.saveLearningData(learningItem)
-                })
+        navigation(startDestination = Screen.AuthScreen.route, route = "LOGIN") {
+            composable(route = Screen.AuthScreen.route) {
+                AuthScreen(
+                    onSyncAction = { navHostController.navigateSingleTopTo(route = Screen.SynchronizationScreen.route) }, modifier = modifier,)
             }
-
+            composable(route = Screen.SynchronizationScreen.route) {
+                SynchronizationScreen(
+                    modifier = modifier,
+                    onSyncronizedSucces = {
+                        navHostController.navigateUp()
+                    })
+            }
         }
-        composable(route = LearningWordsScreens.SCREEN_SHOW_WORDS.name) {
-            //
+        navigation(startDestination = Screen.LearnScreen.route, route = "MAIN") {
+            composable(route = Screen.AddScreen.route) {
+                AddWordsScreen(
+                    navigateAfterSuccessWasAdded = { navHostController.navigateUp() },
+                    modifier = modifier
+                )
+            }
+            composable(route = Screen.LearnScreen.route) {
+                ShowLearningWordsScreen(
+                    onNavigate = { screen -> navHostController.navigate(screen.route) },
+                    modifier = modifier
+                )
+            }
+            composable(route = Screen.SubscribeScreen.route) {
+                SubscribeScreen(
+                    onByCoffeeAction = { navHostController.popBackStack() },
+                    modifier = modifier
+                )
+            }
         }
     }
+
 
 }

@@ -37,6 +37,14 @@ private val fontFamilyKulim = FontFamily(
     )
 )
 
+val fontFamilyAndroid = FontFamily(
+    listOf(
+        Font(
+            resId = R.font.android_italic
+        )
+    )
+)
+
 private val fontFamilyLato = FontFamily(
     listOf(
         Font(
@@ -106,4 +114,5 @@ val typography = Typography(
         lineHeight = 20.sp,
         letterSpacing = (0.1).sp
     )
+
 )

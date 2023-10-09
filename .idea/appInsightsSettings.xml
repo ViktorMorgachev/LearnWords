@@ -27,10 +27,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.learn.worlds" />
+                  <option name="mobileSdkAppId" value="1:60332136903:android:5ad3d6c94045cdd5c2a1e2" />
+                  <option name="projectId" value="learnwords-69696" />
+                  <option name="projectNumber" value="60332136903" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
