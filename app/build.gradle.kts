@@ -6,6 +6,15 @@ plugins {
 }
 
 android {
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt") // path to CMakeLists file
+            version = "3.22.1" // your downloaded CMake version
+        }
+    }
+
+
     namespace = "com.learn.worlds"
     compileSdk = 34
 

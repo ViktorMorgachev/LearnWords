@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,28 +25,48 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.data.model.base.LearningItem
-import com.learn.worlds.ui.LearningItemsUIState
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
-import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
 import com.learn.worlds.ui.theme.LearnWordsTheme
+import com.learn.worlds.utils.Result
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+
 
 @Composable
-fun AddWordsScreen(modifier: Modifier = Modifier, navigateToBackAction: ()->Unit,  viewModel: AddLearningItemsViewModel = hiltViewModel()) {
-    var foreignData by remember { mutableStateOf("") }
-    var nativeData by remember { mutableStateOf("") }
-    val items by viewModel.uiState.collectAsStateWithLifecycle()
-    when(items){
-        is LearningItemsUIState.Loading-> LoadingDialog()
-        is LearningItemsUIState.Error -> SomethingWentWrongDialog {
-            viewModel.addLearningItem(LearningItem(nativeData = nativeData, foreignData = foreignData))
-        }
-        is LearningItemsUIState.Success -> {
-            navigateToBackAction.invoke()
-        }
+fun AddWordsScreen(
+    modifier: Modifier = Modifier,
+    navigateAfterSuccessWasAdded: () -> Unit,
+    viewModel: AddLearningItemsViewModel = hiltViewModel()
+) {
+    var foreignData by rememberSaveable { mutableStateOf("") }
+    var nativeData by rememberSaveable { mutableStateOf("") }
+    var stateError by remember { mutableStateOf<Boolean>(false) }
+    var stateLoadingState by remember { mutableStateOf<Boolean>(false) }
+    var stateComplete by remember { mutableStateOf<Boolean?>(null) }
+
+
+    val coroutineScope = rememberCoroutineScope()
+
+    if (stateError) {
+        SomethingWentWrongDialog({ stateError = false }, { stateError = false })
     }
+
+    if (stateLoadingState) {
+        LoadingDialog({
+            stateLoadingState = false
+        })
+    }
+
+    if (stateComplete == true) {
+        navigateAfterSuccessWasAdded.invoke()
+    }
+
 
     Column(
         modifier = modifier
@@ -59,12 +81,56 @@ fun AddWordsScreen(modifier: Modifier = Modifier, navigateToBackAction: ()->Unit
             text = "Что хотите заучить?\n'Введите слово или фразу'",
             textAlign = TextAlign.Center
         )
-        EditTextCustom(actualText = nativeData, modifier = Modifier.fillMaxWidth(), onValueChange = {nativeData = it})
+        EditTextCustom(
+            actualText = nativeData,
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { nativeData = it })
         Spacer(Modifier.height(16.dp))
-        Text(text = "Введите перевод", textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 8.dp))
-        EditTextCustom(actualText = foreignData, modifier = Modifier.fillMaxWidth(), onValueChange = {foreignData = it})
+        Text(
+            text = "Введите перевод",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        EditTextCustom(
+            actualText = foreignData,
+            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { foreignData = it })
         Spacer(Modifier.height(16.dp))
-        Button(onClick = { viewModel.addLearningItem(LearningItem(nativeData = nativeData, foreignData = foreignData)) }) {
+        Button(onClick = {
+            coroutineScope.launch {
+                withContext(Dispatchers.IO) {
+                    viewModel.addLearningItem(
+                        LearningItem(
+                            nativeData = nativeData,
+                            foreignData = foreignData
+                        )
+                    ).collectLatest {
+                        when (it) {
+                            is Result.Loading -> {
+                                stateLoadingState = true
+                                stateError = false
+                            }
+
+                            is Result.Error -> {
+                                stateError = true
+                                stateLoadingState = false
+                            }
+
+                            is Result.Complete -> {
+                                stateLoadingState = false
+                                stateError = false
+                                stateComplete = true
+                            }
+
+                            else -> {}
+                        }
+                    }
+                }
+
+
+            }
+        }
+        ) {
             Text(text = "Сохранить")
         }
     }
@@ -74,9 +140,11 @@ fun AddWordsScreen(modifier: Modifier = Modifier, navigateToBackAction: ()->Unit
 
 
 @Composable
-fun EditTextCustom(actualText: String,
-                   modifier: Modifier = Modifier,
-                   onValueChange: (String) -> Unit) {
+fun EditTextCustom(
+    actualText: String,
+    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit
+) {
     OutlinedTextField(
         shape = MaterialTheme.shapes.medium,
         modifier = modifier,
@@ -95,7 +163,7 @@ private fun AddWordsScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            AddWordsScreen(navigateToBackAction = {})
+            AddWordsScreen(navigateAfterSuccessWasAdded = {})
         }
     }
 }

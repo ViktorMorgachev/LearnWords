@@ -21,9 +21,7 @@ interface LearningItemDao {
     @Query("SELECT * from learningItems WHERE id = :id")
     fun getLearningItem(id: Int): Flow<LearningItemDB>
 }
-enum class LearningStatusDB{
-    LEARNING, KNOWLEDGE
-}
+
 @Entity(tableName = "learningItems", indices = [Index(value = ["native_data", "foreign_data"], unique = true)])
 data class LearningItemDB(@ColumnInfo(name = "native_data") val nativeData: String,
                           @ColumnInfo(name = "foreign_data")  val foreignData: String,

@@ -1,18 +1,23 @@
 package com.learn.worlds.ui.show_words
 
+import android.view.KeyCharacterMap.UnavailableException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.learn.worlds.data.model.base.LearningStatus
+import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.repository.LearningItemsRepository
-import com.learn.worlds.ui.LearningItemsUIState
-import com.learn.worlds.ui.LearningItemsUIState.Success
+import com.learn.worlds.ui.TestUIState
+import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -21,23 +26,45 @@ class ShowLearningItemsViewModel @Inject constructor(
     private val learningItemsRepository: LearningItemsRepository
 ) : ViewModel() {
 
-    val uiState: StateFlow<LearningItemsUIState> =
-        learningItemsRepository.data.map(::Success).catch {
-            LearningItemsUIState.Error(it)
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(3000),
-            LearningItemsUIState.Loading
-        )
+    private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(emptyList())
+    val stateLearningItems: StateFlow<List<LearningItem>> = _stateLearningItems
 
+    private val _loadingState = MutableStateFlow(false)
+    val loadingState: StateFlow<Boolean> = _loadingState
 
-    fun changeLearningState(newState: String, itemID: Int) {
+    private val _errorState = MutableStateFlow<String?>(null)
+    val errorState: StateFlow<String?> = _errorState
+
+    init {
         viewModelScope.launch {
-            learningItemsRepository.changeState(newState, itemID)
+            learningItemsRepository.data.onEach {
+                Timber.d("learningItemsState: ${it.javaClass.canonicalName}")
+                when(it) {
+                    is Result.Loading -> {
+                        _loadingState.value = true
+                    }
+                    is Result.Success -> {
+                        _loadingState.value = false
+                        _stateLearningItems.value = it.data
+                    }
+                    is Result.Error -> {
+                        _loadingState.value = false
+                        _errorState.value = it.error
+                    }
+                    Result.Complete -> {}
+                }
+            }.stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                Result.Loading
+            ).collect()
         }
     }
 
-    fun fetchLearningItemsData() {
-
+    fun dropErrorDialog(){
+        _errorState.value = null
     }
+
+    suspend fun changeLearningState(newState: String, itemID: Int) = learningItemsRepository.changeState(newState, itemID)
+
 }

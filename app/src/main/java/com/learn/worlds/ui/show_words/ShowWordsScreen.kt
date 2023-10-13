@@ -12,50 +12,88 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
-import com.learn.worlds.ui.LearningItemsUIState
-import com.learn.worlds.ui.LearningItemsUIState as UIState
+import com.learn.worlds.navigation.Screen
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
+import com.learn.worlds.utils.Result
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @Composable
-fun ShowLearningWordsScreen(modifier: Modifier = Modifier, viewModel: ShowLearningItemsViewModel = hiltViewModel()) {
-    val items by viewModel.uiState.collectAsStateWithLifecycle()
-    when(items){
-        is UIState.Loading-> LoadingDialog()
-        is UIState.Error -> SomethingWentWrongDialog {
-            viewModel.fetchLearningItemsData()
-        }
-        is UIState.Success -> {
-            LearningItemsScreen(modifier = modifier, learningItems = (items as LearningItemsUIState.Success).data, onChangeData = {
-                viewModel.changeLearningState(it.learningStatus, it.uid)
+fun ShowLearningWordsScreen(
+    modifier: Modifier = Modifier,
+    viewModel: ShowLearningItemsViewModel = hiltViewModel()
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val stateLearningItems by viewModel.stateLearningItems.collectAsStateWithLifecycle()
+
+    val loadingState by viewModel.loadingState.collectAsStateWithLifecycle()
+    val error by viewModel.errorState.collectAsStateWithLifecycle()
+
+
+    error?.let {
+        SomethingWentWrongDialog(
+            onConfirm = {
+                viewModel.dropErrorDialog()
+            }, onDismiss = {
+                viewModel.dropErrorDialog()
             })
-        }
     }
+
+    Timber.d("loadingState: ${loadingState} errorState: ${error}")
+
+    if (loadingState) {
+        LoadingDialog()
+    }
+
+
+    LearningItemsScreen(modifier = modifier,
+        learningItems = stateLearningItems,
+        onChangeData = {
+            coroutineScope.launch {
+                viewModel.changeLearningState(it.learningStatus, it.uid)
+            }
+        }
+    )
+
 }
 
 @Preview
@@ -64,7 +102,7 @@ private fun ShowLearningItemsScreenPreview() {
     LearnWordsTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             LearningItemsScreen(
-              learningItems = listOf(),
+                learningItems = listOf(),
                 onChangeData = {}
             )
         }
@@ -74,28 +112,25 @@ private fun ShowLearningItemsScreenPreview() {
 @Composable
 fun LearningItemsScreen(
     learningItems: List<LearningItem>,
-    onChangeData: (LearningItem)->Unit,
+    onChangeData: (LearningItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        // TODO: Add filter button and floating button for adding new data
-    ) { innerPadding ->
-        LearningList(
-            modifier = modifier
-                .padding(innerPadding),
-            learningItems = learningItems,
-            onChangeData = onChangeData,
-        )
-    }
+    LearningList(
+        modifier = modifier,
+        learningItems = learningItems,
+        onChangeData = onChangeData
+    )
 }
 
 @Composable
-fun CardContent(learningItem: LearningItem, onChangeData: (LearningItem)->Unit, showDefaultNative: Boolean = true) {
+fun CardContent(
+    learningItem: LearningItem,
+    onChangeData: (LearningItem) -> Unit,
+    showDefaultNative: Boolean = true
+) {
     var expanded by remember { mutableStateOf(false) }
     Card(
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
     ) {
         Row(
@@ -114,18 +149,19 @@ fun CardContent(learningItem: LearningItem, onChangeData: (LearningItem)->Unit, 
                     .padding(12.dp)
             ) {
                 Text(
-                    text = if (showDefaultNative) learningItem.nativeData else learningItem.foreignData, style = MaterialTheme.typography.headlineMedium.copy(
+                    text = if (showDefaultNative) learningItem.nativeData else learningItem.foreignData,
+                    style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.ExtraBold
                     )
                 )
                 if (expanded) {
                     Text(
-                        text =  if (showDefaultNative) learningItem.foreignData else learningItem.nativeData
+                        text = if (showDefaultNative) learningItem.foreignData else learningItem.nativeData
                     )
                 }
             }
             IconButton(onClick = {
-                if (!expanded){
+                if (!expanded) {
                     onChangeData.invoke(learningItem.copy(learningStatus = LearningStatus.LEARNING.name))
                 }
                 expanded = !expanded
@@ -145,7 +181,7 @@ fun CardContent(learningItem: LearningItem, onChangeData: (LearningItem)->Unit, 
 private fun LearningList(
     modifier: Modifier = Modifier,
     learningItems: List<LearningItem>,
-    onChangeData: (LearningItem)->Unit,
+    onChangeData: (LearningItem) -> Unit,
     needRememberLastScrollState: Boolean = true
 ) {
     LazyColumn(
