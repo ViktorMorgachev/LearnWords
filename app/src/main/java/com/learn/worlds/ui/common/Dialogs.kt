@@ -62,6 +62,7 @@ fun SomethingWentWrongDialogPrewiew(
 
 @Composable
 fun SomethingWentWrongDialog(
+    message: String? = null,
     onDismiss: () -> Unit = {},
     onConfirm: () -> Unit = {}
 ) {
@@ -70,7 +71,7 @@ fun SomethingWentWrongDialog(
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = "Somesthing went wrong dialog",
+                    contentDescription = message ?: "Somesthing went wrong dialog",
                     tint = Color.Red
                 )
             },
@@ -79,7 +80,7 @@ fun SomethingWentWrongDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "Somesthing went wrong")
+                    Text(text = message ?: "Somesthing went wrong")
                 }
 
             },

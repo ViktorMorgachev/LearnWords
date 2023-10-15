@@ -4,6 +4,7 @@ import android.view.KeyCharacterMap.UnavailableException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.repository.LearningItemsRepository
 import com.learn.worlds.ui.TestUIState
 import com.learn.worlds.utils.Result
@@ -23,13 +24,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ShowLearningItemsViewModel @Inject constructor(
-    private val learningItemsRepository: LearningItemsRepository
+    private val learningItemsRepository: LearningItemsRepository,
+    private val mySharedPreferences: MySharedPreferences
 ) : ViewModel() {
 
-    private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(emptyList())
+    private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
     val stateLearningItems: StateFlow<List<LearningItem>> = _stateLearningItems
 
-    private val _loadingState = MutableStateFlow(false)
+    private val _loadingState = MutableStateFlow(true)
     val loadingState: StateFlow<Boolean> = _loadingState
 
     private val _errorState = MutableStateFlow<String?>(null)
@@ -38,13 +40,15 @@ class ShowLearningItemsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             learningItemsRepository.data.onEach {
-                Timber.d("learningItemsState: ${it.javaClass.canonicalName}")
+                val data = if (it is Result.Success){ it.data } else null
+                Timber.d("learningItemsState: type ${it.javaClass.simpleName} data $data")
                 when(it) {
                     is Result.Loading -> {
                         _loadingState.value = true
                     }
                     is Result.Success -> {
                         _loadingState.value = false
+                        mySharedPreferences.canAddNewLearnItem = it.data.size < mySharedPreferences.currentLimit
                         _stateLearningItems.value = it.data
                     }
                     is Result.Error -> {
@@ -63,6 +67,10 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     fun dropErrorDialog(){
         _errorState.value = null
+    }
+
+    fun dropLimits(){
+        mySharedPreferences.currentLimit = Int.MAX_VALUE
     }
 
     suspend fun changeLearningState(newState: String, itemID: Int) = learningItemsRepository.changeState(newState, itemID)

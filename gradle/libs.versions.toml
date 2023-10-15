@@ -20,6 +20,7 @@ timber = "5.0.1"
 androidxHilt = "1.0.0"
 squareupJavapoet = "1.13.0"
 daggerCompiler = "2.48"
+dataStore= "1.0.0"
 
 
 
@@ -59,9 +60,7 @@ hilt-android = { group = "com.google.dagger",name="hilt-android", version.ref = 
 hilt-android-compiler = { group = "com.google.dagger",name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger",name = "hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name="hilt-navigation-compose", version.ref = "androidxHilt" }
-squareup-javapoet = { group = "com.squareup", name="javapoet", version.ref = "squareupJavapoet" }
-
-
+dataStore-preferences-core = { group = "androidx.datastore", name="datastore-preferences-core", version.ref = "dataStore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "androidGradlePlugin" }

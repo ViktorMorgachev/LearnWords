@@ -1,5 +1,22 @@
 <resources>
     <string name="app_name">LearnWords</string>
-    <string name="learn">Учить</string>
+
     <string name="add">Добавить</string>
+    <string name="subscribe">Подписаться</string>
+
+    <!--LearnScreen-->
+    <string name="learn">Учить</string>
+    <string name="filter_all">Все фразы</string>
+    <string name="filter_learned">Выученые</string>
+    <string name="sort_by_new">Новые</string>
+    <string name="sort_by_old">Старые</string>
+    <string name="available_count">Доступное количество фраз %s</string>
+    <string name="empty_list">Список пустой \n Но вы можете добавить любую новую фразу</string>
+
+    <!--Subscribe Screen-->
+    <string name="subsribe_title">Купите кофе разработчику и \n пользуйтесь  полной версией на здоровье</string>
+    <string name="by_coffee">Купить кофе</string>
+
+    <!--Descriptions-->
+    <string name="desc_action_filter_list">Отфильтровать список</string>
 </resources>

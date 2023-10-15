@@ -46,15 +46,15 @@ fun AddWordsScreen(
 ) {
     var foreignData by rememberSaveable { mutableStateOf("") }
     var nativeData by rememberSaveable { mutableStateOf("") }
-    var stateError by remember { mutableStateOf<Boolean>(false) }
+    var stateError by remember { mutableStateOf<Result.Error?>(null) }
     var stateLoadingState by remember { mutableStateOf<Boolean>(false) }
     var stateComplete by remember { mutableStateOf<Boolean?>(null) }
 
 
     val coroutineScope = rememberCoroutineScope()
 
-    if (stateError) {
-        SomethingWentWrongDialog({ stateError = false }, { stateError = false })
+    if (stateError != null) {
+        SomethingWentWrongDialog(message = stateError!!.error,  { stateError = null }, { stateError = null })
     }
 
     if (stateLoadingState) {
@@ -108,17 +108,17 @@ fun AddWordsScreen(
                         when (it) {
                             is Result.Loading -> {
                                 stateLoadingState = true
-                                stateError = false
+                                stateError = null
                             }
 
                             is Result.Error -> {
-                                stateError = true
+                                stateError = it
                                 stateLoadingState = false
                             }
 
                             is Result.Complete -> {
                                 stateLoadingState = false
-                                stateError = false
+                                stateError = null
                                 stateComplete = true
                             }
 

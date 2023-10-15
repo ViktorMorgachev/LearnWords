@@ -3,6 +3,7 @@ package com.learn.worlds.ui.show_words
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,9 +16,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Filter
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,9 +52,11 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.learn.worlds.R
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.navigation.Screen
+import com.learn.worlds.ui.common.ActualTopBar
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
@@ -56,7 +65,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import timber.log.Timber
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowLearningWordsScreen(
     modifier: Modifier = Modifier,
@@ -78,12 +87,16 @@ fun ShowLearningWordsScreen(
             })
     }
 
-    Timber.d("loadingState: ${loadingState} errorState: ${error}")
-
     if (loadingState) {
         LoadingDialog()
     }
 
+    ActualTopBar(
+        title = R.string.learn,
+        actions  = listOf(Triple(
+            first = Icons.Default.FilterList,
+            second = R.string.desc_action_filter_list,
+            third = {})))
 
     LearningItemsScreen(modifier = modifier,
         learningItems = stateLearningItems,
@@ -115,11 +128,27 @@ fun LearningItemsScreen(
     onChangeData: (LearningItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LearningList(
-        modifier = modifier,
-        learningItems = learningItems,
-        onChangeData = onChangeData
-    )
+    if (learningItems.isNotEmpty()){
+        LearningList(
+            modifier = modifier,
+            learningItems = learningItems,
+            onChangeData = onChangeData
+        )
+    }
+    else EmptyScreen()
+}
+
+@Preview
+@Composable
+fun EmptyScreen() {
+    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center){
+        Text(
+            text = stringResource(R.string.empty_list),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.ExtraBold
+            ))
+    }
 }
 
 @Composable

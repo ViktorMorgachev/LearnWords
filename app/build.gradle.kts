@@ -114,12 +114,11 @@ dependencies {
     // Logging
     implementation(libs.timber.logging)
 
+    // DataStore
+
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-
-    // KSP helpers
-    //implementation(libs.squareup.javapoet)
 
 }

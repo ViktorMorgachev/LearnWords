@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
 import javax.inject.Inject
 
-class LearningItemsRepository @Inject constructor(@MockDataSource private val learningItemsLocalDataSource: LearningItemsDataSource) {
+class LearningItemsRepository @Inject constructor(private val learningItemsLocalDataSource: LearningItemsDataSource) {
 
     val data: Flow<Result<List<LearningItem>>> = learningItemsLocalDataSource.learningItems.map { initialData ->
             try {

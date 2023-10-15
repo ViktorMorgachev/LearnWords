@@ -21,19 +21,13 @@ class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private
     private val _learningItems: MutableStateFlow<MutableList<LearningItemDB>> = MutableStateFlow(initMockData())
     override val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()
 
-    init {
-        Timber.d("Init ${this.javaClass.simpleName}")
-    }
-
     override suspend fun changeState(newState: String, learningItemID: Int) = flow<Result<Any>> {
-        // TODO: Will write test later, I don't think to add wrapper for ui if will Fail
+        Timber.e("changeState: newState $newState learningItemID: $learningItemID")
         emit(Result.Complete)
     }
 
     private fun initMockData(): MutableList<LearningItemDB> {
-        Timber.d("initMockData")
         return mutableListOf(
-            LearningItemDB("hello", "hola"),
             LearningItemDB("goodbye", "adios"),
             LearningItemDB("thank you", "gracias"),
             LearningItemDB("you're welcome", "de nada"),
@@ -47,6 +41,7 @@ class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private
     }
 
     override suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<Any>> {
+        Timber.e("addLearningItem: learningItemDB $learningItemDB")
         try {
             emit(Result.Loading)
             _learningItems.value.add(learningItemDB)

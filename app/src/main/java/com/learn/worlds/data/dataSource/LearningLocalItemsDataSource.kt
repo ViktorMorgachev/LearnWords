@@ -2,6 +2,7 @@ package com.learn.worlds.data.dataSource
 
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.db.LearningItemDao
+import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
@@ -14,18 +15,14 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-class LearningLocalItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher, private val learningItemDao: LearningItemDao):
+class LearningLocalItemsDataSource @Inject constructor(private val mySharedPreferences: MySharedPreferences, private val learningItemDao: LearningItemDao):
     LearningItemsDataSource {
 
 
     override val learningItems:  Flow<List<LearningItemDB>>  = learningItemDao.getLearningItems()
 
-    init {
-        Timber.d("Init ${this.javaClass.simpleName}")
-    }
-
     override suspend fun changeState(newState: String, learningItemID: Int) = flow{
-        // TODO: Will write test later
+        Timber.e("changeState: newState $newState learningItemID: $learningItemID")
         learningItemDao.getLearningItem(learningItemID).collect{
             try {
                 emit(Result.Loading)
@@ -41,14 +38,21 @@ class LearningLocalItemsDataSource @Inject constructor(@IoDispatcher private val
     }
 
     override suspend fun addLearningItem(learningItemDB: LearningItemDB)  = flow {
-        try {
-            emit(Result.Loading)
-            learningItemDao.insertLearningItem(learningItemDB)
-            emit(Result.Complete)
-        } catch (t: Throwable){
-            Timber.e(t)
-            emit(Result.Error())
+        Timber.e("addLearningItem: learningItemDB $learningItemDB")
+        learningItemDao.getLearningItems().collect{
+            try {
+                emit(Result.Loading)
+              /*  if (it.size < mySharedPreferences.currentLimit){
+                    emit(Result.Error("Прывышено ограничение на добавление слов"))
+                }*/
+                learningItemDao.insertLearningItem(learningItemDB)
+                emit(Result.Complete)
+            } catch (t: Throwable){
+                Timber.e(t)
+                emit(Result.Error())
+            }
         }
+
     }
 
 }

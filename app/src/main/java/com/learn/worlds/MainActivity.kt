@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LearnWordsApp(navHostController, listOf(Screen.LearnScreen, Screen.AddScreen))
+                    LearnWordsApp(navHostController, listOf(Screen.LearnScreen, Screen.AddScreen, Screen.SubscribeScreen))
                 }
             }
         }
