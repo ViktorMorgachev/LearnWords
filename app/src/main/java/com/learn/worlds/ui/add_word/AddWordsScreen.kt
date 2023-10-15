@@ -50,7 +50,6 @@ fun AddWordsScreen(
     var stateLoadingState by remember { mutableStateOf<Boolean>(false) }
     var stateComplete by remember { mutableStateOf<Boolean?>(null) }
 
-
     val coroutineScope = rememberCoroutineScope()
 
     if (stateError != null) {
@@ -98,32 +97,30 @@ fun AddWordsScreen(
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
             coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    viewModel.addLearningItem(
-                        LearningItem(
-                            nativeData = nativeData,
-                            foreignData = foreignData
-                        )
-                    ).collectLatest {
-                        when (it) {
-                            is Result.Loading -> {
-                                stateLoadingState = true
-                                stateError = null
-                            }
-
-                            is Result.Error -> {
-                                stateError = it
-                                stateLoadingState = false
-                            }
-
-                            is Result.Complete -> {
-                                stateLoadingState = false
-                                stateError = null
-                                stateComplete = true
-                            }
-
-                            else -> {}
+                viewModel.addLearningItem(
+                    LearningItem(
+                        nativeData = nativeData,
+                        foreignData = foreignData
+                    )
+                ).collectLatest {
+                    when (it) {
+                        is Result.Loading -> {
+                            stateLoadingState = true
+                            stateError = null
                         }
+
+                        is Result.Error -> {
+                            stateError = it
+                            stateLoadingState = false
+                        }
+
+                        is Result.Complete -> {
+                            stateLoadingState = false
+                            stateError = null
+                            stateComplete = true
+                        }
+
+                        else -> {}
                     }
                 }
 

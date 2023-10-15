@@ -16,6 +16,7 @@ import javax.inject.Inject
 class AddLearningItemsViewModel  @Inject constructor(
     private val learningItemsRepository: LearningItemsRepository
 ) : ViewModel() {
+
      suspend fun addLearningItem(learningItem: LearningItem) = learningItemsRepository.addLearningItem(learningItem)
 
 }

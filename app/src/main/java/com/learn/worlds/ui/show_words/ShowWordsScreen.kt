@@ -3,6 +3,7 @@ package com.learn.worlds.ui.show_words
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,27 +14,21 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Filter
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,27 +43,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavHostController
 import com.learn.worlds.R
+import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
+import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.navigation.Screen
+import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
-import com.learn.worlds.utils.Result
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import timber.log.Timber
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowLearningWordsScreen(
     modifier: Modifier = Modifier,
+    navHostController: NavHostController,
     viewModel: ShowLearningItemsViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -76,6 +69,8 @@ fun ShowLearningWordsScreen(
 
     val loadingState by viewModel.loadingState.collectAsStateWithLifecycle()
     val error by viewModel.errorState.collectAsStateWithLifecycle()
+    var showFilterMenu by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
 
 
     error?.let {
@@ -91,22 +86,135 @@ fun ShowLearningWordsScreen(
         LoadingDialog()
     }
 
-    ActualTopBar(
-        title = R.string.learn,
-        actions  = listOf(Triple(
-            first = Icons.Default.FilterList,
-            second = R.string.desc_action_filter_list,
-            third = {})))
-
     LearningItemsScreen(modifier = modifier,
         learningItems = stateLearningItems,
         onChangeData = {
             coroutineScope.launch {
                 viewModel.changeLearningState(it.learningStatus, it.uid)
             }
+        },
+        appBar = {
+            ActualTopBar(
+                title = R.string.learn,
+                actions = mutableListOf(
+                    ActionTopBar(
+                        imageVector = Icons.Default.FilterList,
+                        contentDesc = R.string.desc_action_filter_list,
+                        action = {
+                            showFilterMenu = true
+                        },
+                        dropDownContent = {
+                            DropdownMenu(
+                                expanded = showFilterMenu,
+                                onDismissRequest = { showFilterMenu = false }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.filter_learned),
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .clickable(
+                                            onClick = {
+                                                coroutineScope.launch {
+                                                    viewModel.filterBy(FilteringType.LEARNED)
+                                                }
+                                            })
+                                )
+                                Text(
+                                    text = stringResource(R.string.filter_all),
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .clickable(onClick = {
+                                            coroutineScope.launch {
+                                                viewModel.filterBy(FilteringType.ALL)
+                                            }
+                                        })
+                                )
+                            }
+                        }
+                    ),
+                    ActionTopBar(
+                        imageVector = Icons.Default.Sort,
+                        contentDesc = R.string.desc_action_sort_list,
+                        action = {
+                            showSortMenu = true
+                        },
+                        dropDownContent = {
+                            DropdownMenu(
+                                expanded = showSortMenu,
+                                onDismissRequest = { showSortMenu = false }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.sort_by_new),
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .clickable(onClick = {
+                                            coroutineScope.launch {
+                                                viewModel.sortBy(SortingType.SORT_BY_NEW)
+                                            }
+
+                                        })
+                                )
+                                Text(
+                                    text = stringResource(R.string.sort_by_old),
+                                    modifier = Modifier
+                                        .padding(10.dp)
+                                        .clickable(onClick = {
+                                            coroutineScope.launch {
+                                                viewModel.sortBy(SortingType.SORT_BY_OLD)
+                                            }
+                                        })
+                                )
+                            }
+                        }
+                    )
+                ).apply {
+                    if (viewModel.isLockedApplication()) {
+                        add(
+                            ActionTopBar(
+                                imageVector = Icons.Default.LockOpen,
+                                contentDesc = R.string.desc_action_filter_list,
+                                action = {
+                                    // TODO need to add navGraph for subscriptions userflow
+                                    navHostController.navigate(Screen.SubscribeScreen.route)
+                                }
+                            ))
+                    }
+                }
+            )
         }
     )
+}
 
+@Composable
+fun FilteringMenu(
+    onSelectedFilter: (FilteringType) -> Unit,
+    expanded: Boolean,
+    onDismissRequest: () -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest
+    ) {
+        Text(
+            text = stringResource(R.string.filter_all),
+            modifier = Modifier
+                .padding(10.dp)
+                .clickable(
+                    onClick = {
+                        onDismissRequest.invoke()
+                        onSelectedFilter.invoke(FilteringType.ALL)
+                    })
+        )
+        Text(
+            text = stringResource(R.string.filter_learned),
+            modifier = Modifier
+                .padding(10.dp)
+                .clickable(onClick = {
+                    onSelectedFilter.invoke(FilteringType.LEARNED)
+                    onDismissRequest.invoke()
+                })
+        )
+    }
 }
 
 @Preview
@@ -116,7 +224,25 @@ private fun ShowLearningItemsScreenPreview() {
         Surface(modifier = Modifier.fillMaxSize()) {
             LearningItemsScreen(
                 learningItems = listOf(),
-                onChangeData = {}
+                onChangeData = {},
+                appBar = {
+                    ActualTopBar(
+                        title = R.string.learn,
+                        actions = listOf(
+                            ActionTopBar(
+                                imageVector = Icons.Default.FilterList,
+                                contentDesc = R.string.desc_action_filter_list,
+                                action = {},
+                            ),
+                            ActionTopBar(
+                                imageVector = Icons.Default.Sort,
+                                contentDesc = R.string.desc_action_sort_list,
+                                action = {},
+                            )
+                        )
+                    )
+                }
+
             )
         }
     }
@@ -126,28 +252,37 @@ private fun ShowLearningItemsScreenPreview() {
 fun LearningItemsScreen(
     learningItems: List<LearningItem>,
     onChangeData: (LearningItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    appBar: @Composable (() -> Unit)? = null,
 ) {
-    if (learningItems.isNotEmpty()){
-        LearningList(
-            modifier = modifier,
-            learningItems = learningItems,
-            onChangeData = onChangeData
-        )
+    Column {
+        appBar?.invoke()
+        if (learningItems.isNotEmpty()) {
+            LearningList(
+                modifier = modifier,
+                learningItems = learningItems,
+                onChangeData = onChangeData
+            )
+        } else EmptyScreen()
     }
-    else EmptyScreen()
+
 }
 
 @Preview
 @Composable
 fun EmptyScreen() {
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center){
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp), contentAlignment = Alignment.Center
+    ) {
         Text(
             text = stringResource(R.string.empty_list),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.ExtraBold
-            ))
+            )
+        )
     }
 }
 

@@ -1,15 +1,9 @@
 package com.learn.worlds.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Filter
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -43,7 +37,7 @@ fun MyNavHost(
                 modifier = modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
-                ShowLearningWordsScreen()
+                ShowLearningWordsScreen(navHostController = navHostController)
             }
         }
         composable(route = Screen.SubscribeScreen.route) {
