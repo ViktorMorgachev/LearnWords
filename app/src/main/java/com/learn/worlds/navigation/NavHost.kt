@@ -28,7 +28,7 @@ fun MyNavHost(
                 color = MaterialTheme.colorScheme.background
             ) {
                 AddWordsScreen(navigateAfterSuccessWasAdded = {
-                    navHostController.popBackStack()
+                    navHostController.navigateUp()
                 })
             }
         }

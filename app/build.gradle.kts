@@ -114,8 +114,6 @@ dependencies {
     // Logging
     implementation(libs.timber.logging)
 
-    // DataStore
-
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

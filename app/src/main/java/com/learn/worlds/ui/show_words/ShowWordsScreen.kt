@@ -73,7 +73,7 @@ fun ShowLearningWordsScreen(
     var showSortMenu by remember { mutableStateOf(false) }
 
 
-    error?.let {
+     error?.let {
         SomethingWentWrongDialog(
             onConfirm = {
                 viewModel.dropErrorDialog()

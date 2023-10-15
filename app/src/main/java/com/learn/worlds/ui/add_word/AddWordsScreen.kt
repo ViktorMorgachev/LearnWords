@@ -99,8 +99,8 @@ fun AddWordsScreen(
             coroutineScope.launch {
                 viewModel.addLearningItem(
                     LearningItem(
-                        nativeData = nativeData,
-                        foreignData = foreignData
+                        nativeData = nativeData.trimEnd(),
+                        foreignData = foreignData.trimEnd()
                     )
                 ).collectLatest {
                     when (it) {

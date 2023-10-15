@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 interface LearningItemDao {
     @Query("SELECT * FROM learningItems ORDER BY id DESC")
     fun getLearningItems(): Flow<@JvmSuppressWildcards List<LearningItemDB>>
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertLearningItem(item: LearningItemDB)
 
     @Query("SELECT * from learningItems WHERE id = :id")
@@ -26,6 +26,7 @@ interface LearningItemDao {
 data class LearningItemDB(@ColumnInfo(name = "native_data") val nativeData: String,
                           @ColumnInfo(name = "foreign_data")  val foreignData: String,
                           @ColumnInfo(name = "learning_status") val learningStatus: String = "LEARNING"){
+
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     var uid: Int = 0

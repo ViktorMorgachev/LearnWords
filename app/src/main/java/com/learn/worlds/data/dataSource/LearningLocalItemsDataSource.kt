@@ -42,9 +42,6 @@ class LearningLocalItemsDataSource @Inject constructor(private val mySharedPrefe
         learningItemDao.getLearningItems().collect{
             try {
                 emit(Result.Loading)
-              /*  if (it.size < mySharedPreferences.currentLimit){
-                    emit(Result.Error("Прывышено ограничение на добавление слов"))
-                }*/
                 learningItemDao.insertLearningItem(learningItemDB)
                 emit(Result.Complete)
             } catch (t: Throwable){
