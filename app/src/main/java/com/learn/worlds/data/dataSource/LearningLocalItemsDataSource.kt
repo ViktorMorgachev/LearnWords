@@ -1,10 +1,13 @@
 package com.learn.worlds.data.dataSource
 
+import android.content.Context
+import com.learn.worlds.R
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.db.LearningItemDao
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
@@ -15,9 +18,8 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-class LearningLocalItemsDataSource @Inject constructor(private val mySharedPreferences: MySharedPreferences, private val learningItemDao: LearningItemDao):
+class LearningLocalItemsDataSource @Inject constructor(@ApplicationContext val context: Context, private val mySharedPreferences: MySharedPreferences, private val learningItemDao: LearningItemDao):
     LearningItemsDataSource {
-
 
     override val learningItems:  Flow<List<LearningItemDB>>  = learningItemDao.getLearningItems()
 
@@ -42,7 +44,11 @@ class LearningLocalItemsDataSource @Inject constructor(private val mySharedPrefe
         learningItemDao.getLearningItems().collect{
             try {
                 emit(Result.Loading)
-                learningItemDao.insertLearningItem(learningItemDB)
+                if (it.size >= mySharedPreferences.currentLimit){
+                    emit(Result.Error(context.getString(R.string.error_limits_adding_words)))
+                    return@collect
+                }
+               learningItemDao.insertLearningItem(learningItemDB)
                 emit(Result.Complete)
             } catch (t: Throwable){
                 Timber.e(t)

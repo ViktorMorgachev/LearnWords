@@ -75,9 +75,7 @@ fun ShowLearningWordsScreen(
 
      error?.let {
         SomethingWentWrongDialog(
-            onConfirm = {
-                viewModel.dropErrorDialog()
-            }, onDismiss = {
+            onTryAgain = {
                 viewModel.dropErrorDialog()
             })
     }

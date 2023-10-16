@@ -20,4 +20,13 @@
     <!--Descriptions-->
     <string name="desc_action_filter_list">Отфильтровать список</string>
     <string name="desc_action_sort_list">Отсортировать список</string>
+    <string name="error_someshing_went_wrong">Что-то пошло не так</string>
+
+    <!--Dialogs-->
+    <string name="error_limits_adding_words">Прывышено ограничение на добавление слов</string>
+
+    <!--Common-->
+    <string name="try_again">Повторить запрос</string>
+    <string name="close">Закрыть</string>
+    <string name="ok">ОК</string>
 </resources>

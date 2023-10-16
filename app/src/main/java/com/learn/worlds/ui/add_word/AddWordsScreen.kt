@@ -53,7 +53,7 @@ fun AddWordsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     if (stateError != null) {
-        SomethingWentWrongDialog(message = stateError!!.error,  { stateError = null }, { stateError = null })
+        SomethingWentWrongDialog(message = stateError!!.error, onDismiss =  { stateError = null })
     }
 
     if (stateLoadingState) {
