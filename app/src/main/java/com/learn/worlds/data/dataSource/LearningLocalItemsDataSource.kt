@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -26,6 +28,7 @@ class LearningLocalItemsDataSource @Inject constructor(@ApplicationContext val c
     override suspend fun changeState(newState: String, learningItemID: Int) = flow{
         Timber.e("changeState: newState $newState learningItemID: $learningItemID")
         learningItemDao.getLearningItem(learningItemID).collect{
+            emit(Result.Loading)
             try {
                 emit(Result.Loading)
                 val newItem = it.copy(learningStatus = newState)
@@ -41,21 +44,17 @@ class LearningLocalItemsDataSource @Inject constructor(@ApplicationContext val c
 
     override suspend fun addLearningItem(learningItemDB: LearningItemDB)  = flow {
         Timber.e("addLearningItem: learningItemDB $learningItemDB")
-        learningItemDao.getLearningItems().collect{
+        if (mySharedPreferences.dataBaseLocked){
+            emit(Result.Error(context.getString(R.string.error_limits_adding_words)))
+        } else {
             try {
-                emit(Result.Loading)
-                if (it.size >= mySharedPreferences.currentLimit){
-                    emit(Result.Error(context.getString(R.string.error_limits_adding_words)))
-                    return@collect
-                }
-               learningItemDao.insertLearningItem(learningItemDB)
+                learningItemDao.insertLearningItem(learningItemDB)
                 emit(Result.Complete)
             } catch (t: Throwable){
                 Timber.e(t)
                 emit(Result.Error())
             }
         }
-
     }
 
 }

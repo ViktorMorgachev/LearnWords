@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.learn.worlds.R
 import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
 import com.learn.worlds.utils.stringRes
@@ -41,7 +42,7 @@ private fun SubscribeScreenPrewiew() {
 }
 
 @Composable
-fun SubscribeScreen(modifier: Modifier = Modifier, onByCoffeeAction: ()->Unit, viewModel: ShowLearningItemsViewModel? = null) {
+fun SubscribeScreen(modifier: Modifier = Modifier, onByCoffeeAction: ()->Unit, viewModel: ShowLearningItemsViewModel = hiltViewModel()) {
     Box(modifier = modifier.padding(12.dp), contentAlignment = Alignment.Center) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(

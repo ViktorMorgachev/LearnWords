@@ -24,7 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ShowLearningItemsViewModel @Inject constructor(
     private val learningItemsRepository: LearningItemsRepository,
-    private val mySharedPreferences: MySharedPreferences
+    private val preferences: MySharedPreferences
 ) : ViewModel() {
 
 
@@ -45,12 +45,16 @@ class ShowLearningItemsViewModel @Inject constructor(
                     it.data
                 } else null
                 Timber.d("learningItemsState: type ${it.javaClass.simpleName} data $data")
+
                 when (it) {
                     is Result.Loading -> {
                         _loadingState.value = true
                     }
 
                     is Result.Success -> {
+                        if (it.data.size >= preferences.currentLimit){
+                            preferences.dataBaseLocked = true
+                        }
                         _loadingState.value = false
                         _stateLearningItems.value = it.data
                         allLearningItems.value = it.data
@@ -94,11 +98,11 @@ class ShowLearningItemsViewModel @Inject constructor(
     }
 
     fun isLockedApplication(): Boolean {
-        return mySharedPreferences.currentLimit != Int.MAX_VALUE
+        return preferences.currentLimit != Int.MAX_VALUE
     }
 
     fun dropLimits() {
-        mySharedPreferences.currentLimit = Int.MAX_VALUE
+        preferences.currentLimit = Int.MAX_VALUE
     }
 
     suspend fun changeLearningState(newState: String, itemID: Int) =

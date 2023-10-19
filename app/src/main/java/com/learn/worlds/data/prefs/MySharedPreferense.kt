@@ -12,6 +12,14 @@ class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPre
         set(value) {
             sharedPrefs.edit().putInt("currentLimit", value).apply()
         }
+
+    var dataBaseLocked: Boolean
+        get() {
+            return sharedPrefs.getBoolean("dataBaseLocked", false)
+        }
+        set(value) {
+            sharedPrefs.edit().putBoolean("dataBaseLocked", value).apply()
+        }
 }
 
 
