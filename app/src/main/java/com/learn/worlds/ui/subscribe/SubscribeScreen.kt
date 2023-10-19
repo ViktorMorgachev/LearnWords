@@ -55,7 +55,7 @@ fun SubscribeScreen(modifier: Modifier = Modifier, onByCoffeeAction: ()->Unit, v
             OutlinedButton(
                 modifier = Modifier.padding(4.dp),
                 onClick = {
-                viewModel?.dropLimits()
+                viewModel.dropLimits()
                 onByCoffeeAction.invoke()
             }){
                 Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {

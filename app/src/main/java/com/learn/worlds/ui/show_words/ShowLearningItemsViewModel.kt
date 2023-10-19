@@ -102,6 +102,7 @@ class ShowLearningItemsViewModel @Inject constructor(
     }
 
     fun dropLimits() {
+        preferences.dataBaseLocked = false
         preferences.currentLimit = Int.MAX_VALUE
     }
 

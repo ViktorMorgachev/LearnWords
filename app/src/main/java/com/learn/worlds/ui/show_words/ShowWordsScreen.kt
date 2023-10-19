@@ -1,8 +1,11 @@
 package com.learn.worlds.ui.show_words
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,11 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_off_learned
 import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
+import com.learn.worlds.data.model.base.getActualText
 import com.learn.worlds.navigation.Screen
 import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
@@ -221,7 +227,7 @@ private fun ShowLearningItemsScreenPreview() {
     LearnWordsTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             LearningItemsScreen(
-                learningItems = listOf(),
+                learningItems = listOf(LearningItem(nativeData = "Девушка", foreignData = "Girl", learningStatus = LearningStatus.LEARNING.name)),
                 onChangeData = {},
                 appBar = {
                     ActualTopBar(
@@ -284,16 +290,31 @@ fun EmptyScreen() {
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardContent(
     learningItem: LearningItem,
     onChangeData: (LearningItem) -> Unit,
     showDefaultNative: Boolean = true
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var switch by remember { mutableStateOf(false) }
+    var actualText by remember { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
+
+    val bgColor: Color by animateColorAsState(
+        targetValue = if (switch) md_theme_light_cardbg_switch_off_learned else  MaterialTheme.colorScheme.primary,
+        animationSpec = tween(1000, easing = LinearEasing))
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+        colors = CardDefaults.cardColors(containerColor = bgColor),
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+        onClick = {
+            switch = !switch
+            if (switch){
+                actualText = learningItem.getActualText(!showDefaultNative)
+            } else {
+                actualText = learningItem.getActualText(showDefaultNative)
+            }
+        }
     ) {
         Row(
             modifier = Modifier
@@ -306,33 +327,18 @@ fun CardContent(
                 )
         ) {
             Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .weight(1f)
                     .padding(12.dp)
             ) {
                 Text(
-                    text = if (showDefaultNative) learningItem.nativeData else learningItem.foreignData,
+                    text = actualText,
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.ExtraBold
                     )
                 )
-                if (expanded) {
-                    Text(
-                        text = if (showDefaultNative) learningItem.foreignData else learningItem.nativeData
-                    )
-                }
-            }
-            IconButton(onClick = {
-                if (!expanded) {
-                    onChangeData.invoke(learningItem.copy(learningStatus = LearningStatus.LEARNING.name))
-                }
-                expanded = !expanded
 
-            }) {
-                Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = ""
-                )
             }
         }
     }
