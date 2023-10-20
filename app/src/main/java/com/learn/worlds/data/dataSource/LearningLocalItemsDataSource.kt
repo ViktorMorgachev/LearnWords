@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
@@ -20,7 +21,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-class LearningLocalItemsDataSource @Inject constructor(@ApplicationContext val context: Context, private val mySharedPreferences: MySharedPreferences, private val learningItemDao: LearningItemDao):
+class LearningLocalItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher, @ApplicationContext val context: Context, private val mySharedPreferences: MySharedPreferences, private val learningItemDao: LearningItemDao):
     LearningItemsDataSource {
 
     override val learningItems:  Flow<List<LearningItemDB>>  = learningItemDao.getLearningItems()
@@ -55,6 +56,6 @@ class LearningLocalItemsDataSource @Inject constructor(@ApplicationContext val c
                 emit(Result.Error())
             }
         }
-    }
+    }.flowOn(dispatcher)
 
 }

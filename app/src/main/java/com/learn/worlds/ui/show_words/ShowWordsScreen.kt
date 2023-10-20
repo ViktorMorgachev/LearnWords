@@ -1,5 +1,6 @@
 package com.learn.worlds.ui.show_words
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -7,6 +8,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,8 +19,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Sort
@@ -26,8 +26,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,7 +47,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_off_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_off_learning
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_on_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_on_learning
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_off_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_off_learning
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_on_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_on_learning
 import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_off_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_off_learning
+import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_on_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_on_learning
+import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_off_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_off_learning
+import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_learned
+import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_learning
 import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
@@ -79,7 +93,7 @@ fun ShowLearningWordsScreen(
     var showSortMenu by remember { mutableStateOf(false) }
 
 
-     error?.let {
+    error?.let {
         SomethingWentWrongDialog(
             onTryAgain = {
                 viewModel.dropErrorDialog()
@@ -218,8 +232,8 @@ fun FilteringMenu(
             modifier = Modifier
                 .padding(10.dp)
                 .clickable(onClick = {
-                    onSelectedFilter.invoke(FilteringType.LEARNED)
                     onDismissRequest.invoke()
+                    onSelectedFilter.invoke(FilteringType.LEARNED)
                 })
         )
     }
@@ -231,7 +245,13 @@ private fun ShowLearningItemsScreenPreview() {
     LearnWordsTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
             LearningItemsScreen(
-                learningItems = listOf(LearningItem(nativeData = "Девушка", foreignData = "Girl", learningStatus = LearningStatus.LEARNING.name)),
+                learningItems = listOf(
+                    LearningItem(
+                        nativeData = "Девушка",
+                        foreignData = "Girl",
+                        learningStatus = LearningStatus.LEARNING.name
+                    )
+                ),
                 onChangeData = {},
                 appBar = {
                     ActualTopBar(
@@ -302,18 +322,81 @@ fun CardContent(
     onChangeData: (LearningItem) -> Unit,
     showDefaultNative: Boolean = true
 ) {
-    var switch by remember { mutableStateOf(false) }
-    var actualText by remember { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
+    var switch by rememberSaveable { mutableStateOf(false) }
+    var actualText by rememberSaveable { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
 
     val bgColor: Color by animateColorAsState(
-        targetValue = if (switch) md_theme_light_cardbg_switch_off_learned else  MaterialTheme.colorScheme.primary,
-        animationSpec = tween(1000, easing = LinearEasing))
+        targetValue = if (!isSystemInDarkTheme()) {
+            if (switch) {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_light_cardbg_switch_on_learning
+                } else {
+                    md_theme_light_cardbg_switch_on_learned
+                }
+            } else {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_light_cardbg_switch_off_learning
+                } else {
+                    md_theme_light_cardbg_switch_off_learned
+                }
+            }
+        } else {
+            if (switch) {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_dark_cardbg_switch_on_learning
+                } else {
+                    md_theme_dark_cardbg_switch_on_learned
+                }
+            } else {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_dark_cardbg_switch_off_learning
+                } else {
+                    md_theme_dark_cardbg_switch_off_learned
+                }
+            }
+        },
+        animationSpec = tween(1000, easing = LinearEasing)
+    )
+
+    val textColor: Color by animateColorAsState(
+        targetValue = if (!isSystemInDarkTheme()) {
+            if (switch) {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_light_textColor_switch_on_learning
+                } else {
+                    md_theme_light_textColor_switch_on_learned
+                }
+            } else {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_light_textColor_switch_off_learning
+                } else {
+                    md_theme_light_textColor_switch_off_learned
+                }
+            }
+        } else {
+            if (switch) {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_dark_textColor_switch_on_learning
+                } else {
+                    md_theme_dark_textColor_switch_on_learned
+                }
+            } else {
+                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
+                    md_theme_dark_textColor_switch_off_learning
+                } else {
+                    md_theme_dark_textColor_switch_off_learned
+                }
+            }
+        },
+        animationSpec = tween(1000, easing = LinearEasing)
+    )
+
     Card(
         colors = CardDefaults.cardColors(containerColor = bgColor),
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
         onClick = {
             switch = !switch
-            if (switch){
+            if (switch) {
                 actualText = learningItem.getActualText(!showDefaultNative)
             } else {
                 actualText = learningItem.getActualText(showDefaultNative)
@@ -336,12 +419,15 @@ fun CardContent(
                     .weight(1f)
                     .padding(12.dp)
             ) {
-                Text(
-                    text = actualText,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold
+                Crossfade(targetState = switch) {
+                    Text(
+                        text = actualText.lowercase(),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = textColor
+                        )
                     )
-                )
+                }
 
             }
         }

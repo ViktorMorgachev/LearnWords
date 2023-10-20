@@ -2,11 +2,13 @@ package com.learn.worlds.data.model.db
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 
@@ -15,10 +17,21 @@ interface LearningItemDao {
     @Query("SELECT * FROM learningItems")
     fun getLearningItems(): Flow<@JvmSuppressWildcards List<LearningItemDB>>
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertLearningItem(item: LearningItemDB)
-
+    fun insertLearningItem(item: LearningItemDB)
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    fun updateLearningItem(item: LearningItemDB)
     @Query("SELECT * from learningItems WHERE id = :id")
     fun getLearningItem(id: Int): Flow<LearningItemDB>
+
+    // Testing
+    @Query("SELECT * FROM learningItems")
+    fun getLearningItemsTest(): List<LearningItemDB>
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    fun insertLearningItemTest(item: LearningItemDB)
+    @Update(onConflict = OnConflictStrategy.REPLACE)
+    fun updateLearningItemTest(item: LearningItemDB)
+    @Query("SELECT * from learningItems WHERE id = :id")
+    fun getLearningItemTest(id: Int): LearningItemDB
 }
 
 @Entity(tableName = "learningItems")
