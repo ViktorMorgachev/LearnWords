@@ -118,6 +118,7 @@ fun ShowLearningWordsScreen(
                                         .padding(10.dp)
                                         .clickable(
                                             onClick = {
+                                                showFilterMenu = false
                                                 coroutineScope.launch {
                                                     viewModel.filterBy(FilteringType.LEARNED)
                                                 }
@@ -128,6 +129,7 @@ fun ShowLearningWordsScreen(
                                     modifier = Modifier
                                         .padding(10.dp)
                                         .clickable(onClick = {
+                                            showFilterMenu = false
                                             coroutineScope.launch {
                                                 viewModel.filterBy(FilteringType.ALL)
                                             }
@@ -152,6 +154,7 @@ fun ShowLearningWordsScreen(
                                     modifier = Modifier
                                         .padding(10.dp)
                                         .clickable(onClick = {
+                                            showSortMenu = false
                                             coroutineScope.launch {
                                                 viewModel.sortBy(SortingType.SORT_BY_NEW)
                                             }
@@ -163,6 +166,7 @@ fun ShowLearningWordsScreen(
                                     modifier = Modifier
                                         .padding(10.dp)
                                         .clickable(onClick = {
+                                            showSortMenu = false
                                             coroutineScope.launch {
                                                 viewModel.sortBy(SortingType.SORT_BY_OLD)
                                             }
