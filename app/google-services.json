@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "60332136903",
+    "project_id": "learnwords-69696",
+    "storage_bucket": "learnwords-69696.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:60332136903:android:5ad3d6c94045cdd5c2a1e2",
+        "android_client_info": {
+          "package_name": "com.learn.worlds"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3ZksnSxRQuTAOb3z0levjynAC2E8jL4o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
