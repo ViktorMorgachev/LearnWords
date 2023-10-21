@@ -2,12 +2,12 @@ package com.learn.worlds.ui.show_words
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
-import com.learn.worlds.data.repository.LearningItemsRepository
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,12 +23,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ShowLearningItemsViewModel @Inject constructor(
-    private val learningItemsRepository: LearningItemsRepository,
+    private val learnItemsUseCase: LearnItemsUseCase,
     private val preferences: MySharedPreferences
 ) : ViewModel() {
 
 
-    private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
+    private val _stateLearningItems: MutableStateFlow<List<LearningItem>> =
+        MutableStateFlow(listOf())
     val stateLearningItems: StateFlow<List<LearningItem>> = _stateLearningItems
     private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
@@ -40,18 +41,16 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            learningItemsRepository.data.onEach {
-                val data = if (it is Result.Success) {
-                    it.data
-                } else null
+            learnItemsUseCase.actualData.onEach {
+                val data = if (it is Result.Success) { it.data } else null
                 Timber.d("learningItemsState: type ${it.javaClass.simpleName} data $data")
-
                 when (it) {
                     is Result.Loading -> {
                         _loadingState.value = true
                     }
+
                     is Result.Success -> {
-                        if (!preferences.subscribedByUser){
+                        if (!preferences.subscribedByUser) {
                             if (it.data.size >= preferences.defaultLimit) {
                                 preferences.dataBaseLocked = true
                             }
@@ -65,6 +64,7 @@ class ShowLearningItemsViewModel @Inject constructor(
                         _loadingState.value = false
                         _errorState.value = it.error
                     }
+
                     Result.Complete -> {}
                 }
             }.stateIn(
@@ -95,9 +95,9 @@ class ShowLearningItemsViewModel @Inject constructor(
             }
         }
         preferences.savedSortingType?.let {
-          return  if (it == SortingType.SORT_BY_NEW.name){
-                 actualList.sortedByDescending { it.uid }
-            } else  actualList.sortedBy { it.uid }
+            return if (it == SortingType.SORT_BY_NEW.name) {
+                actualList.sortedByDescending { it.uid }
+            } else actualList.sortedBy { it.uid }
         }
         return actualList
     }
@@ -117,7 +117,11 @@ class ShowLearningItemsViewModel @Inject constructor(
         preferences.savedSortingType = sortingType.name
         Timber.d("sortBy: ${sortingType.name}")
         if (sortingType == SortingType.SORT_BY_NEW) {
-            Timber.d("sorted: ${allLearningItems.value.sortedByDescending { it.uid }.joinToString(", ")}")
+            Timber.d(
+                "sorted: ${
+                    allLearningItems.value.sortedByDescending { it.uid }.joinToString(", ")
+                }"
+            )
             _stateLearningItems.emit(allLearningItems.value.sortedByDescending { it.uid })
         }
         if (sortingType == SortingType.SORT_BY_OLD) {
@@ -134,8 +138,5 @@ class ShowLearningItemsViewModel @Inject constructor(
         preferences.subscribedByUser = true
         preferences.dataBaseLocked = false
     }
-
-    suspend fun changeLearningState(newState: String, itemID: Int) =
-        learningItemsRepository.changeState(newState, itemID)
 
 }

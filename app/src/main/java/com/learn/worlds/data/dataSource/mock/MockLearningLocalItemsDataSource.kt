@@ -1,6 +1,6 @@
-package com.learn.worlds.data.dataSource.mockDataSource.di
+package com.learn.worlds.data.dataSource.mock
 
-import com.learn.worlds.data.dataSource.LearningItemsDataSource
+
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
@@ -9,22 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher) :
-    LearningItemsDataSource {
+class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher) {
 
     private val _learningItems: MutableStateFlow<MutableList<LearningItemDB>> = MutableStateFlow(initMockData())
-    override val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()
-
-    override suspend fun changeState(newState: String, learningItemID: Int) = flow<Result<Any>> {
-        Timber.e("changeState: newState $newState learningItemID: $learningItemID")
-        emit(Result.Complete)
-    }
+    val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()
 
     private fun initMockData(): MutableList<LearningItemDB> {
         return mutableListOf(
@@ -40,7 +31,7 @@ class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private
         )
     }
 
-    override suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<Any>> {
+    suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<Any>> {
         Timber.e("addLearningItem: learningItemDB $learningItemDB")
         try {
             emit(Result.Loading)

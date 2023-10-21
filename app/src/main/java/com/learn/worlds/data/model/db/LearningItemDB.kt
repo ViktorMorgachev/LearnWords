@@ -15,9 +15,12 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LearningItemDao {
     @Query("SELECT * FROM learningItems")
-    fun getLearningItems(): Flow<@JvmSuppressWildcards List<LearningItemDB>>
+    fun getLearningItems(): Flow<List<LearningItemDB>>
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    fun insertLearningItem(item: LearningItemDB)
+    suspend fun insertLearningItem(item: LearningItemDB)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertLearningItems(item: List<LearningItemDB>)
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateLearningItem(item: LearningItemDB)
     @Query("SELECT * from learningItems WHERE id = :id")
@@ -28,6 +31,9 @@ interface LearningItemDao {
     fun getLearningItemsTest(): List<LearningItemDB>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     fun insertLearningItemTest(item: LearningItemDB)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertLearningItemsTest(item: List<LearningItemDB>)
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateLearningItemTest(item: LearningItemDB)
     @Query("SELECT * from learningItems WHERE id = :id")

@@ -20,6 +20,7 @@
     <!--Descriptions-->
     <string name="desc_action_filter_list">Отфильтровать список</string>
     <string name="desc_action_sort_list">Отсортировать список</string>
+    <string name="desc_action_synk_data">Синхронизировать данные</string>
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
 
     <!--Dialogs-->

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -47,22 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_off_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_off_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_on_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_on_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_off_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_off_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_on_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_dark_textColor_switch_on_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_off_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_off_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_on_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_light_cardbg_switch_on_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_off_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_off_learning
-import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_learned
-import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_learning
 import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
@@ -74,6 +59,8 @@ import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
+import com.learn.worlds.ui.show_words.customization.getCardBackground
+import com.learn.worlds.ui.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import kotlinx.coroutines.launch
 
@@ -108,7 +95,7 @@ fun ShowLearningWordsScreen(
         learningItems = stateLearningItems,
         onChangeData = {
             coroutineScope.launch {
-                viewModel.changeLearningState(it.learningStatus, it.uid)
+               // viewModel.changeLearningState(it.learningStatus, it.uid)
             }
         },
         appBar = {
@@ -187,6 +174,13 @@ fun ShowLearningWordsScreen(
                                         })
                                 )
                             }
+                        }
+                    ),
+                    ActionTopBar(
+                        imageVector = Icons.Default.Sync,
+                        contentDesc = R.string.desc_action_sort_list,
+                        action = {
+
                         }
                     )
                 ).apply {
@@ -291,6 +285,7 @@ fun LearningItemsScreen(
                 learningItems = learningItems,
                 onChangeData = onChangeData
             )
+            Text(text = "Sign In")
         } else EmptyScreen()
     }
 
@@ -326,68 +321,12 @@ fun CardContent(
     var actualText by rememberSaveable { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
 
     val bgColor: Color by animateColorAsState(
-        targetValue = if (!isSystemInDarkTheme()) {
-            if (switch) {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_light_cardbg_switch_on_learning
-                } else {
-                    md_theme_light_cardbg_switch_on_learned
-                }
-            } else {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_light_cardbg_switch_off_learning
-                } else {
-                    md_theme_light_cardbg_switch_off_learned
-                }
-            }
-        } else {
-            if (switch) {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_dark_cardbg_switch_on_learning
-                } else {
-                    md_theme_dark_cardbg_switch_on_learned
-                }
-            } else {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_dark_cardbg_switch_off_learning
-                } else {
-                    md_theme_dark_cardbg_switch_off_learned
-                }
-            }
-        },
+        targetValue = getCardBackground(isSystemDarkTheme = isSystemInDarkTheme(), switch = switch, learningStatus = learningItem.learningStatus),
         animationSpec = tween(1000, easing = LinearEasing)
     )
 
     val textColor: Color by animateColorAsState(
-        targetValue = if (!isSystemInDarkTheme()) {
-            if (switch) {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_light_textColor_switch_on_learning
-                } else {
-                    md_theme_light_textColor_switch_on_learned
-                }
-            } else {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_light_textColor_switch_off_learning
-                } else {
-                    md_theme_light_textColor_switch_off_learned
-                }
-            }
-        } else {
-            if (switch) {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_dark_textColor_switch_on_learning
-                } else {
-                    md_theme_dark_textColor_switch_on_learned
-                }
-            } else {
-                if (learningItem.learningStatus == LearningStatus.LEARNING.name) {
-                    md_theme_dark_textColor_switch_off_learning
-                } else {
-                    md_theme_dark_textColor_switch_off_learned
-                }
-            }
-        },
+        targetValue = getCardTextColor(isSystemDarkTheme = isSystemInDarkTheme(), switch = switch, learningStatus = learningItem.learningStatus),
         animationSpec = tween(1000, easing = LinearEasing)
     )
 

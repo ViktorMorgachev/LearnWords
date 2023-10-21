@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+
 }
 
 android {
@@ -118,6 +120,7 @@ dependencies {
     //Firebase
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.auth)
 
     // Room Database
     implementation(libs.androidx.room.runtime)

@@ -1,17 +1,16 @@
 package com.learn.worlds.data.prefs
 
 import android.content.SharedPreferences
+import androidx.annotation.Keep
 
 import javax.inject.Inject
 
+@Keep
+external fun defaultLimit(): String
 class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPreferences) {
-    var defaultLimit: Int
-        get() {
-           return sharedPrefs.getInt("currentLimit", 3)
-        }
-        set(value) {
-            sharedPrefs.edit().putInt("currentLimit", value).apply()
-        }
+
+
+    var defaultLimit: Int = 3
 
     var dataBaseLocked: Boolean
         get() {
