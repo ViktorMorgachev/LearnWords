@@ -21,9 +21,8 @@ androidxHilt = "1.0.0"
 squareupJavapoet = "1.13.0"
 daggerCompiler = "2.48"
 dataStore= "1.0.0"
-
-
-
+firebase-bom = "32.4.0"
+googleServices = "4.4.0"
 
 
 [libraries]
@@ -41,6 +40,9 @@ androidx-room-runtime = { group = "androidx.room", name="room-runtime", version.
 androidx-room-ktx = { group = "androidx.room",name="room-ktx", version.ref = "androidxRoom" }
 androidx-room-compiler = { group = "androidx.room",name="room-compiler", version.ref = "androidxRoom" }
 
+firebase-boom = { group = "com.google.firebase",name="firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { group = "com.google.firebase",name="firebase-analytics-ktx" }
+firebase-database = { group = "com.google.firebase", name="firebase-database-ktx" }
 
 
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
@@ -69,4 +71,5 @@ android-library = { id = "com.android.library", version.ref = "androidGradlePlug
 daggerHiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinAndroid" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices"}
 

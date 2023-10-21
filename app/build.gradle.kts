@@ -75,6 +75,7 @@ dependencies {
 
     implementation(platform(libs.compose.bom))
     androidTestImplementation(platform(libs.compose.bom))
+    implementation(platform(libs.firebase.boom))
 
 
     // Core Android deps
@@ -113,6 +114,10 @@ dependencies {
 
     // Logging
     implementation(libs.timber.logging)
+
+    //Firebase
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.database)
 
     // Room Database
     implementation(libs.androidx.room.runtime)
