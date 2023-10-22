@@ -1,5 +1,19 @@
 package com.learn.worlds.ui.auth
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -110,6 +124,7 @@ fun AuthScreen(
 
 
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AuthenticationForm(
     modifier: Modifier = Modifier,
@@ -134,7 +149,7 @@ fun AuthenticationForm(
             )
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(16.dp).animateContentSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 EmailInput(
@@ -153,10 +168,18 @@ fun AuthenticationForm(
                     onDoneClicked = { handleEvent.invoke(AuthenticationEvent.Authenticate) }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                RequirementForm(
+
+
+                AnimatedVisibility(
                     visible = authenticationMode == AuthenticationMode.SIGN_UP,
-                    passwordRequirements = passwordRequirements
-                )
+                    enter = slideInHorizontally(initialOffsetX = {fullWidth -> -fullWidth }) + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = {fullWidth -> fullWidth }) + fadeOut(),
+                ) {
+                    RequirementForm(
+                        visible = true,
+                        passwordRequirements = passwordRequirements
+                    )
+                }
                 Spacer(modifier = Modifier.height(12.dp))
                 AuthenticationButton(
                     modifier = Modifier.fillMaxWidth(),

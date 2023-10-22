@@ -1,9 +1,16 @@
 package com.learn.worlds.ui.auth
 
 import androidx.lifecycle.ViewModel
+import com.learn.worlds.data.LearnItemsUseCase
+import com.learn.worlds.servises.AuthService
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import javax.inject.Inject
 
-class AuthViewModel : ViewModel() {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authService: AuthService
+) : ViewModel() {
     val uiState = MutableStateFlow(AuthenticationState())
 
     private fun toggleAuthenticationMode() {
@@ -40,7 +47,14 @@ class AuthViewModel : ViewModel() {
         uiState.value = uiState.value.copy(
             isLoading = true
         )
-        // trigger network request
+        uiState.value.let {
+            if (it.authenticationMode == AuthenticationMode.SIGN_UP){
+                authService.signUp(password = it.password!!, email = it.email!!)
+            } else {
+                authService.signIn(password = it.password!!, email = it.email!!)
+            }
+        }
+
     }
 
     private fun updateEmail(email: String) {
