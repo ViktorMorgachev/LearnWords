@@ -21,7 +21,26 @@
     <string name="desc_action_filter_list">Отфильтровать список</string>
     <string name="desc_action_sort_list">Отсортировать список</string>
     <string name="desc_action_synk_data">Синхронизировать данные</string>
+    <string name="desc_input_email">Введите почту</string>
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
+    <string name="desc_show_password">Показать пароль</string>
+    <string name="desc_hide_password">Спрятать пароль</string>
+
+
+    <!--Auth Screen-->
+    <string name="password_requirement_characters">Не менее 8 символов</string>
+    <string name="password_requirement_capital">Не менее 1 заглавной буквы</string>
+    <string name="password_requirement_digit">Не менее 1 цифры</string>
+    <string name="label_sign_in_to_account">Войдите в свою учетную запись</string>
+    <string name="label_sign_up_for_account">Зарегистрируйте учетную запись</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Пароль</string>
+    <string name="password_requirement_satisfied">%s, satisfied</string>
+    <string name="password_requirement_needed">%s, needed</string>
+    <string name="action_sign_up">Зарегистрироваться</string>
+    <string name="action_sign_in">Войти</string>
+    <string name="action_need_account">Нужна учетная запись?</string>
+    <string name="action_already_have_account">У вас уже есть учетная запись?</string>
 
     <!--Dialogs-->
     <string name="error_limits_adding_words">Прывышено ограничение на добавление слов</string>
@@ -30,4 +49,5 @@
     <string name="try_again">Повторить запрос</string>
     <string name="close">Закрыть</string>
     <string name="ok">ОК</string>
+    <string name="auth_error_tittle">Что-то пошло не так</string>
 </resources>

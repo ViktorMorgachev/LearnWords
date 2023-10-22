@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
@@ -42,30 +43,25 @@ import timber.log.Timber
 fun AddWordsScreen(
     modifier: Modifier = Modifier,
     navigateAfterSuccessWasAdded: () -> Unit,
+    addWordsState: AddWordsState,
     viewModel: AddLearningItemsViewModel = hiltViewModel()
 ) {
-    var foreignData by rememberSaveable { mutableStateOf("") }
-    var nativeData by rememberSaveable { mutableStateOf("") }
-    var stateError by remember { mutableStateOf<Result.Error?>(null) }
-    var stateLoadingState by remember { mutableStateOf<Boolean>(false) }
-    var stateComplete by remember { mutableStateOf<Boolean?>(null) }
 
-    val coroutineScope = rememberCoroutineScope()
+    val stateComplete by viewModel.stateWasSavedSuccessfully.collectAsStateWithLifecycle()
 
-    if (stateError != null) {
-        SomethingWentWrongDialog(message = stateError!!.error, onDismiss =  { stateError = null })
+
+    addWordsState.error?.let {
+        SomethingWentWrongDialog(message = it.error, onDismiss =  { viewModel.handleEvent(AddWordsEvent.ErrorDismissed) })
     }
 
-    if (stateLoadingState) {
-        LoadingDialog({
-            stateLoadingState = false
-        })
+
+    if (addWordsState.isLoading) {
+        LoadingDialog()
     }
 
-    if (stateComplete == true) {
+    if (stateComplete) {
         navigateAfterSuccessWasAdded.invoke()
     }
-
 
     Column(
         modifier = modifier
@@ -81,9 +77,9 @@ fun AddWordsScreen(
             textAlign = TextAlign.Center
         )
         EditTextCustom(
-            actualText = nativeData,
+            actualText = addWordsState.nativeData ?: "",
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = { nativeData = it })
+            onValueChange = { viewModel.handleEvent(AddWordsEvent.NativeDataChanged(nativeData = it)) })
         Spacer(Modifier.height(16.dp))
         Text(
             text = "Введите перевод",
@@ -91,41 +87,12 @@ fun AddWordsScreen(
             modifier = Modifier.padding(bottom = 8.dp)
         )
         EditTextCustom(
-            actualText = foreignData,
+            actualText = addWordsState.foreignData ?: "",
             modifier = Modifier.fillMaxWidth(),
-            onValueChange = { foreignData = it })
+            onValueChange = { viewModel.handleEvent(AddWordsEvent.ForeignDataChanged(foreignData = it)) })
         Spacer(Modifier.height(16.dp))
         Button(onClick = {
-            coroutineScope.launch {
-                viewModel.addLearningItem(
-                    LearningItem(
-                        nativeData = nativeData.trimEnd(),
-                        foreignData = foreignData.trimEnd()
-                    )
-                ).collectLatest {
-                    when (it) {
-                        is Result.Loading -> {
-                            stateLoadingState = true
-                            stateError = null
-                        }
-
-                        is Result.Error -> {
-                            stateError = it
-                            stateLoadingState = false
-                        }
-
-                        is Result.Complete -> {
-                            stateLoadingState = false
-                            stateError = null
-                            stateComplete = true
-                        }
-
-                        else -> {}
-                    }
-                }
-
-
-            }
+            viewModel.handleEvent(AddWordsEvent.SaveLearningItem)
         }
         ) {
             Text(text = "Сохранить")
@@ -160,7 +127,7 @@ private fun AddWordsScreenPreview() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            AddWordsScreen(navigateAfterSuccessWasAdded = {})
+            AddWordsScreen(navigateAfterSuccessWasAdded = {}, addWordsState = AddWordsState())
         }
     }
 }

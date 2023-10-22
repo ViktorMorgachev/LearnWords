@@ -19,4 +19,6 @@ sealed class Screen(val route: String, val bottomItem: BottomItem? = null) {
         bottomItem = BottomItem(bottomIcon = Icons.Default.Add, bottomText = R.string.add))
 
     object SubscribeScreen : Screen(route = "screen_subscribe")
+
+    object AuthScreen: Screen(route = "screen_auth")
 }

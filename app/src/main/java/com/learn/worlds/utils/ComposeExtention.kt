@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
+infix fun <T> Boolean.then(param: T): T? = if (this) param else null
+
 sealed class Result<out T> {
     object Loading : Result<Nothing>()
 

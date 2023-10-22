@@ -64,35 +64,44 @@ import com.learn.worlds.ui.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import kotlinx.coroutines.launch
 
+
+@Composable
+fun ShowLearningWordsScreenPreview() {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        ShowLearningWordsScreen(onNavigate = {}, uiState = ShowWordsState())
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowLearningWordsScreen(
+    uiState: ShowWordsState,
     modifier: Modifier = Modifier,
-    navHostController: NavHostController,
+    onNavigate: (Screen)->Unit,
     viewModel: ShowLearningItemsViewModel = hiltViewModel()
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val stateLearningItems by viewModel.stateLearningItems.collectAsStateWithLifecycle()
 
-    val loadingState by viewModel.loadingState.collectAsStateWithLifecycle()
-    val error by viewModel.errorState.collectAsStateWithLifecycle()
     var showFilterMenu by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
 
 
-    error?.let {
+    uiState.error?.let {
         SomethingWentWrongDialog(
             onTryAgain = {
                 viewModel.dropErrorDialog()
             })
     }
 
-    if (loadingState) {
+    if (uiState.isLoading) {
         LoadingDialog()
     }
 
     LearningItemsScreen(modifier = modifier,
-        learningItems = stateLearningItems,
+        learningItems = uiState.learningItems,
         onChangeData = {
             coroutineScope.launch {
                // viewModel.changeLearningState(it.learningStatus, it.uid)
@@ -178,9 +187,9 @@ fun ShowLearningWordsScreen(
                     ),
                     ActionTopBar(
                         imageVector = Icons.Default.Sync,
-                        contentDesc = R.string.desc_action_sort_list,
+                        contentDesc = R.string.desc_action_synk_data,
                         action = {
-
+                            onNavigate.invoke(Screen.AuthScreen)
                         }
                     )
                 ).apply {
@@ -191,7 +200,8 @@ fun ShowLearningWordsScreen(
                                 contentDesc = R.string.desc_action_filter_list,
                                 action = {
                                     // TODO need to add navGraph for subscriptions userflow
-                                    navHostController.navigate(Screen.SubscribeScreen.route)
+                                    onNavigate.invoke(Screen.SubscribeScreen)
+
                                 }
                             ))
                     }
