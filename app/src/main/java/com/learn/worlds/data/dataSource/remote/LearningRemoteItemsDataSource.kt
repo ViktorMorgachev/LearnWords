@@ -15,6 +15,7 @@ import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,12 +32,20 @@ class LearningRemoteItemsDataSource @Inject constructor(
     val database by lazy { Firebase.database }
     var databaseRef: DatabaseReference? = null
 
-    private val _learningItems: MutableStateFlow<Result<List<LearningItemAPI>>> =
-        MutableStateFlow(Result.Success(mutableListOf<LearningItemAPI>()))
+    private val _learningItems: MutableStateFlow<Result<List<LearningItemAPI>>> = MutableStateFlow(Result.Loading)
     val learningItems: Flow<Result<List<LearningItemAPI>>> = _learningItems.asStateFlow()
 
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher)
 
+    suspend fun fetchDataFromNetwork() {
+        scope.launch {
+            _learningItems.emit(Result.Loading)
+            delay(3000)
+             val items = listOf<LearningItemAPI>()
+            _learningItems.emit(Result.Success(items))
+
+        }
+    }
 
     fun subsribeToDatabase() {
         if (authService.getUserUUID() == null) return

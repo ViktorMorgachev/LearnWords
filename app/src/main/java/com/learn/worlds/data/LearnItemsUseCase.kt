@@ -37,8 +37,6 @@ class LearnItemsUseCase @Inject constructor(
         }
     }.flowOn(dispatcher)
 
-    suspend fun loadItemsFromNetwork() = flow<Result.Success<Any>> {
-        learningItemsRepository
-    }
+    suspend fun loadItemsFromNetwork() = learningItemsRepository.fetchDataFromNetwork()
 
 }

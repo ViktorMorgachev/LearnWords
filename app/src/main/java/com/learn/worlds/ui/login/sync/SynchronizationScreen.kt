@@ -12,10 +12,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,6 +28,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.learn.worlds.R
+import com.learn.worlds.ui.common.InformationDialog
+import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import com.learn.worlds.ui.theme.fontFamilyAndroid
 
@@ -32,16 +38,33 @@ import com.learn.worlds.ui.theme.fontFamilyAndroid
 @Composable
 fun SynchronizationScreenPreview() {
     LearnWordsTheme{
-       SynchronizationScreen(synchronizationState = SynchronizationState(), onSyncronizedSucces = {})
+       SynchronizationScreen(synchronizationState = SynchronizationState(), onSyncronizedSucces = {}, handleEvent = {})
     }
 }
 
 @Composable
-fun SynchronizationScreen(modifier: Modifier = Modifier, synchronizationState: SynchronizationState, onSyncronizedSucces: ()->Unit) {
+fun SynchronizationScreen(modifier: Modifier = Modifier, synchronizationState: SynchronizationState, onSyncronizedSucces: ()->Unit,  handleEvent: (SynchronizationEvent)->Unit) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation_loading))
 
-    if (synchronizationState.cancelledByUser == true || synchronizationState.completed == true){
+    var actualTestText by remember { mutableStateOf("DOWLOADING") }
+
+    if (synchronizationState.success == true){
         onSyncronizedSucces.invoke()
+    }
+
+    if (synchronizationState.cancelledByUser == true){
+        actualTestText = "Cancelled"
+    }
+
+    if (synchronizationState.emptyRemoteData == true){
+        InformationDialog(message = stringResource(R.string.empty_data_from_network), onDismiss = { onSyncronizedSucces.invoke() })
+    }
+
+    synchronizationState.dialogError?.let {
+        SomethingWentWrongDialog(message =  it.error, onDismiss = {
+            handleEvent.invoke(SynchronizationEvent.DismissDialog)
+            onSyncronizedSucces.invoke()
+        })
     }
 
     Surface(
@@ -61,7 +84,6 @@ fun SynchronizationScreen(modifier: Modifier = Modifier, synchronizationState: S
                     fontSize = 30.sp,
                     letterSpacing = (1.9).sp)
             }
-
 
         }
     }

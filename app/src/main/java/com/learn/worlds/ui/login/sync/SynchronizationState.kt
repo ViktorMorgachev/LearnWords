@@ -8,6 +8,7 @@ sealed class SynchronizationEvent{
 }
 data class SynchronizationState(
     val dialogError: Result.Error? = null,
-    val completed: Boolean? = null,
+    val emptyRemoteData: Boolean? = null,
+    val success: Boolean? = null,
     val cancelledByUser: Boolean? = null
 )

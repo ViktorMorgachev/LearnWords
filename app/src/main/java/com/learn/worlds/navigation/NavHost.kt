@@ -16,6 +16,7 @@ import com.learn.worlds.ui.base.show_words.ShowLearningWordsScreen
 import com.learn.worlds.ui.base.subscribe.SubscribeScreen
 import com.learn.worlds.ui.login.auth.AuthScreen
 import com.learn.worlds.ui.login.auth.AuthViewModel
+import com.learn.worlds.ui.login.sync.SynchronizationEvent
 import com.learn.worlds.ui.login.sync.SynchronizationScreen
 import com.learn.worlds.ui.login.sync.SynchronizationViewModel
 
@@ -50,9 +51,11 @@ fun MyNavHost(
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 SynchronizationScreen(
                     modifier = modifier,
+                    handleEvent = { viewModel.handleEvent(it) },
                     synchronizationState = uiState,
                     onSyncronizedSucces = {
-                        navHostController.popBackStack()
+                        viewModel.handleEvent(SynchronizationEvent.DismissDialog)
+                        navHostController.navigateUp()
                     })
             }
         }

@@ -24,3 +24,7 @@ fun LearningItemDB.toLearningItemAPI(): LearningItemAPI{
 fun LearningItemAPI.toLearningItemDB(): LearningItemDB{
     return LearningItemDB(nativeData, foreignData, learningStatus, timeStampUIID)
 }
+
+fun LearningItemAPI.toLearningItem(): LearningItem{
+    return LearningItem(nativeData, foreignData, learningStatus, timeStampUIID)
+}
