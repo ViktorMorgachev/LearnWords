@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.add_word
+package com.learn.worlds.ui.base.add_word
 
 import com.learn.worlds.utils.Result
 

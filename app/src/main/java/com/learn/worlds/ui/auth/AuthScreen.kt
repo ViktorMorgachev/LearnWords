@@ -69,16 +69,16 @@ import com.learn.worlds.ui.theme.LearnWordsTheme
 @Preview(showSystemUi = true, device = "id:pixel_3a")
 @Composable
 fun AuthScreenPreview() {
-    LearnWordsTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            AuthScreen(
-                authenticationState = AuthenticationState(authenticationMode = AuthenticationMode.SIGN_UP, dialogAuthSuccess = AuthSuccessEvent.SIGN_UP),
-                onAuthSuccessAction = {})
-        }
+
+    LearnWordsTheme{
+        AuthScreen(
+            authenticationState = AuthenticationState(
+                authenticationMode = AuthenticationMode.SIGN_UP,
+                dialogAuthSuccess = AuthSuccessEvent.SIGN_UP
+            ),
+            onAuthSuccessAction = {})
     }
+
 }
 
 @Composable
@@ -88,51 +88,57 @@ fun AuthScreen(
     onAuthSuccessAction: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        if (authenticationState.isLoading) {
-            CircularProgressIndicator()
-        } else {
-            AuthenticationForm(
-                modifier = Modifier.fillMaxSize(),
-                authenticationMode = authenticationState.authenticationMode,
-                email = authenticationState.email,
-                password = authenticationState.password,
-                handleEvent = { viewModel.handleEvent(it) },
-                passwordRequirements = authenticationState.passwordRequirements,
-                enableAuthentication = authenticationState.isFormValid()
-            )
-        }
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            if (authenticationState.isLoading) {
+                CircularProgressIndicator()
+            } else {
+                AuthenticationForm(
+                    modifier = Modifier.fillMaxSize(),
+                    authenticationMode = authenticationState.authenticationMode,
+                    email = authenticationState.email,
+                    password = authenticationState.password,
+                    handleEvent = { viewModel.handleEvent(it) },
+                    passwordRequirements = authenticationState.passwordRequirements,
+                    enableAuthentication = authenticationState.isFormValid()
+                )
+            }
 
-        authenticationState.dialogAuthSuccess?.let {
-            when (it) {
-                AuthSuccessEvent.SIGN_IN -> {
-                    SuccessDialog(
-                        message = stringResource(R.string.action_sign_in),
-                        {
-                            onAuthSuccessAction.invoke()
-                            viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
-                        })
-                }
+            authenticationState.dialogAuthSuccess?.let {
+                when (it) {
+                    AuthSuccessEvent.SIGN_IN -> {
+                        SuccessDialog(
+                            message = stringResource(R.string.account_was_sig_in),
+                            {
+                                onAuthSuccessAction.invoke()
+                                viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
+                            })
+                    }
 
-                AuthSuccessEvent.SIGN_UP -> {
-                    SuccessDialog(
-                        message = stringResource(R.string.action_sign_up),
-                        {
-                            onAuthSuccessAction.invoke()
-                            viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
-                        })
+                    AuthSuccessEvent.SIGN_UP -> {
+                        SuccessDialog(
+                            message = stringResource(R.string.account_was_sign_up),
+                            {
+                                onAuthSuccessAction.invoke()
+                                viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
+                            })
+                    }
                 }
             }
-        }
-        authenticationState.dialogError?.let { error ->
-            SomethingWentWrongDialog(
-                message = error.error,
-                onDismiss = { viewModel.handleEvent(AuthenticationEvent.DialogDismiss) })
+            authenticationState.dialogError?.let { error ->
+                SomethingWentWrongDialog(
+                    message = error.error,
+                    onDismiss = { viewModel.handleEvent(AuthenticationEvent.DialogDismiss) })
+            }
         }
     }
+
 }
 
 

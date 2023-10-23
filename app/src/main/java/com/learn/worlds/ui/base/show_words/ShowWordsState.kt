@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.show_words
+package com.learn.worlds.ui.base.show_words
 
 import com.learn.worlds.data.model.base.LearningItem
 

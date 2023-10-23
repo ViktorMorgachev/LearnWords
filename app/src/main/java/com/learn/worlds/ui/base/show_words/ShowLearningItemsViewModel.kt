@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.show_words
+package com.learn.worlds.ui.base.show_words
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,12 +8,10 @@ import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
-import com.learn.worlds.ui.auth.AuthenticationState
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn

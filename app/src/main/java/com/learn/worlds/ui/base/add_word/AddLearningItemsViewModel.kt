@@ -1,11 +1,9 @@
-package com.learn.worlds.ui.add_word
+package com.learn.worlds.ui.base.add_word
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.model.base.LearningItem
-import com.learn.worlds.ui.auth.AuthenticationEvent
-import com.learn.worlds.ui.show_words.ShowWordsState
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

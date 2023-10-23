@@ -36,7 +36,8 @@ data class AuthenticationState(
     val passwordRequirements: List<PasswordRequirement> = emptyList(),
     val isLoading: Boolean = false,
     val dialogError: Result.Error? = null,
-    val dialogAuthSuccess: AuthSuccessEvent? = null
+    val dialogAuthSuccess: AuthSuccessEvent? = null,
+    val isSynchronization: Boolean? = null
 ){
     fun isFormValid(): Boolean {
         return password?.isNotEmpty() == true && email?.isNotEmpty() == true &&

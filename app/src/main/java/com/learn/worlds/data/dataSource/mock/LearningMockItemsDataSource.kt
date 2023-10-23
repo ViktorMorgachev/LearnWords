@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 import javax.inject.Inject
 
-class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher) {
+class LearningMockItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher) {
 
     private val _learningItems: MutableStateFlow<MutableList<LearningItemDB>> = MutableStateFlow(initMockData())
     val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()

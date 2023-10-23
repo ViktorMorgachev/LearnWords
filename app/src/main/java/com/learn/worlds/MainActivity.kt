@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.learn.worlds.navigation.Screen
-import com.learn.worlds.ui.show_words.ShowLearningItemsViewModel
+import com.learn.worlds.ui.base.show_words.ShowLearningItemsViewModel
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import dagger.hilt.android.AndroidEntryPoint
 

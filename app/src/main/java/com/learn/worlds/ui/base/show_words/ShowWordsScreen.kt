@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.show_words
+package com.learn.worlds.ui.base.show_words
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -46,8 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
@@ -55,22 +53,19 @@ import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.model.base.getActualText
 import com.learn.worlds.navigation.Screen
+import com.learn.worlds.ui.base.show_words.customization.getCardBackground
+import com.learn.worlds.ui.base.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
-import com.learn.worlds.ui.show_words.customization.getCardBackground
-import com.learn.worlds.ui.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import kotlinx.coroutines.launch
 
 
 @Composable
 fun ShowLearningWordsScreenPreview() {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
+    MaterialTheme {
         ShowLearningWordsScreen(onNavigate = {}, uiState = ShowWordsState())
     }
 }
@@ -80,135 +75,138 @@ fun ShowLearningWordsScreenPreview() {
 fun ShowLearningWordsScreen(
     uiState: ShowWordsState,
     modifier: Modifier = Modifier,
-    onNavigate: (Screen)->Unit,
+    onNavigate: (Screen) -> Unit,
     viewModel: ShowLearningItemsViewModel = hiltViewModel()
 ) {
-    val coroutineScope = rememberCoroutineScope()
 
-    var showFilterMenu by remember { mutableStateOf(false) }
-    var showSortMenu by remember { mutableStateOf(false) }
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        val coroutineScope = rememberCoroutineScope()
+        var showFilterMenu by remember { mutableStateOf(false) }
+        var showSortMenu by remember { mutableStateOf(false) }
 
 
-    uiState.error?.let {
-        SomethingWentWrongDialog(
-            onTryAgain = {
-                viewModel.dropErrorDialog()
-            })
-    }
+        uiState.error?.let {
+            SomethingWentWrongDialog(
+                onTryAgain = {
+                    viewModel.dropErrorDialog()
+                })
+        }
 
-    if (uiState.isLoading) {
-        LoadingDialog()
-    }
+        if (uiState.isLoading) {
+            LoadingDialog()
+        }
 
-    LearningItemsScreen(modifier = modifier,
-        learningItems = uiState.learningItems,
-        onChangeData = {
-            coroutineScope.launch {
-               // viewModel.changeLearningState(it.learningStatus, it.uid)
-            }
-        },
-        appBar = {
-            ActualTopBar(
-                title = R.string.learn,
-                actions = mutableListOf(
-                    ActionTopBar(
-                        imageVector = Icons.Default.FilterList,
-                        contentDesc = R.string.desc_action_filter_list,
-                        action = {
-                            showFilterMenu = true
-                        },
-                        dropDownContent = {
-                            DropdownMenu(
-                                expanded = showFilterMenu,
-                                onDismissRequest = { showFilterMenu = false }
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.filter_learned),
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .clickable(
-                                            onClick = {
+        LearningItemsScreen(modifier = modifier,
+            learningItems = uiState.learningItems,
+            onChangeData = {
+                coroutineScope.launch {
+                    // viewModel.changeLearningState(it.learningStatus, it.uid)
+                }
+            },
+            appBar = {
+                ActualTopBar(
+                    title = R.string.learn,
+                    actions = mutableListOf(
+                        ActionTopBar(
+                            imageVector = Icons.Default.FilterList,
+                            contentDesc = R.string.desc_action_filter_list,
+                            action = {
+                                showFilterMenu = true
+                            },
+                            dropDownContent = {
+                                DropdownMenu(
+                                    expanded = showFilterMenu,
+                                    onDismissRequest = { showFilterMenu = false }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.filter_learned),
+                                        modifier = Modifier
+                                            .padding(10.dp)
+                                            .clickable(
+                                                onClick = {
+                                                    showFilterMenu = false
+                                                    coroutineScope.launch {
+                                                        viewModel.filterBy(FilteringType.LEARNED)
+                                                    }
+                                                })
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.filter_all),
+                                        modifier = Modifier
+                                            .padding(10.dp)
+                                            .clickable(onClick = {
                                                 showFilterMenu = false
                                                 coroutineScope.launch {
-                                                    viewModel.filterBy(FilteringType.LEARNED)
+                                                    viewModel.filterBy(FilteringType.ALL)
                                                 }
                                             })
-                                )
-                                Text(
-                                    text = stringResource(R.string.filter_all),
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .clickable(onClick = {
-                                            showFilterMenu = false
-                                            coroutineScope.launch {
-                                                viewModel.filterBy(FilteringType.ALL)
-                                            }
-                                        })
-                                )
-                            }
-                        }
-                    ),
-                    ActionTopBar(
-                        imageVector = Icons.Default.Sort,
-                        contentDesc = R.string.desc_action_sort_list,
-                        action = {
-                            showSortMenu = true
-                        },
-                        dropDownContent = {
-                            DropdownMenu(
-                                expanded = showSortMenu,
-                                onDismissRequest = { showSortMenu = false }
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.sort_by_new),
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .clickable(onClick = {
-                                            showSortMenu = false
-                                            coroutineScope.launch {
-                                                viewModel.sortBy(SortingType.SORT_BY_NEW)
-                                            }
-
-                                        })
-                                )
-                                Text(
-                                    text = stringResource(R.string.sort_by_old),
-                                    modifier = Modifier
-                                        .padding(10.dp)
-                                        .clickable(onClick = {
-                                            showSortMenu = false
-                                            coroutineScope.launch {
-                                                viewModel.sortBy(SortingType.SORT_BY_OLD)
-                                            }
-                                        })
-                                )
-                            }
-                        }
-                    ),
-                    ActionTopBar(
-                        imageVector = Icons.Default.Sync,
-                        contentDesc = R.string.desc_action_synk_data,
-                        action = {
-                            onNavigate.invoke(Screen.AuthScreen)
-                        }
-                    )
-                ).apply {
-                    if (viewModel.isLockedApplication()) {
-                        add(
-                            ActionTopBar(
-                                imageVector = Icons.Default.LockOpen,
-                                contentDesc = R.string.desc_action_filter_list,
-                                action = {
-                                    // TODO need to add navGraph for subscriptions userflow
-                                    onNavigate.invoke(Screen.SubscribeScreen)
-
+                                    )
                                 }
-                            ))
+                            }
+                        ),
+                        ActionTopBar(
+                            imageVector = Icons.Default.Sort,
+                            contentDesc = R.string.desc_action_sort_list,
+                            action = {
+                                showSortMenu = true
+                            },
+                            dropDownContent = {
+                                DropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismissRequest = { showSortMenu = false }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.sort_by_new),
+                                        modifier = Modifier
+                                            .padding(10.dp)
+                                            .clickable(onClick = {
+                                                showSortMenu = false
+                                                coroutineScope.launch {
+                                                    viewModel.sortBy(SortingType.SORT_BY_NEW)
+                                                }
+
+                                            })
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.sort_by_old),
+                                        modifier = Modifier
+                                            .padding(10.dp)
+                                            .clickable(onClick = {
+                                                showSortMenu = false
+                                                coroutineScope.launch {
+                                                    viewModel.sortBy(SortingType.SORT_BY_OLD)
+                                                }
+                                            })
+                                    )
+                                }
+                            }
+                        ),
+                        ActionTopBar(
+                            imageVector = Icons.Default.Sync,
+                            contentDesc = R.string.desc_action_synk_data,
+                            action = {
+                                onNavigate.invoke(Screen.AuthScreen)
+                            }
+                        )
+                    ).apply {
+                        if (viewModel.isLockedApplication()) {
+                            add(
+                                ActionTopBar(
+                                    imageVector = Icons.Default.LockOpen,
+                                    contentDesc = R.string.desc_action_filter_list,
+                                    action = {
+                                        onNavigate.invoke(Screen.SubscribeScreen)
+                                    }
+                                ))
+                        }
                     }
-                }
-            )
-        }
-    )
+                )
+            }
+        )
+    }
 }
 
 @Composable
@@ -295,7 +293,6 @@ fun LearningItemsScreen(
                 learningItems = learningItems,
                 onChangeData = onChangeData
             )
-            Text(text = "Sign In")
         } else EmptyScreen()
     }
 
@@ -331,12 +328,20 @@ fun CardContent(
     var actualText by rememberSaveable { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
 
     val bgColor: Color by animateColorAsState(
-        targetValue = getCardBackground(isSystemDarkTheme = isSystemInDarkTheme(), switch = switch, learningStatus = learningItem.learningStatus),
+        targetValue = getCardBackground(
+            isSystemDarkTheme = isSystemInDarkTheme(),
+            switch = switch,
+            learningStatus = learningItem.learningStatus
+        ),
         animationSpec = tween(1000, easing = LinearEasing)
     )
 
     val textColor: Color by animateColorAsState(
-        targetValue = getCardTextColor(isSystemDarkTheme = isSystemInDarkTheme(), switch = switch, learningStatus = learningItem.learningStatus),
+        targetValue = getCardTextColor(
+            isSystemDarkTheme = isSystemInDarkTheme(),
+            switch = switch,
+            learningStatus = learningItem.learningStatus
+        ),
         animationSpec = tween(1000, easing = LinearEasing)
     )
 

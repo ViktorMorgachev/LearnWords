@@ -1,9 +1,9 @@
 package com.learn.worlds.data.repository
 
 import com.learn.worlds.data.dataSource.local.LearningLocalItemsDataSource
+import com.learn.worlds.data.dataSource.mock.LearningMockItemsDataSource
 import com.learn.worlds.data.dataSource.remote.LearningRemoteItemsDataSource
 import com.learn.worlds.data.mappers.toLearningItem
-import com.learn.worlds.data.mappers.toLearningItemAPI
 import com.learn.worlds.data.mappers.toLearningItemDB
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.remote.LearningItemAPI
@@ -13,6 +13,8 @@ import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -24,7 +26,8 @@ class LearningItemsRepository @Inject constructor(
     private val authService: AuthService,
     private val preferences: MySharedPreferences,
     private val localDataSource: LearningLocalItemsDataSource,
-    private val remoteDataSource: LearningRemoteItemsDataSource) {
+    private val remoteDataSource: LearningRemoteItemsDataSource,
+    private val mockDataSource: LearningMockItemsDataSource) {
 
     private val scope: CoroutineScope = CoroutineScope(dispatcher)
 
@@ -43,7 +46,6 @@ class LearningItemsRepository @Inject constructor(
                     try {
                         if (it is Result.Success<List<LearningItemAPI>>){
                             localDataSource.addLearningItems(it.data.map { it.toLearningItemDB() })
-                            preferences.isSynchronizedFromRemote = true
                         }
                     } catch (t: Throwable){
                         Timber.e(t)
@@ -55,6 +57,6 @@ class LearningItemsRepository @Inject constructor(
 
     }
 
-    suspend fun addLearningItem(learningItem: LearningItem) = remoteDataSource.addLearningItem(learningItem.toLearningItemAPI())
+    suspend fun addLearningItem(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
 
 }

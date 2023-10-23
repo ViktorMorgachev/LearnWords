@@ -17,13 +17,14 @@ class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPre
             sharedPrefs.edit().putBoolean("dataBaseLocked", value).apply()
         }
 
-    var isSynchronizedFromRemote: Boolean
+    var isAuthentificated: Boolean
         get() {
-            return sharedPrefs.getBoolean("isSynchronizedFromRemote", false)
+            return sharedPrefs.getBoolean("isAuthentificated", false)
         }
         set(value) {
-            sharedPrefs.edit().putBoolean("isSynchronizedFromRemote", value).apply()
+            sharedPrefs.edit().putBoolean("isAuthentificated", value).apply()
         }
+
     var subscribedByUser: Boolean
         get() {
             return sharedPrefs.getBoolean("subscribedByUser", false)

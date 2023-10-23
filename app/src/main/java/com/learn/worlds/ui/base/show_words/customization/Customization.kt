@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.show_words.customization
+package com.learn.worlds.ui.base.show_words.customization
 
 import androidx.compose.ui.graphics.Color
 import com.codelab.basiclayouts.ui.theme.md_theme_dark_cardbg_switch_off_learned

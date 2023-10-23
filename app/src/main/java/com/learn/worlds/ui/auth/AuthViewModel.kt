@@ -6,6 +6,7 @@ import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,17 +57,24 @@ class AuthViewModel @Inject constructor(
                 viewModelScope.launch(Dispatchers.IO) {
                     val result = authService.signUp(password = it.password!!, email = it.email!!)
                     if (result is Result.Complete) {
-                        signInAction()
+                        signUpAction()
+                        delay(1000)
+                        dismissDialogs()
+                        syncronizeData()
                     }
                     if (result is Result.Error) {
                         authError(result)
                     }
+
                 }
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
                     val result = authService.signIn(password = it.password!!, email = it.email!!)
                     if (result is Result.Complete) {
                         signInAction()
+                        delay(1000)
+                        dismissDialogs()
+                        syncronizeData()
                     }
                     if (result is Result.Error) {
                         authError(result)
@@ -77,6 +85,13 @@ class AuthViewModel @Inject constructor(
         }
 
     }
+
+    private fun syncronizeData() {
+        uiState.value = uiState.value.copy(
+            isSynchronization = true
+        )
+    }
+
 
     private fun updateEmail(email: String) {
         uiState.value = uiState.value.copy(

@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.add_word
+package com.learn.worlds.ui.base.add_word
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,59 +46,65 @@ fun AddWordsScreen(
     addWordsState: AddWordsState,
     viewModel: AddLearningItemsViewModel = hiltViewModel()
 ) {
-
-    val stateComplete by viewModel.stateWasSavedSuccessfully.collectAsStateWithLifecycle()
-
-
-    addWordsState.error?.let {
-        SomethingWentWrongDialog(message = it.error, onDismiss =  { viewModel.handleEvent(AddWordsEvent.ErrorDismissed) })
-    }
-
-
-    if (addWordsState.isLoading) {
-        LoadingDialog()
-    }
-
-    if (stateComplete) {
-        navigateAfterSuccessWasAdded.invoke()
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Spacer(Modifier.height(16.dp))
-        Text(
-            modifier = Modifier.padding(bottom = 16.dp),
-            text = "Что хотите заучить?\n'Введите слово или фразу'",
-            textAlign = TextAlign.Center
-        )
-        EditTextCustom(
-            actualText = addWordsState.nativeData ?: "",
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = { viewModel.handleEvent(AddWordsEvent.NativeDataChanged(nativeData = it)) })
-        Spacer(Modifier.height(16.dp))
-        Text(
-            text = "Введите перевод",
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        EditTextCustom(
-            actualText = addWordsState.foreignData ?: "",
-            modifier = Modifier.fillMaxWidth(),
-            onValueChange = { viewModel.handleEvent(AddWordsEvent.ForeignDataChanged(foreignData = it)) })
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = {
-            viewModel.handleEvent(AddWordsEvent.SaveLearningItem)
+
+        val stateComplete by viewModel.stateWasSavedSuccessfully.collectAsStateWithLifecycle()
+
+        addWordsState.error?.let {
+            SomethingWentWrongDialog(message = it.error, onDismiss = {
+                viewModel.handleEvent(
+                    AddWordsEvent.ErrorDismissed
+                )
+            })
         }
+
+        if (addWordsState.isLoading) {
+            LoadingDialog()
+        }
+
+        if (stateComplete) {
+            navigateAfterSuccessWasAdded.invoke()
+        }
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Сохранить")
+            Spacer(Modifier.height(16.dp))
+            Text(
+                modifier = Modifier.padding(bottom = 16.dp),
+                text = "Что хотите заучить?\n'Введите слово или фразу'",
+                textAlign = TextAlign.Center
+            )
+            EditTextCustom(
+                actualText = addWordsState.nativeData ?: "",
+                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { viewModel.handleEvent(AddWordsEvent.NativeDataChanged(nativeData = it)) })
+            Spacer(Modifier.height(16.dp))
+            Text(
+                text = "Введите перевод",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            EditTextCustom(
+                actualText = addWordsState.foreignData ?: "",
+                modifier = Modifier.fillMaxWidth(),
+                onValueChange = { viewModel.handleEvent(AddWordsEvent.ForeignDataChanged(foreignData = it)) })
+            Spacer(Modifier.height(16.dp))
+            Button(onClick = {
+                viewModel.handleEvent(AddWordsEvent.SaveLearningItem)
+            }
+            ) {
+                Text(text = "Сохранить")
+            }
         }
     }
-
 
 }
 
@@ -122,12 +128,7 @@ fun EditTextCustom(
 @Composable
 private fun AddWordsScreenPreview() {
     LearnWordsTheme {
-        // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            AddWordsScreen(navigateAfterSuccessWasAdded = {}, addWordsState = AddWordsState())
-        }
+        AddWordsScreen(navigateAfterSuccessWasAdded = {}, addWordsState = AddWordsState())
     }
+
 }
