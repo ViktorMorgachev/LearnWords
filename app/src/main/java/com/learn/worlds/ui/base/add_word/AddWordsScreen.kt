@@ -47,7 +47,7 @@ fun AddWordsScreen(
     viewModel: AddLearningItemsViewModel = hiltViewModel()
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
 

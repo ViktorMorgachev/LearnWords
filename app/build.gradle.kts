@@ -99,6 +99,10 @@ dependencies {
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
+
+    //UI
+    implementation(libs.lottie.compose)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines)
 

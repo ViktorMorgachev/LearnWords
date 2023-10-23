@@ -21,4 +21,6 @@ sealed class Screen(val route: String, val bottomItem: BottomItem? = null) {
     object SubscribeScreen : Screen(route = "screen_subscribe")
 
     object AuthScreen: Screen(route = "screen_auth")
+
+    object SynchronizationScreen: Screen(route = "sync_auth")
 }

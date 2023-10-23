@@ -2,9 +2,11 @@ package com.learn.worlds.data.prefs
 
 import android.content.SharedPreferences
 import androidx.annotation.Keep
+import com.learn.worlds.di.MainPreferences
+import timber.log.Timber
 
 import javax.inject.Inject
-class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPreferences) {
+class MySharedPreferences @Inject constructor(@MainPreferences private val sharedPrefs: SharedPreferences) {
 
 
     var defaultLimit: Int = 3
@@ -19,7 +21,9 @@ class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPre
 
     var isAuthentificated: Boolean
         get() {
-            return sharedPrefs.getBoolean("isAuthentificated", false)
+            val isAuthentificated = sharedPrefs.getBoolean("isAuthentificated", false)
+            Timber.d("isAuthentificated: $isAuthentificated")
+            return isAuthentificated
         }
         set(value) {
             sharedPrefs.edit().putBoolean("isAuthentificated", value).apply()

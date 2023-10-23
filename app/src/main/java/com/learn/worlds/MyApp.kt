@@ -22,10 +22,7 @@ class MyApp : Application() {
             Timber.plant(Timber.DebugTree())
         }
         FirebaseApp.initializeApp(this)
-        Firebase.auth.currentUser?.let {
-
-        }
-
+        preferences.isAuthentificated  = Firebase.auth.currentUser != null
         Firebase.database.setLogLevel(Logger.Level.DEBUG)
         FirebaseDatabase.getInstance()
 

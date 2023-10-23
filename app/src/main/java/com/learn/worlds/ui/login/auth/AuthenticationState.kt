@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.auth
+package com.learn.worlds.ui.login.auth
 
 import androidx.annotation.StringRes
 import com.learn.worlds.R

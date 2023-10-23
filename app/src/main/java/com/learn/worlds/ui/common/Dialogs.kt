@@ -65,11 +65,72 @@ fun SuccessDialogPrewiew(
     SuccessDialog(message = "Успешно зарегистрировались в системе")
 }
 
+
+@Preview
+@Composable
+fun InfoDialogPrewiew(
+) {
+    InformationDialog(message = "Информация")
+}
+
+@Composable
+fun InformationDialog(
+    message: String,
+    onDismiss: () -> Unit = {},
+    onNextAction: (() -> Unit)? = null
+) {
+    Surface(modifier = Modifier,
+        shadowElevation = 16.dp) {
+        AlertDialog(
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Info,
+                    contentDescription = message,
+                    tint = Color.Blue
+                )
+            },
+            text = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(text = message)
+                }
+
+            },
+            onDismissRequest = {
+                onDismiss()
+            },
+            confirmButton = {
+                onNextAction?.let {
+                    TextButton(
+                        onClick = {
+                            it.invoke()
+                        }
+                    ) {
+                        Text(text = stringResource(R.string.next))
+                    }
+                }
+
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+}
+
 @Composable
 fun SuccessDialog(
     message: String,
-    onDismiss: () -> Unit = {},
-    onTryAgain: (() -> Unit)? = null
+    onDismiss: () -> Unit = {}
 ) {
     Surface(modifier = Modifier,
         shadowElevation = 16.dp) {

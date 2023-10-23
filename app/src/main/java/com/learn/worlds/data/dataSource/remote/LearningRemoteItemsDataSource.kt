@@ -37,9 +37,6 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher)
 
-    init {
-      //  subsribeToDatabase()
-    }
 
     fun subsribeToDatabase() {
         if (authService.getUserUUID() == null) return

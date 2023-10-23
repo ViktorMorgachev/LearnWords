@@ -12,6 +12,7 @@
     <string name="sort_by_old">Старые</string>
     <string name="available_count">Доступное количество фраз %s</string>
     <string name="empty_list">Список пустой \n Но вы можете добавить любую новую фразу</string>
+    <string name="information_login">Чтобы воспользоваться всеми возможностями приложения, необходимо зарегистрироваться</string>
 
     <!--Subscribe Screen-->
     <string name="subsribe_title">Купите кофе разработчику и \n пользуйтесь  полной версией на здоровье</string>
@@ -28,6 +29,7 @@
     <!--Dialogs -->
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
     <string name="well">Отлично</string>
+    <string name="next">Далее</string>
     <string name="account_was_sign_up">Успешно зарегистрировались в системе</string>
     <string name="account_was_sig_in">Успешно прошли аутентификацию</string>
 
@@ -56,4 +58,6 @@
     <string name="close">Закрыть</string>
     <string name="ok">ОК</string>
     <string name="auth_error_tittle">Что-то пошло не так</string>
+    <string name="syncronize">Синхронизировать</string>
+
 </resources>

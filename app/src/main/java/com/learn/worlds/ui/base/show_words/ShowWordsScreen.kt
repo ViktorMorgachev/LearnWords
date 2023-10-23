@@ -1,6 +1,5 @@
 package com.learn.worlds.ui.base.show_words
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -12,7 +11,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -22,12 +24,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,6 +59,7 @@ import com.learn.worlds.ui.base.show_words.customization.getCardBackground
 import com.learn.worlds.ui.base.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
+import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
@@ -66,7 +69,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun ShowLearningWordsScreenPreview() {
     MaterialTheme {
-        ShowLearningWordsScreen(onNavigate = {}, uiState = ShowWordsState())
+        ShowLearningWordsScreen(
+            onNavigate = {},
+            uiState = ShowWordsState(isAuthentificated = false)
+        )
     }
 }
 
@@ -80,7 +86,7 @@ fun ShowLearningWordsScreen(
 ) {
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         val coroutineScope = rememberCoroutineScope()
@@ -95,16 +101,23 @@ fun ShowLearningWordsScreen(
                 })
         }
 
+
+
         if (uiState.isLoading) {
             LoadingDialog()
         }
 
         LearningItemsScreen(modifier = modifier,
+            isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
             learningItems = uiState.learningItems,
-            onChangeData = {
-                coroutineScope.launch {
-                    // viewModel.changeLearningState(it.learningStatus, it.uid)
-                }
+            onChangeData = {},
+            isAuthenticated = uiState.isAuthentificated,
+            onLoginAction = { onNavigate.invoke(Screen.AuthScreen) },
+            onShowedLoginInformationDialogAction = {
+                viewModel.saveShowedLoginInfoDialog()
+            },
+            onSyncAction = {
+                onNavigate.invoke(Screen.SynchronizationScreen)
             },
             appBar = {
                 ActualTopBar(
@@ -183,13 +196,6 @@ fun ShowLearningWordsScreen(
                                     )
                                 }
                             }
-                        ),
-                        ActionTopBar(
-                            imageVector = Icons.Default.Sync,
-                            contentDesc = R.string.desc_action_synk_data,
-                            action = {
-                                onNavigate.invoke(Screen.AuthScreen)
-                            }
                         )
                     ).apply {
                         if (viewModel.isLockedApplication()) {
@@ -209,38 +215,6 @@ fun ShowLearningWordsScreen(
     }
 }
 
-@Composable
-fun FilteringMenu(
-    onSelectedFilter: (FilteringType) -> Unit,
-    expanded: Boolean,
-    onDismissRequest: () -> Unit
-) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest
-    ) {
-        Text(
-            text = stringResource(R.string.filter_all),
-            modifier = Modifier
-                .padding(10.dp)
-                .clickable(
-                    onClick = {
-                        onDismissRequest.invoke()
-                        onSelectedFilter.invoke(FilteringType.ALL)
-                    })
-        )
-        Text(
-            text = stringResource(R.string.filter_learned),
-            modifier = Modifier
-                .padding(10.dp)
-                .clickable(onClick = {
-                    onDismissRequest.invoke()
-                    onSelectedFilter.invoke(FilteringType.LEARNED)
-                })
-        )
-    }
-}
-
 @Preview
 @Composable
 private fun ShowLearningItemsScreenPreview() {
@@ -254,7 +228,10 @@ private fun ShowLearningItemsScreenPreview() {
                         learningStatus = LearningStatus.LEARNING.name
                     )
                 ),
+                onShowedLoginInformationDialogAction = {},
                 onChangeData = {},
+                onLoginAction = {},
+                onSyncAction = {},
                 appBar = {
                     ActualTopBar(
                         title = R.string.learn,
@@ -280,39 +257,154 @@ private fun ShowLearningItemsScreenPreview() {
 
 @Composable
 fun LearningItemsScreen(
+    modifier: Modifier = Modifier,
+    isAuthenticated: Boolean? = null,
     learningItems: List<LearningItem>,
     onChangeData: (LearningItem) -> Unit,
-    modifier: Modifier = Modifier,
     appBar: @Composable (() -> Unit)? = null,
+    onLoginAction: () -> Unit,
+    onSyncAction: () -> Unit,
+    isWasShowedLoginInformationDialog: Boolean = false,
+    onShowedLoginInformationDialogAction: () -> Unit,
 ) {
+
+    var isShowLoginInfoDialog by rememberSaveable { mutableStateOf(false) }
+
     Column {
         appBar?.invoke()
+        if (isShowLoginInfoDialog) {
+            InformationDialog(
+                message = stringResource(R.string.information_login),
+                onDismiss = {
+                    onShowedLoginInformationDialogAction.invoke()
+                    isShowLoginInfoDialog = false
+                },
+                onNextAction = {
+
+                    onShowedLoginInformationDialogAction.invoke()
+                    onLoginAction.invoke()
+                    isShowLoginInfoDialog = false
+                })
+        }
+        if (isAuthenticated == false) {
+            NotAuthenticatedItem(
+                onLoginAction = {
+                    if (isWasShowedLoginInformationDialog) {
+                        onLoginAction.invoke()
+                    } else {
+                        onShowedLoginInformationDialogAction.invoke()
+                        isShowLoginInfoDialog = true
+                    }
+                }
+            )
+        }
         if (learningItems.isNotEmpty()) {
             LearningList(
-                modifier = modifier,
+                modifier = Modifier,
                 learningItems = learningItems,
                 onChangeData = onChangeData
             )
-        } else EmptyScreen()
+        } else EmptyScreen(
+            isAuthenticated = isAuthenticated,
+            modifier = modifier,
+            onSyncAction = onSyncAction)
     }
 
 }
 
 @Preview
 @Composable
-fun EmptyScreen() {
+fun NotAuthenticatedItemPreview() {
+    MaterialTheme {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            NotAuthenticatedItem(onLoginAction = {})
+        }
+    }
+}
+
+@Composable
+fun NotAuthenticatedItem(
+    onLoginAction: () -> Unit
+) {
+
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.weight(0.1f))
+        Card(
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .weight(0.9f)
+                .clickable {
+                    onLoginAction.invoke()
+                },
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 8.dp
+            )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    text = stringResource(R.string.action_sign_up),
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+        }
+        Spacer(modifier = Modifier.weight(0.1f))
+    }
+
+}
+
+
+@Preview
+@Composable
+fun EmptyScreenPreview() {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        EmptyScreen(isAuthenticated = true, onSyncAction = {})
+    }
+}
+
+
+@Composable
+fun EmptyScreen(
+    modifier: Modifier = Modifier,
+    isAuthenticated: Boolean?,
+    onSyncAction: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp), contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = stringResource(R.string.empty_list),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.ExtraBold
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = stringResource(R.string.empty_list),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontWeight = FontWeight.ExtraBold
+                )
             )
-        )
+            if (isAuthenticated == true) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(onClick = { onSyncAction.invoke() }) {
+                    Text(text = stringResource(R.string.syncronize))
+                }
+            }
+
+
+        }
+
+
     }
 }
 
@@ -333,7 +425,7 @@ fun CardContent(
             switch = switch,
             learningStatus = learningItem.learningStatus
         ),
-        animationSpec = tween(1000, easing = LinearEasing)
+        animationSpec = tween(1000, easing = LinearEasing), label = ""
     )
 
     val textColor: Color by animateColorAsState(
@@ -342,7 +434,7 @@ fun CardContent(
             switch = switch,
             learningStatus = learningItem.learningStatus
         ),
-        animationSpec = tween(1000, easing = LinearEasing)
+        animationSpec = tween(1000, easing = LinearEasing), label = ""
     )
 
     Card(
@@ -373,15 +465,13 @@ fun CardContent(
                     .weight(1f)
                     .padding(12.dp)
             ) {
-                Crossfade(targetState = switch) {
-                    Text(
-                        text = actualText.lowercase(),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            color = textColor
-                        )
+                Text(
+                    text = actualText.lowercase(),
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = textColor
                     )
-                }
+                )
 
             }
         }

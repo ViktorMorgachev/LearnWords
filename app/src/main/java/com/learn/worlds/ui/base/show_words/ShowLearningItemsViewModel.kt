@@ -8,6 +8,7 @@ import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
+import com.learn.worlds.data.prefs.UISharedPreferences
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,13 +24,19 @@ import javax.inject.Inject
 @HiltViewModel
 class ShowLearningItemsViewModel @Inject constructor(
     private val learnItemsUseCase: LearnItemsUseCase,
-    private val preferences: MySharedPreferences
+    private val preferences: MySharedPreferences,
+    private val uiPreferences: UISharedPreferences
 ) : ViewModel() {
 
-    val uiState = MutableStateFlow(ShowWordsState())
+    val uiState = MutableStateFlow(ShowWordsState(isAuthentificated = preferences.isAuthentificated))
 
     private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
     private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
+
+
+    fun isShowedLoginInfoDialogForUser(): Boolean{
+        return  uiPreferences.isShowedLoginInfo
+    }
 
     init {
         viewModelScope.launch {
@@ -78,6 +85,10 @@ class ShowLearningItemsViewModel @Inject constructor(
         uiState.value = uiState.value.copy(
             error = null
         )
+    }
+
+    fun saveShowedLoginInfoDialog(){
+        uiPreferences.isShowedLoginInfo = true
     }
 
     private fun getSortedAndFilteringData(allLearningItems: List<LearningItem>): List<LearningItem> {

@@ -27,7 +27,7 @@ fun LearnWordsApp(navController: NavHostController, allScreens: List<Screen>) {
             }
         }
     ) { innerPadding ->
-        MyNavHost(navController, startDestination = Screen.LearnScreen.route, modifier = Modifier.padding(innerPadding))
+        MyNavHost(navController, modifier = Modifier.padding(innerPadding))
     }
 
 }

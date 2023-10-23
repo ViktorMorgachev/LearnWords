@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.auth
+package com.learn.worlds.ui.login.auth
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -33,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -89,7 +90,7 @@ fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Box(
@@ -114,20 +115,20 @@ fun AuthScreen(
                 when (it) {
                     AuthSuccessEvent.SIGN_IN -> {
                         SuccessDialog(
-                            message = stringResource(R.string.account_was_sig_in),
-                            {
-                                onAuthSuccessAction.invoke()
-                                viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
-                            })
+                            message = stringResource(R.string.account_was_sig_in)
+                        ) {
+                            onAuthSuccessAction.invoke()
+                            viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
+                        }
                     }
 
                     AuthSuccessEvent.SIGN_UP -> {
                         SuccessDialog(
-                            message = stringResource(R.string.account_was_sign_up),
-                            {
-                                onAuthSuccessAction.invoke()
-                                viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
-                            })
+                            message = stringResource(R.string.account_was_sign_up)
+                        ) {
+                            onAuthSuccessAction.invoke()
+                            viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
+                        }
                     }
                 }
             }
@@ -138,7 +139,6 @@ fun AuthScreen(
             }
         }
     }
-
 }
 
 
@@ -157,11 +157,11 @@ fun AuthenticationForm(
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(modifier = Modifier.height(32.dp))
         AuthenticationTitle(authenticationMode = authenticationMode)
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 32.dp, vertical = 32.dp),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 4.dp
             )
@@ -224,7 +224,7 @@ fun AuthenticationButton(
     enableAuthentication: Boolean,
     onAuthAction: () -> Unit
 ) {
-    Button(
+    OutlinedButton(
         modifier = modifier,
         onClick = { onAuthAction.invoke() },
         enabled = enableAuthentication

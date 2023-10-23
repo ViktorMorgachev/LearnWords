@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -40,7 +41,8 @@ class LearningItemsRepository @Inject constructor(
         }
 
     init {
-        if (authService.isAuthentificated()){
+        // TODO: need enabled after, next step we need to realize sync data with worker
+       /* if (authService.isAuthentificated()){
             scope.launch{
                 remoteDataSource.learningItems.collect {
                     try {
@@ -53,8 +55,15 @@ class LearningItemsRepository @Inject constructor(
 
                 }
             }
-        }
+        }*/
 
+    }
+
+    suspend fun fetchDataFromNetwork(): Flow<Result<List<LearningItem>>>{
+        return flow {
+            emit(Result.Loading)
+
+        }
     }
 
     suspend fun addLearningItem(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())

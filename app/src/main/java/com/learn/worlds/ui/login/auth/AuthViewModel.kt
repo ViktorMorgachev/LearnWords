@@ -1,4 +1,4 @@
-package com.learn.worlds.ui.auth
+package com.learn.worlds.ui.login.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -43,7 +43,8 @@ class AuthViewModel @Inject constructor(
 
     private fun dismissDialogs() {
         uiState.value = uiState.value.copy(
-            dialogError = null
+            dialogError = null,
+            dialogAuthSuccess = null
         )
     }
 

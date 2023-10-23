@@ -40,7 +40,7 @@ private fun SubscribeScreenPrewiew() {
 fun SubscribeScreen(modifier: Modifier = Modifier, onByCoffeeAction: ()->Unit, viewModel: ShowLearningItemsViewModel = hiltViewModel()) {
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Box(modifier = modifier.padding(12.dp), contentAlignment = Alignment.Center) {
