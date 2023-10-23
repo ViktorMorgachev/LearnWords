@@ -43,7 +43,7 @@ class SimpleEntityReadWriteTest {
     @Test
     @Throws(Exception::class)
     fun writeUserAndReadInList()  {
-        val data = LearningItemDB(nativeData = "девушка", foreignData = "girl")
+        val data = LearningItemDB(nativeData = "девушка", foreignData = "girl", timeStampUIID = 1657977381214)
         userDao.insertLearningItemTest(data)
         var items = userDao.getLearningItemsTest()
         assertThat(items.size, equalTo(1))
@@ -52,7 +52,7 @@ class SimpleEntityReadWriteTest {
     @Test
     @Throws(Exception::class)
     fun writeAndChangeDataAfter()  {
-        val data = LearningItemDB(nativeData = "котёнок", foreignData = "kitty")
+        val data = LearningItemDB(nativeData = "котёнок", foreignData = "kitty", timeStampUIID = 1657977381212)
         userDao.insertLearningItemTest(data)
         var items = userDao.getLearningItemsTest()
         userDao.updateLearningItemTest(items.first { it.nativeData == "котёнок" }.copy(

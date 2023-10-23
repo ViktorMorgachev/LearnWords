@@ -22,10 +22,14 @@
     <string name="desc_action_sort_list">Отсортировать список</string>
     <string name="desc_action_synk_data">Синхронизировать данные</string>
     <string name="desc_input_email">Введите почту</string>
-    <string name="error_someshing_went_wrong">Что-то пошло не так</string>
     <string name="desc_show_password">Показать пароль</string>
     <string name="desc_hide_password">Спрятать пароль</string>
 
+    <!--Dialogs -->
+    <string name="error_someshing_went_wrong">Что-то пошло не так</string>
+    <string name="well">Отлично</string>
+    <string name="account_was_sign_up">Успешно зарегистрировались в системе</string>
+    <string name="account_was_sig_in">Успешно прошли аутентификацию</string>
 
     <!--Auth Screen-->
     <string name="password_requirement_characters">Не менее 8 символов</string>
@@ -40,7 +44,9 @@
     <string name="action_sign_up">Зарегистрироваться</string>
     <string name="action_sign_in">Войти</string>
     <string name="action_need_account">Нужна учетная запись?</string>
+    <string name="error_invalid_login">Проверьте почту или пароль</string>
     <string name="action_already_have_account">У вас уже есть учетная запись?</string>
+
 
     <!--Dialogs-->
     <string name="error_limits_adding_words">Прывышено ограничение на добавление слов</string>

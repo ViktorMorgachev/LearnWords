@@ -21,7 +21,6 @@ infix fun <T> Boolean.then(param: T): T? = if (this) param else null
 
 sealed class Result<out T> {
     object Loading : Result<Nothing>()
-
     object Complete : Result<Nothing>()
     data class Success<out T>(val data: T) : Result<T>()
     class Error(val error: String? = null) : Result<Nothing>()

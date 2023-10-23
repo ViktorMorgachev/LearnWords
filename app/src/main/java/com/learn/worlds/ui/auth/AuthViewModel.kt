@@ -1,17 +1,20 @@
 package com.learn.worlds.ui.auth
 
 import androidx.lifecycle.ViewModel
-import com.learn.worlds.data.LearnItemsUseCase
+import androidx.lifecycle.viewModelScope
 import com.learn.worlds.servises.AuthService
+import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authService: AuthService
 ) : ViewModel() {
-    val uiState = MutableStateFlow(AuthenticationState())
+    val uiState = MutableStateFlow(AuthenticationState(email = "morgachev@iksu.kg", password = "1qWertyu"))
 
     private fun toggleAuthenticationMode() {
         val authenticationMode = uiState.value.authenticationMode
@@ -33,25 +36,43 @@ class AuthViewModel @Inject constructor(
             is AuthenticationEvent.EmailChanged -> updateEmail(authenticationEvent.emailAddress)
             is AuthenticationEvent.PasswordChanged -> updatePassword(authenticationEvent.password)
             is AuthenticationEvent.Authenticate -> authenticate()
-            is AuthenticationEvent.ErrorDismissed -> dismissError()
+            is AuthenticationEvent.DialogDismiss -> dismissDialogs()
         }
     }
 
-    private fun dismissError() {
+    private fun dismissDialogs() {
         uiState.value = uiState.value.copy(
-            error = null
+            dialogError = null
         )
     }
+
 
     private fun authenticate() {
         uiState.value = uiState.value.copy(
             isLoading = true
         )
         uiState.value.let {
-            if (it.authenticationMode == AuthenticationMode.SIGN_UP){
-                authService.signUp(password = it.password!!, email = it.email!!)
+            if (it.authenticationMode == AuthenticationMode.SIGN_UP) {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val result = authService.signUp(password = it.password!!, email = it.email!!)
+                    if (result is Result.Complete) {
+                        signInAction()
+                    }
+                    if (result is Result.Error) {
+                        authError(result)
+                    }
+                }
             } else {
-                authService.signIn(password = it.password!!, email = it.email!!)
+                viewModelScope.launch(Dispatchers.IO) {
+                    val result = authService.signIn(password = it.password!!, email = it.email!!)
+                    if (result is Result.Complete) {
+                        signInAction()
+                    }
+                    if (result is Result.Error) {
+                        authError(result)
+                    }
+                }
+
             }
         }
 
@@ -60,6 +81,28 @@ class AuthViewModel @Inject constructor(
     private fun updateEmail(email: String) {
         uiState.value = uiState.value.copy(
             email = email
+        )
+    }
+
+
+    private fun signInAction() {
+        uiState.value = uiState.value.copy(
+            isLoading = false,
+            dialogAuthSuccess = AuthSuccessEvent.SIGN_UP
+        )
+    }
+
+    private fun signUpAction() {
+        uiState.value = uiState.value.copy(
+            isLoading = false,
+            dialogAuthSuccess = AuthSuccessEvent.SIGN_IN
+        )
+    }
+
+    private fun authError(error: Result.Error) {
+        uiState.value = uiState.value.copy(
+            isLoading = false,
+            dialogError = error
         )
     }
 

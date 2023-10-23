@@ -4,9 +4,6 @@ import android.content.SharedPreferences
 import androidx.annotation.Keep
 
 import javax.inject.Inject
-
-@Keep
-external fun defaultLimit(): String
 class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPreferences) {
 
 
@@ -20,6 +17,13 @@ class MySharedPreferences @Inject constructor(private val sharedPrefs: SharedPre
             sharedPrefs.edit().putBoolean("dataBaseLocked", value).apply()
         }
 
+    var isSynchronizedFromRemote: Boolean
+        get() {
+            return sharedPrefs.getBoolean("isSynchronizedFromRemote", false)
+        }
+        set(value) {
+            sharedPrefs.edit().putBoolean("isSynchronizedFromRemote", value).apply()
+        }
     var subscribedByUser: Boolean
         get() {
             return sharedPrefs.getBoolean("subscribedByUser", false)

@@ -5,20 +5,22 @@ import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.remote.LearningItemAPI
 
 fun LearningItemDB.toLearningItem(): LearningItem{
-    return LearningItem(nativeData, foreignData, learningStatus, uid)
+    return LearningItem(nativeData, foreignData, learningStatus, timeStampUIID)
 }
 
 
 fun LearningItem.toLearningItemDB(): LearningItemDB{
-    return LearningItemDB(nativeData, foreignData, learningStatus)
+    return LearningItemDB(nativeData, foreignData, learningStatus, timeStampUIID)
+}
+
+fun LearningItem.toLearningItemAPI(): LearningItemAPI{
+    return LearningItemAPI(nativeData, foreignData, learningStatus, timeStampUIID)
 }
 
 fun LearningItemDB.toLearningItemAPI(): LearningItemAPI{
-    return LearningItemAPI(nativeData, foreignData, learningStatus, uid)
+    return LearningItemAPI(nativeData, foreignData, learningStatus, timeStampUIID)
 }
 
 fun LearningItemAPI.toLearningItemDB(): LearningItemDB{
-    return LearningItemDB(nativeData, foreignData, learningStatus).apply {
-        this@toLearningItemDB.uid = uid
-    }
+    return LearningItemDB(nativeData, foreignData, learningStatus, timeStampUIID)
 }

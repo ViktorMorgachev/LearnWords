@@ -99,8 +99,8 @@ class ShowLearningItemsViewModel @Inject constructor(
         }
         preferences.savedSortingType?.let {
             return if (it == SortingType.SORT_BY_NEW.name) {
-                actualList.sortedByDescending { it.uid }
-            } else actualList.sortedBy { it.uid }
+                actualList.sortedByDescending { it.timeStampUIID }
+            } else actualList.sortedBy { it.timeStampUIID }
         }
         return actualList
     }
@@ -120,12 +120,12 @@ class ShowLearningItemsViewModel @Inject constructor(
         preferences.savedSortingType = sortingType.name
         Timber.d("sortBy: ${sortingType.name}")
         if (sortingType == SortingType.SORT_BY_NEW) {
-            Timber.d("sorted: ${allLearningItems.value.sortedByDescending { it.uid }.joinToString(", ")}")
-            _stateLearningItems.emit(allLearningItems.value.sortedByDescending { it.uid })
+            Timber.d("sorted: ${allLearningItems.value.sortedByDescending { it.timeStampUIID }.joinToString(", ")}")
+            _stateLearningItems.emit(allLearningItems.value.sortedByDescending { it.timeStampUIID })
         }
         if (sortingType == SortingType.SORT_BY_OLD) {
-            Timber.d("sorted: ${allLearningItems.value.sortedBy { it.uid }.joinToString(", ")}")
-            _stateLearningItems.emit(allLearningItems.value.sortedBy { it.uid })
+            Timber.d("sorted: ${allLearningItems.value.sortedBy { it.timeStampUIID }.joinToString(", ")}")
+            _stateLearningItems.emit(allLearningItems.value.sortedBy { it.timeStampUIID })
         }
     }
 

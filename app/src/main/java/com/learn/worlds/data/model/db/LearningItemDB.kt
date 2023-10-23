@@ -37,15 +37,11 @@ interface LearningItemDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateLearningItemTest(item: LearningItemDB)
     @Query("SELECT * from learningItems WHERE id = :id")
-    fun getLearningItemTest(id: Int): LearningItemDB
+    fun getLearningItemTest(id: Long): LearningItemDB
 }
 
 @Entity(tableName = "learningItems")
 data class LearningItemDB(@ColumnInfo(name = "native_data") val nativeData: String,
                           @ColumnInfo(name = "foreign_data")  val foreignData: String,
-                          @ColumnInfo(name = "learning_status") val learningStatus: String = "LEARNING"){
-
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")
-    var uid: Int = 0
-}
+                          @ColumnInfo(name = "learning_status") val learningStatus: String = "LEARNING",
+                          @PrimaryKey @ColumnInfo(name = "id") val timeStampUIID: Long)

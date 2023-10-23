@@ -9,6 +9,7 @@ import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
@@ -27,7 +28,7 @@ class LearnItemsUseCase @Inject constructor(
             emit(Result.Error(context.getString(R.string.error_limits_adding_words)))
         } else {
             try {
-                learningItemsRepository.addLearningItem(learningItem)
+                learningItemsRepository.addLearningItem(learningItem).collect()
                 emit(Result.Complete)
             } catch (t: Throwable){
                 Timber.e(t)

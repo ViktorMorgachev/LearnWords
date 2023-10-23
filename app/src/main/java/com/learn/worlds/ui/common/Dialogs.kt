@@ -1,11 +1,13 @@
 package com.learn.worlds.ui.common
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -55,6 +57,60 @@ fun LoadingDialog(
 
 }
 
+
+@Preview
+@Composable
+fun SuccessDialogPrewiew(
+) {
+    SuccessDialog(message = "Успешно зарегистрировались в системе")
+}
+
+@Composable
+fun SuccessDialog(
+    message: String,
+    onDismiss: () -> Unit = {},
+    onTryAgain: (() -> Unit)? = null
+) {
+    Surface(modifier = Modifier,
+        shadowElevation = 16.dp) {
+        AlertDialog(
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Done,
+                    contentDescription = message,
+                    tint = Color.Green
+                )
+            },
+            title = {
+                Text(text = stringResource(R.string.well))
+            },
+            text = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(text = message)
+                }
+
+            },
+            onDismissRequest = {
+                onDismiss()
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onDismiss()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+}
+
 @Preview
 @Composable
 fun SomethingWentWrongDialogPrewiew(
@@ -66,9 +122,10 @@ fun SomethingWentWrongDialogPrewiew(
 fun SomethingWentWrongDialog(
     message: String? = null,
     onDismiss: () -> Unit = {},
-    onTryAgain: (() -> Unit)? = {}
+    onTryAgain: (() -> Unit)? = null
 ) {
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = Modifier,
+        shadowElevation = 16.dp) {
         AlertDialog(
             icon = {
                 Icon(

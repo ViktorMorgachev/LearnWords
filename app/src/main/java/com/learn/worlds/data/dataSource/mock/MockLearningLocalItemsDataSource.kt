@@ -18,16 +18,17 @@ class MockLearningLocalItemsDataSource @Inject constructor(@IoDispatcher private
     val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()
 
     private fun initMockData(): MutableList<LearningItemDB> {
-        return mutableListOf(
-            LearningItemDB("goodbye", "adios"),
-            LearningItemDB("thank you", "gracias"),
-            LearningItemDB("you're welcome", "de nada"),
-            LearningItemDB("please", "por favor"),
-            LearningItemDB("no problem", "no hay problema"),
-            LearningItemDB("I'm sorry", "lo siento"),
-            LearningItemDB("yes", "sí"),
-            LearningItemDB("no", "no"),
-            LearningItemDB("I don't know", "no lo sé")
+        return  mutableListOf(
+            LearningItemDB("hello", "hola", "LEARNING", 1657977381211),
+            LearningItemDB("goodbye", "adios", "LEARNING", 1657977381212),
+            LearningItemDB("thank you", "gracias", "LEARNING", 1657977381213),
+            LearningItemDB("you're welcome", "de nada", "LEARNING", 1657977381214),
+            LearningItemDB("please", "por favor", "LEARNING", 1657977381215),
+            LearningItemDB("no problem", "no hay problema", "LEARNING", 1657977381216),
+            LearningItemDB("I'm sorry", "lo siento", "LEARNING", 1657977381217),
+            LearningItemDB("yes", "sí", "LEARNING", 1657977381218),
+            LearningItemDB("no", "no", "LEARNING", 1657977381219),
+            LearningItemDB("I don't know", "no lo sé", "LEARNING", 1657977381220)
         )
     }
 

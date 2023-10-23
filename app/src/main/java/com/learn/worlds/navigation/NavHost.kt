@@ -72,7 +72,9 @@ fun MyNavHost(
             ) {
                 val viewModel: AuthViewModel = hiltViewModel()
                 val uiState by  viewModel.uiState.collectAsStateWithLifecycle()
-                AuthScreen(authenticationState = uiState, viewModel = viewModel)
+                AuthScreen(authenticationState = uiState, viewModel = viewModel, onAuthSuccessAction = {
+                    navHostController.popBackStack()
+                })
             }
         }
     }

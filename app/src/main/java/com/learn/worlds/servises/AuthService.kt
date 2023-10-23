@@ -1,53 +1,69 @@
 package com.learn.worlds.servises
 
+import android.content.Context
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
-import timber.log.Timber
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+
+
 
 @Singleton
-class AuthService @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher, private val preferences: MySharedPreferences){
+class AuthService @Inject constructor(
+    @IoDispatcher private val dispatcher: CoroutineDispatcher,
+    private val firebaseAuthErrorWrapper: FirebaseAuthErrorWrapper
+) {
     private val auth by lazy { Firebase.auth }
-    private val scope: CoroutineScope = CoroutineScope(dispatcher)
-    fun isAuthentificated(): Boolean{
+
+    init {
+        auth.setLanguageCode("ru")
+    }
+
+    fun isAuthentificated(): Boolean {
         return auth.currentUser != null
     }
 
-    fun signIn(password: String, email: String){
-        scope.launch {
+    fun getUserUUID(): String? {
+        return auth.currentUser?.uid
+    }
+
+    suspend fun signIn(password: String, email: String): Result<Any> {
+        return suspendCancellableCoroutine { continuation ->
             auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener{ task ->
-                    if (task.isSuccessful) {
-                        val user = auth.currentUser
-                        Timber.d("signIn: success")
+                .addOnCompleteListener {
+                    if (it.isSuccessful && it.result.user != null) {
+                        continuation.resume(Result.Complete)
                     } else {
-                        Timber.e(task.exception)
+                        continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it.exception?.localizedMessage)))
                     }
                 }
         }
+
     }
 
-    fun signUp(password: String, email: String) {
-        scope.launch {
+    suspend fun signUp(password: String, email: String):  Result<Any> {
+        return suspendCancellableCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task->
-                    if (task.isSuccessful) {
-                        val user = auth.currentUser
-
-                        Timber.d("")
+                .addOnCompleteListener {
+                    if (it.isSuccessful && it.result.user != null) {
+                        continuation.resume(Result.Complete)
                     } else {
-                        Timber.e(task.exception)
+                        continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it.exception?.localizedMessage)))
                     }
                 }
         }
     }
 
 }
+
+

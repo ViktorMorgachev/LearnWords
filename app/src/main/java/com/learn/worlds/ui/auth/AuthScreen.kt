@@ -1,19 +1,12 @@
 package com.learn.worlds.ui.auth
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -34,7 +27,6 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,7 +40,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,11 +60,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.R
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
+import com.learn.worlds.ui.common.SuccessDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
-import com.learn.worlds.utils.then
 
 
 @Preview(showSystemUi = true, device = "id:pixel_3a")
@@ -85,8 +75,8 @@ fun AuthScreenPreview() {
             color = MaterialTheme.colorScheme.background
         ) {
             AuthScreen(
-                authenticationState = AuthenticationState(
-                    authenticationMode = AuthenticationMode.SIGN_UP))
+                authenticationState = AuthenticationState(authenticationMode = AuthenticationMode.SIGN_UP, dialogAuthSuccess = AuthSuccessEvent.SIGN_UP),
+                onAuthSuccessAction = {})
         }
     }
 }
@@ -95,6 +85,7 @@ fun AuthScreenPreview() {
 fun AuthScreen(
     modifier: Modifier = Modifier,
     authenticationState: AuthenticationState,
+    onAuthSuccessAction: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     Box(
@@ -111,17 +102,38 @@ fun AuthScreen(
                 password = authenticationState.password,
                 handleEvent = { viewModel.handleEvent(it) },
                 passwordRequirements = authenticationState.passwordRequirements,
-                enableAuthentication = authenticationState.isFormValid())
+                enableAuthentication = authenticationState.isFormValid()
+            )
         }
 
+        authenticationState.dialogAuthSuccess?.let {
+            when (it) {
+                AuthSuccessEvent.SIGN_IN -> {
+                    SuccessDialog(
+                        message = stringResource(R.string.action_sign_in),
+                        {
+                            onAuthSuccessAction.invoke()
+                            viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
+                        })
+                }
 
-            authenticationState.error?.let { error ->
-                SomethingWentWrongDialog(message = error.error, onDismiss = { viewModel.handleEvent(AuthenticationEvent.ErrorDismissed)})
+                AuthSuccessEvent.SIGN_UP -> {
+                    SuccessDialog(
+                        message = stringResource(R.string.action_sign_up),
+                        {
+                            onAuthSuccessAction.invoke()
+                            viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
+                        })
+                }
             }
+        }
+        authenticationState.dialogError?.let { error ->
+            SomethingWentWrongDialog(
+                message = error.error,
+                onDismiss = { viewModel.handleEvent(AuthenticationEvent.DialogDismiss) })
+        }
     }
 }
-
-
 
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -149,7 +161,9 @@ fun AuthenticationForm(
             )
         ) {
             Column(
-                modifier = Modifier.padding(16.dp).animateContentSize(),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .animateContentSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 EmailInput(
@@ -169,11 +183,10 @@ fun AuthenticationForm(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-
                 AnimatedVisibility(
                     visible = authenticationMode == AuthenticationMode.SIGN_UP,
-                    enter = slideInHorizontally(initialOffsetX = {fullWidth -> -fullWidth }) + fadeIn(),
-                    exit = slideOutHorizontally(targetOffsetX = {fullWidth -> fullWidth }) + fadeOut(),
+                    enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(),
                 ) {
                     RequirementForm(
                         visible = true,
@@ -184,8 +197,9 @@ fun AuthenticationForm(
                 AuthenticationButton(
                     modifier = Modifier.fillMaxWidth(),
                     authenticationMode = authenticationMode,
-                    onAuthAction = { handleEvent.invoke(AuthenticationEvent.Authenticate)},
-                    enableAuthentication = enableAuthentication)
+                    onAuthAction = { handleEvent.invoke(AuthenticationEvent.Authenticate) },
+                    enableAuthentication = enableAuthentication
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 ToggleAuthenticationMode(
                     modifier = Modifier.fillMaxWidth(),
@@ -220,7 +234,7 @@ fun AuthenticationButton(
                 }
             ),
 
-        )
+            )
     }
 }
 
@@ -272,11 +286,7 @@ fun PasswordInput(
 ) {
 
     var isPasswordHidden by rememberSaveable { mutableStateOf(true) }
-    val passwordTransformation by remember {
-        mutableStateOf(
-            (isPasswordHidden then PasswordVisualTransformation()) ?: VisualTransformation.None
-        )
-    }
+
 
     TextField(
         modifier = modifier,
@@ -307,7 +317,7 @@ fun PasswordInput(
                 contentDescription = null
             )
         },
-        visualTransformation = passwordTransformation,
+        visualTransformation = if (!isPasswordHidden) VisualTransformation.None else PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(
             imeAction = ImeAction.Done,
             keyboardType = KeyboardType.Password
@@ -390,17 +400,6 @@ fun PasswordRequirements(
             )
         }
     }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun RequirementsPreview() {
-    PasswordRequirements(
-        satisfiedRequirements = listOf(
-            PasswordRequirement.CAPITAL_LETTER,
-            PasswordRequirement.EIGHT_CHARACTERS
-        )
-    )
 }
 
 @Composable

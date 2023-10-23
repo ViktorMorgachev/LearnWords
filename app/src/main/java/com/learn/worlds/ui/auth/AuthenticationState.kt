@@ -10,7 +10,7 @@ sealed class AuthenticationEvent {
     class EmailChanged(val emailAddress: String): AuthenticationEvent()
     class PasswordChanged(val password: String): AuthenticationEvent()
     object Authenticate: AuthenticationEvent()
-    object ErrorDismissed: AuthenticationEvent()
+    object DialogDismiss: AuthenticationEvent()
 }
 
 enum class PasswordRequirement(
@@ -25,13 +25,18 @@ enum class AuthenticationMode {
     SIGN_UP, SIGN_IN
 }
 
+enum class AuthSuccessEvent{
+    SIGN_IN, SIGN_UP
+}
+
 data class AuthenticationState(
     val authenticationMode: AuthenticationMode = AuthenticationMode.SIGN_IN,
     val email: String? = null,
     val password: String? = null,
     val passwordRequirements: List<PasswordRequirement> = emptyList(),
     val isLoading: Boolean = false,
-    val error: Result.Error? = null
+    val dialogError: Result.Error? = null,
+    val dialogAuthSuccess: AuthSuccessEvent? = null
 ){
     fun isFormValid(): Boolean {
         return password?.isNotEmpty() == true && email?.isNotEmpty() == true &&
