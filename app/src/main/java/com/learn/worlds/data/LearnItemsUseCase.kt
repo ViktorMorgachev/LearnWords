@@ -2,6 +2,7 @@ package com.learn.worlds.data
 
 import android.content.Context
 import com.learn.worlds.R
+import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.repository.LearningItemsRepository
@@ -10,8 +11,11 @@ import com.learn.worlds.utils.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -38,7 +42,49 @@ class LearnItemsUseCase @Inject constructor(
         }
     }.flowOn(dispatcher)
 
-    suspend fun syncItemsFromNetwork() = learningItemsRepository.writeToLocalDatabase(learningItemsRepository.fetchDataFromNetwork())
+    suspend fun syncItems() = flow<Result<List<LearningItem>>>{
+        learningItemsRepository.fetchDataFromNetwork()
+            .filter { it != Result.Loading && it != Result.Complete }
+            .combine(learningItemsRepository.getDataFromDatabase()
+                .map { listDB-> listDB.map { it.toLearningItem() } }) { fromNetwork, fromDatabase ->
+
+                if (fromNetwork is Result.Success){
+                    val networkData = fromNetwork.data
+                    val dataForNetwork: MutableList<LearningItem> = mutableListOf()
+                    val dataForLocal: MutableList<LearningItem> = mutableListOf()
+                    fromDatabase.forEach { dbItem ->
+                        // Записываем в интернет если в ней нет элемента
+                        if (!networkData.contains(dbItem)) {
+                            dataForNetwork.add(dbItem)
+                        }
+                    }
+                    networkData.forEach { remoteItem ->
+                        if (!fromDatabase.contains(remoteItem)) {
+                            dataForLocal.add(remoteItem)
+                        }
+                    }
+
+                    // Если оба списка пусты
+                    if (networkData.isEmpty() && dataForLocal.isEmpty()){
+                        emit(Result.Success(listOf()))
+                    } else {
+                        learningItemsRepository.writeToRemoteDatabase(dataForNetwork)
+                            .combine(learningItemsRepository.writeToLocalDatabase(dataForLocal)) { remoteResult, localResult->
+                                emit(Result.Success(networkData.plus(dataForLocal)))
+                            }
+
+                    }
+
+
+
+                    Timber.d("SynchronizationWorker: " +
+                            "\n forRemote: ${dataForNetwork.joinToString(", ")}" +
+                            " \n forLocal: ${dataForLocal.joinToString(", ")}"
+                    )
+
+                }
+            }.flowOn(dispatcher).collect()
+    }
 
 
 }

@@ -8,6 +8,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.AuthService
@@ -61,10 +62,10 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
     }
 
-    suspend fun addLearningItems(learningItemAPI: List<LearningItemAPI>) = flow<Result<Any>> {
+    // todo переписать ошибка не будет обрабатываться
+    suspend fun addLearningItems(learningItemAPI: List<LearningItemAPI>) = flow<Result<Result<LearningItemAPI>>> {
         Timber.e("addLearningItem: LearningItemAPI $learningItemAPI")
         try {
-            emit(Result.Loading)
             databaseRef!!.setValue(learningItemAPI).addOnCompleteListener {
                Timber.d("addLearningItem:  success ${it.isSuccessful} errorMessage: ${it.exception?.localizedMessage}")
             }

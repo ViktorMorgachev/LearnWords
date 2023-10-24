@@ -27,12 +27,13 @@
     <string name="desc_hide_password">Спрятать пароль</string>
 
     <!--Dialogs -->
+    <string name="error_limits_adding_words">Прывышено ограничение на добвление слов</string>
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
     <string name="well">Отлично</string>
     <string name="next">Далее</string>
     <string name="account_was_sign_up">Успешно зарегистрировались в системе</string>
     <string name="account_was_sig_in">Успешно прошли аутентификацию</string>
-    <string name="empty_data_from_network">У вас нет данных, для загрузки</string>
+    <string name="nothing_to_sync">Нечего синхронизировать</string>
 
     <!--Auth Screen-->
     <string name="password_requirement_characters">Не менее 8 символов</string>
@@ -51,8 +52,7 @@
     <string name="action_already_have_account">У вас уже есть учетная запись?</string>
 
 
-    <!--Dialogs-->
-    <string name="error_limits_adding_words">Прывышено ограничение на добавление слов</string>
+
 
     <!--Common-->
     <string name="try_again">Повторить запрос</string>
