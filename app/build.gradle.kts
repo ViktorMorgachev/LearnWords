@@ -84,12 +84,15 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.activity.compose)
+    implementation(libs.android.work)
 
     // Hilt Deps Injection
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
     ksp(libs.hilt.android.compiler)
+
 
     // Compose
     implementation(libs.compose.ui)

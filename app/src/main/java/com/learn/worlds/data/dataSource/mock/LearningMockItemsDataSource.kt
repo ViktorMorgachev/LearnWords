@@ -2,9 +2,7 @@ package com.learn.worlds.data.dataSource.mock
 
 
 import com.learn.worlds.data.model.db.LearningItemDB
-import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +10,7 @@ import kotlinx.coroutines.flow.flow
 import timber.log.Timber
 import javax.inject.Inject
 
-class LearningMockItemsDataSource @Inject constructor(@IoDispatcher private val dispatcher: CoroutineDispatcher) {
+class LearningMockItemsDataSource @Inject constructor() {
 
     private val _learningItems: MutableStateFlow<MutableList<LearningItemDB>> = MutableStateFlow(initMockData())
     val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()

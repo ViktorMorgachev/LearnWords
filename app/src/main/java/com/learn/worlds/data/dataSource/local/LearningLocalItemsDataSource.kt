@@ -3,7 +3,6 @@ package com.learn.worlds.data.dataSource.local
 
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.db.LearningItemDao
-import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher

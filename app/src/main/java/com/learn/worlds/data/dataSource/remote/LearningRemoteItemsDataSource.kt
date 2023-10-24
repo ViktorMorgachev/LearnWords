@@ -35,7 +35,6 @@ class LearningRemoteItemsDataSource @Inject constructor(
     var databaseRef: DatabaseReference? = null
 
     suspend fun fetchDataFromNetwork() = callbackFlow<Result<List<LearningItemAPI>>> {
-        this@callbackFlow.trySendBlocking(Result.Loading)
         val dbListener = object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
                 Timber.e(message = "${error.message} :${error.code}")

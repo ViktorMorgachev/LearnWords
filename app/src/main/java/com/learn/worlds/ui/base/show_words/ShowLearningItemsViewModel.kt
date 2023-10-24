@@ -28,11 +28,21 @@ class ShowLearningItemsViewModel @Inject constructor(
     private val uiPreferences: UISharedPreferences
 ) : ViewModel() {
 
-    val uiState = MutableStateFlow(ShowWordsState(isAuthentificated = preferences.isAuthentificated))
+    val uiState = MutableStateFlow(ShowWordsState())
 
     private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
     private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
+
+    init {
+        checkForAuthenticated()
+    }
+
+    private fun checkForAuthenticated() {
+        uiState.value = uiState.value.copy(
+            isAuthentificated = preferences.isAuthentificated
+        )
+    }
 
     fun isShowedLoginInfoDialogForUser(): Boolean{
         return  uiPreferences.isShowedLoginInfo

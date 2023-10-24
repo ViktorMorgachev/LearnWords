@@ -8,7 +8,6 @@ import timber.log.Timber
 import javax.inject.Inject
 class MySharedPreferences @Inject constructor(@MainPreferences private val sharedPrefs: SharedPreferences) {
 
-
     var defaultLimit: Int = 3
 
     var dataBaseLocked: Boolean

@@ -24,7 +24,7 @@ class AddLearningItemsViewModel  @Inject constructor(
            learnItemsUseCase.addLearningItem(learningItem).collectLatest {
                when(it){
                    Result.Complete -> stateWasSavedSuccessfully.value = true
-                   is Result.Error -> showError()
+                   is Result.Error -> showError(it)
                    Result.Loading -> showLoading()
                    is Result.Success -> stateWasSavedSuccessfully.value = true
                }
@@ -57,9 +57,9 @@ class AddLearningItemsViewModel  @Inject constructor(
         )
     }
 
-    private fun showError() {
+    private fun showError(error: Result.Error? = null) {
         uiState.value = uiState.value.copy(
-            error = Result.Error(),
+            error = error,
             isLoading = false
         )
     }

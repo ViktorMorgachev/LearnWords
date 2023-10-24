@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -22,11 +23,8 @@ import javax.inject.Inject
 
 class LearningItemsRepository @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
-    private val authService: AuthService,
-    private val preferences: MySharedPreferences,
     private val localDataSource: LearningLocalItemsDataSource,
-    private val remoteDataSource: LearningRemoteItemsDataSource,
-    private val mockDataSource: LearningMockItemsDataSource
+    private val remoteDataSource: LearningRemoteItemsDataSource
 ) {
 
     private val scope: CoroutineScope = CoroutineScope(dispatcher)
@@ -39,42 +37,34 @@ class LearningItemsRepository @Inject constructor(
         }
     }
 
-    suspend fun fetchDataFromNetwork(): Flow<Result<List<LearningItem>>> {
-        return flow {
-            remoteDataSource.fetchDataFromNetwork().onEach { result ->
-                Timber.d("fetchDataFromNetwork: $result")
-                when (result) {
-                    is Result.Success -> {
-                        emit(Result.Success(result.data.map { it.toLearningItem() }))
-                    }
+     fun getDataFromDatabase() = localDataSource.learningItems
 
-                    is Result.Complete -> {
-                        emit(Result.Complete)
-                    }
-
-                    is Result.Error -> {
-                        emit(Result.Loading)
-                    }
-
-                    is Result.Loading -> {
-                        emit(Result.Loading)
-                    }
-
+    // I want to improve it later
+    suspend fun fetchDataFromNetwork() = flow {
+            remoteDataSource.fetchDataFromNetwork()
+                .filter { it != Result.Loading && it != Result.Complete}
+                .onEach { result ->
+                if (result is Result.Success){
+                    emit(Result.Success(result.data.map { it.toLearningItem() }))
+                }
+                if (result is Result.Error){
+                    emit(Result.Error())
                 }
             }.collect()
         }
-    }
-
 
     suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
+
+    // todo Переработать и записывать чего нет в локальной базе
     fun writeToLocalDatabase(fetchDataFromNetwork: Flow<Result<List<LearningItem>>>) = flow<Result<List<LearningItem>>> {
         fetchDataFromNetwork.collect{ remoteItemsResult->
             when(remoteItemsResult){
-                Result.Complete -> emit(Result.Success(listOf()))
+                Result.Complete -> {}
                 is Result.Error -> emit(Result.Error())
                 Result.Loading -> {}
                 is Result.Success -> {
-                    data.collect(){ databaseItems->
+
+                    data.collect{ databaseItems->
                         if(databaseItems == Result.Error()){
                             emit(Result.Error())
                         } else {

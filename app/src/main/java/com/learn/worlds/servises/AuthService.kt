@@ -1,26 +1,17 @@
 package com.learn.worlds.servises
 
-import android.content.Context
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.learn.worlds.data.prefs.MySharedPreferences
-import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 
 
 @Singleton
 class AuthService @Inject constructor(
-    @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val firebaseAuthErrorWrapper: FirebaseAuthErrorWrapper
 ) {
     private val auth by lazy { Firebase.auth }
