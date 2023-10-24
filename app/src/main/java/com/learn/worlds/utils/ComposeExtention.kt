@@ -9,11 +9,17 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
-import com.learn.worlds.data.model.remote.LearningItemAPI
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -49,4 +55,24 @@ fun <T> Flow<T>.flowWithLifecycleStateInAndCollectAsState(
                 initialValue = initial
             )
     }.collectAsState(context)
+}
+
+data class DeferrableJob(val dispather: CoroutineDispatcher, val delay: Long = 0L, val action: ()->Unit)
+
+/**
+ * An extension that allows you to start the list of deferred coroutines postponed
+ * */
+
+
+@ExperimentalCoroutinesApi
+inline fun CoroutineScope.startDelayed(deferrableJobs: List<DeferrableJob>, delay: Long = 0){
+    launch(Dispatchers.Default) {
+        delay(delay)
+        deferrableJobs.forEach {
+            delay(it.delay)
+            withContext(it.dispather){
+                it.action.invoke()
+            }
+        }
+    }
 }

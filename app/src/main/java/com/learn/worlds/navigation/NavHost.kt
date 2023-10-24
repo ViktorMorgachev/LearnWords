@@ -19,6 +19,7 @@ import com.learn.worlds.ui.login.auth.AuthViewModel
 import com.learn.worlds.ui.login.sync.SynchronizationEvent
 import com.learn.worlds.ui.login.sync.SynchronizationScreen
 import com.learn.worlds.ui.login.sync.SynchronizationViewModel
+import kotlinx.coroutines.delay
 
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) { launchSingleTop = true }
@@ -54,7 +55,6 @@ fun MyNavHost(
                     handleEvent = { viewModel.handleEvent(it) },
                     synchronizationState = uiState,
                     onSyncronizedSucces = {
-                        viewModel.handleEvent(SynchronizationEvent.DismissDialog)
                         navHostController.navigateUp()
                     })
             }
