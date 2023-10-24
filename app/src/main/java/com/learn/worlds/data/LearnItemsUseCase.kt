@@ -39,24 +39,7 @@ class LearnItemsUseCase @Inject constructor(
         }
     }.flowOn(dispatcher)
 
-    suspend fun syncItemsFromNetwork() = flow<Result<List<LearningItem>>> {
-        learningItemsRepository.fetchDataFromNetwork().onEach {
-            when (it) {
-                is Result.Complete -> {
-                    emit(it)
-                }
-                is Result.Error -> {
-                    emit(it)
-                }
-                is Result.Loading -> {
-                    emit(it)
-                }
-                is Result.Success -> {
-                    learningItemsRepository.writeToLocalDatabase(it.data)
-                }
-            }
-        }.collect()
-    }
+    suspend fun syncItemsFromNetwork() = learningItemsRepository.writeToLocalDatabase(learningItemsRepository.fetchDataFromNetwork())
 
 
 }

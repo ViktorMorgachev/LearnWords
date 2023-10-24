@@ -16,7 +16,7 @@ class LearningLocalItemsDataSource @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val learningItemDao: LearningItemDao) {
 
-     val learningItems = getLearningItems()
+     val learningItems = learningItemDao.getLearningItems()
 
     suspend fun addLearningItem(learningItemDB: LearningItemDB)  = flow {
         Timber.e("addLearningItem: learningItem $learningItemDB")
@@ -28,8 +28,6 @@ class LearningLocalItemsDataSource @Inject constructor(
             emit(Result.Error())
         }
     }.flowOn(dispatcher)
-
-     fun getLearningItems() = learningItemDao.getLearningItems()
 
     suspend fun addLearningItems(learningItemDB: List<LearningItemDB>)  = flow {
         Timber.e("addLearningItem: learningItem $learningItemDB")

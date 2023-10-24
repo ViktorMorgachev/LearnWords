@@ -65,24 +65,28 @@ class LearningItemsRepository @Inject constructor(
         }
     }
 
-    suspend fun writeToLocalDatabase(learningItems: List<LearningItem>) = flow<Result<List<LearningItem>>> {
-            data.collect { databaseResult ->
-                when (databaseResult) {
-                    Result.Complete -> {}
-                    is Result.Error -> { emit(Result.Error()) }
-                    Result.Loading -> {}
-                    is Result.Success -> {
-                        learningItems.forEach {
 
+    suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
+    fun writeToLocalDatabase(fetchDataFromNetwork: Flow<Result<List<LearningItem>>>) = flow<Result<List<LearningItem>>> {
+        fetchDataFromNetwork.collect{ remoteItemsResult->
+            when(remoteItemsResult){
+                Result.Complete -> emit(Result.Success(listOf()))
+                is Result.Error -> emit(Result.Error())
+                Result.Loading -> {}
+                is Result.Success -> {
+                    data.collect(){ databaseItems->
+                        if(databaseItems == Result.Error()){
+                            emit(Result.Error())
+                        } else {
+                            remoteItemsResult.data.forEach {
+                               writeToLocalDatabase(it).collect()
+                            }
+                            emit(Result.Success(remoteItemsResult.data))
                         }
                     }
                 }
-
             }
-
         }
-
-
-    suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
+    }
 
 }
