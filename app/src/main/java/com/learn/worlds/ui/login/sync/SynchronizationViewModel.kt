@@ -3,22 +3,18 @@ package com.learn.worlds.ui.login.sync
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.LearnItemsUseCase
-import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.coroutines.CoroutineContext
 
 @HiltViewModel
 class SynchronizationViewModel @Inject constructor(
@@ -34,7 +30,7 @@ class SynchronizationViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            learningItemsUseCase.loadItemsFromNetwork().catch {
+            learningItemsUseCase.syncItemsFromNetwork().catch {
                 if (it == CancellationException()){
                     uiState.value = uiState.value.copy(
                         cancelledByUser = true

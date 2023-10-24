@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 import javax.inject.Inject
 
 class LearningItemsRepository @Inject constructor(
@@ -38,29 +39,10 @@ class LearningItemsRepository @Inject constructor(
         }
     }
 
-    init {
-        // TODO: need enabled after, next step we need to realize sync data with worker
-        /* if (authService.isAuthentificated()){
-             scope.launch{
-                 remoteDataSource.learningItems.collect {
-                     try {
-                         if (it is Result.Success<List<LearningItemAPI>>){
-                             localDataSource.addLearningItems(it.data.map { it.toLearningItemDB() })
-                         }
-                     } catch (t: Throwable){
-                         Timber.e(t)
-                     }
-
-                 }
-             }
-         }*/
-
-    }
-
     suspend fun fetchDataFromNetwork(): Flow<Result<List<LearningItem>>> {
         return flow {
-            remoteDataSource.fetchDataFromNetwork()
-            remoteDataSource.learningItems.onEach { result ->
+            remoteDataSource.fetchDataFromNetwork().onEach { result ->
+                Timber.d("fetchDataFromNetwork: $result")
                 when (result) {
                     is Result.Success -> {
                         emit(Result.Success(result.data.map { it.toLearningItem() }))
@@ -77,13 +59,30 @@ class LearningItemsRepository @Inject constructor(
                     is Result.Loading -> {
                         emit(Result.Loading)
                     }
-                }
 
+                }
             }.collect()
         }
     }
 
-    suspend fun addLearningItem(learningItem: LearningItem) =
-        localDataSource.addLearningItem(learningItem.toLearningItemDB())
+    suspend fun writeToLocalDatabase(learningItems: List<LearningItem>) = flow<Result<List<LearningItem>>> {
+            data.collect { databaseResult ->
+                when (databaseResult) {
+                    Result.Complete -> {}
+                    is Result.Error -> { emit(Result.Error()) }
+                    Result.Loading -> {}
+                    is Result.Success -> {
+                        learningItems.forEach {
+
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+
+    suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
 
 }

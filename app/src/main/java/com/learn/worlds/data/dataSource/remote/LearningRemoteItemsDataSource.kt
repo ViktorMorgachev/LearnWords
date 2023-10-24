@@ -15,68 +15,58 @@ import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
 class LearningRemoteItemsDataSource @Inject constructor(
-    @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val authService: AuthService
 ) {
 
     val database by lazy { Firebase.database }
     var databaseRef: DatabaseReference? = null
 
-    private val _learningItems: MutableStateFlow<Result<List<LearningItemAPI>>> = MutableStateFlow(Result.Loading)
-    val learningItems: Flow<Result<List<LearningItemAPI>>> = _learningItems.asStateFlow()
-
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + dispatcher)
-
-    suspend fun fetchDataFromNetwork() {
-        scope.launch {
-            _learningItems.emit(Result.Loading)
-            delay(3000)
-             val items = listOf<LearningItemAPI>()
-            _learningItems.emit(Result.Success(items))
-
-        }
-    }
-
-    fun subsribeToDatabase() {
-        if (authService.getUserUUID() == null) return
-        databaseRef = database.getReference(authService.getUserUUID()!!)
-        databaseRef?.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val value = dataSnapshot.getValue<@JvmSuppressWildcards List<LearningItemAPI>>()
-                value?.let {
-                    scope.launch {
-                        _learningItems.emit(Result.Success<List<LearningItemAPI>>(it))
-                    }
-                }
-                Timber.d("data from remote database: ${value}")
-            }
-
+    suspend fun fetchDataFromNetwork() = callbackFlow<Result<List<LearningItemAPI>>> {
+        this@callbackFlow.trySendBlocking(Result.Loading)
+        val dbListener = object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Timber.e("data from remote database: ${error.message}  ${error.code}")
-                scope.launch {
-                    _learningItems.emit(Result.Error())
-                }
+                Timber.e(message = "${error.message} :${error.code}")
+                this@callbackFlow.trySendBlocking(Result.Error())
+                close(Throwable(message = "${error.message} :${error.code}"))
             }
-        })
+
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                this@callbackFlow.trySendBlocking(Result.Success(dataSnapshot.getValue<List<LearningItemAPI>>()?.filterNotNull() ?: listOf()))
+                close()
+            }
+        }
+
+        if (!authService.isAuthentificated()){
+            this@callbackFlow.trySendBlocking(Result.Error())
+            close()
+        } else {
+            databaseRef = database.getReference(authService.getUserUUID()!!)
+            databaseRef?.addListenerForSingleValueEvent(dbListener)
+        }
+        awaitClose {
+            databaseRef?.removeEventListener(dbListener)
+        }
+
     }
 
-
-    suspend fun addLearningItem(learningItemAPI: LearningItemAPI) = flow<Result<Any>> {
+    suspend fun addLearningItems(learningItemAPI: List<LearningItemAPI>) = flow<Result<Any>> {
         Timber.e("addLearningItem: LearningItemAPI $learningItemAPI")
         try {
             emit(Result.Loading)
-            databaseRef!!.setValue(learningItemAPI)!!.addOnCompleteListener {
+            databaseRef!!.setValue(learningItemAPI).addOnCompleteListener {
                Timber.d("addLearningItem:  success ${it.isSuccessful} errorMessage: ${it.exception?.localizedMessage}")
             }
             emit(Result.Complete)

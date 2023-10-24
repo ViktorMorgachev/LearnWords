@@ -16,6 +16,7 @@ interface Request<T> {
 
 fun <T> Request<T>.asFlow() = callbackFlow {
         execute(object : Request.Callback<T> {
+
             override fun onSuccess(value: T) {
                 trySendBlocking(value)
                 close()
