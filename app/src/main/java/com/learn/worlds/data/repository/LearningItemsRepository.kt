@@ -9,14 +9,14 @@ import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import timber.log.Timber
 import javax.inject.Inject
 
 class LearningItemsRepository @Inject constructor(
@@ -29,7 +29,8 @@ class LearningItemsRepository @Inject constructor(
         try {
             Result.Success(initialData.map { it.toLearningItem() })
         } catch (t: Throwable) {
-            Result.Error()
+            Timber.e(t)
+            Result.Success(listOf())
         }
     }
 
@@ -49,31 +50,20 @@ class LearningItemsRepository @Inject constructor(
 
     suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
 
-    suspend fun writeToRemoteDatabase(learningItem: List<LearningItem>) = flow<List<LearningItem>> {
-        remoteDataSource.addLearningItems(learningItem.map { it.toLearningItemAPI() })
-            .filter { it != Result.Loading && it != Result.Complete }
-            .onEach { result->
-                if (result is Result.Success) {
-                    emit(result.data)
-                }
-                if (result is Result.Error){
-                    emit(result)
-
-                }
-            }.collect()
+    suspend fun writeListToRemoteDatabase(learningItem: List<LearningItem>) = flow<Result<List<LearningItem>>> {
+        emit(remoteDataSource.addLearningItems(learningItem.map { it.toLearningItemAPI() }))
     }
 
 
-    suspend fun writeToLocalDatabase(fetchDataFromNetwork: List<LearningItem>) =
+    suspend fun writeToLocalDatabase(dataFromNetwork: List<LearningItem>) =
         flow<Result<List<LearningItem>>> {
             data.collect { databaseItems ->
                 if (databaseItems == Result.Error()) {
                     emit(Result.Error())
                 } else {
-                    fetchDataFromNetwork.forEach {
-                        writeToLocalDatabase(it).collect()
+                    localDataSource.addLearningItems(dataFromNetwork.map { it.toLearningItemDB() }).collectLatest {
+                        emit(it)
                     }
-                    emit(Result.Success(fetchDataFromNetwork))
                 }
             }
         }

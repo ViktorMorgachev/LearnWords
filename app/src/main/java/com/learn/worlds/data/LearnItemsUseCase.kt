@@ -1,6 +1,7 @@
 package com.learn.worlds.data
 
 import android.content.Context
+import androidx.compose.material3.TimeInput
 import com.learn.worlds.R
 import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.model.base.LearningItem
@@ -48,12 +49,16 @@ class LearnItemsUseCase @Inject constructor(
             .combine(learningItemsRepository.getDataFromDatabase()
                 .map { listDB-> listDB.map { it.toLearningItem() } }) { fromNetwork, fromDatabase ->
 
+                /**
+                 *
+                 * To avoid cognitive dissonance
+                 * (fromDatabase returns either an empty list in case of an error or data)
+                 * */
                 if (fromNetwork is Result.Success){
                     val networkData = fromNetwork.data
                     val dataForNetwork: MutableList<LearningItem> = mutableListOf()
                     val dataForLocal: MutableList<LearningItem> = mutableListOf()
                     fromDatabase.forEach { dbItem ->
-                        // Записываем в интернет если в ней нет элемента
                         if (!networkData.contains(dbItem)) {
                             dataForNetwork.add(dbItem)
                         }
@@ -64,23 +69,16 @@ class LearnItemsUseCase @Inject constructor(
                         }
                     }
 
-                    // Если оба списка пусты
-                    if (networkData.isEmpty() && dataForLocal.isEmpty()){
+                    if (dataForNetwork.isEmpty() && dataForLocal.isEmpty()){
                         emit(Result.Success(listOf()))
                     } else {
-                        learningItemsRepository.writeToRemoteDatabase(dataForNetwork)
+                        learningItemsRepository.writeListToRemoteDatabase(dataForNetwork)
                             .combine(learningItemsRepository.writeToLocalDatabase(dataForLocal)) { remoteResult, localResult->
-                                emit(Result.Success(networkData.plus(dataForLocal)))
+                                Timber.d("synckResult: remoteResult: ${remoteResult} localResult ${localResult}")
+                                emit(Result.Complete)
                             }
 
                     }
-
-
-
-                    Timber.d("SynchronizationWorker: " +
-                            "\n forRemote: ${dataForNetwork.joinToString(", ")}" +
-                            " \n forLocal: ${dataForLocal.joinToString(", ")}"
-                    )
 
                 }
             }.flowOn(dispatcher).collect()
