@@ -49,13 +49,8 @@ class LearnItemsUseCase @Inject constructor(
             .combine(learningItemsRepository.getDataFromDatabase()
                 .map { listDB-> listDB.map { it.toLearningItem() } }) { fromNetwork, fromDatabase ->
 
-                /**
-                 *
-                 * To avoid cognitive dissonance
-                 * (fromDatabase returns either an empty list in case of an error or data)
-                 * */
-                if (fromNetwork is Result.Success){
-                    val networkData = fromNetwork.data
+                try {
+                    val networkData = if (fromNetwork is Result.Success) fromNetwork.data else listOf()
                     val dataForNetwork: MutableList<LearningItem> = mutableListOf()
                     val dataForLocal: MutableList<LearningItem> = mutableListOf()
                     fromDatabase.forEach { dbItem ->
@@ -75,12 +70,14 @@ class LearnItemsUseCase @Inject constructor(
                         learningItemsRepository.writeListToRemoteDatabase(dataForNetwork)
                             .combine(learningItemsRepository.writeToLocalDatabase(dataForLocal)) { remoteResult, localResult->
                                 Timber.d("synckResult: remoteResult: ${remoteResult} localResult ${localResult}")
-                                emit(Result.Complete)
+                                emit(Result.Success(dataForLocal.plus(dataForNetwork)))
                             }
 
                     }
-
+                } catch (t: Throwable){
+                    emit(Result.Error())
                 }
+
             }.flowOn(dispatcher).collect()
     }
 

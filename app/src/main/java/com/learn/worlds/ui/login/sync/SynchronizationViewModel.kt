@@ -41,7 +41,7 @@ class SynchronizationViewModel @Inject constructor(
                 when (it) {
                     is Result.Success -> {
                         if (it.data.isEmpty()) {
-                            emptyItems()
+                            nothingToSynk()
                         } else {
                             itemsLoaded()
                         }
@@ -73,13 +73,13 @@ class SynchronizationViewModel @Inject constructor(
     private fun itemsLoaded() {
         uiState.value = uiState.value.copy(
             success = true,
-            emptyRemoteData = false,
+            nothingToSync = false,
         )
     }
 
-    private fun emptyItems() {
+    private fun nothingToSynk() {
         uiState.value = uiState.value.copy(
-            emptyRemoteData = true,
+            nothingToSync = true,
             success = false
         )
     }
@@ -99,7 +99,7 @@ class SynchronizationViewModel @Inject constructor(
     private fun dismissDialogs() {
         uiState.value = uiState.value.copy(
             dialogError = null,
-            emptyRemoteData = null
+            nothingToSync = null
         )
     }
 

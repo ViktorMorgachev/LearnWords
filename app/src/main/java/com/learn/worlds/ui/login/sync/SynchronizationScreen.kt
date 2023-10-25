@@ -73,9 +73,9 @@ fun SynchronizationScreen(
         actualTestText = "Cancelled"
     }
 
-    if (synchronizationState.emptyRemoteData == true) {
+    if (synchronizationState.nothingToSync == true) {
         animationRunning = false
-        InformationDialog(message = stringResource(R.string.empty_data_from_network), onDismiss = {
+        InformationDialog(message = stringResource(R.string.nothing_to_sync), onDismiss = {
 
             scope.startDelayed(
                 deferrableJobs = listOf(
