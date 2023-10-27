@@ -11,12 +11,12 @@ import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.AuthService
+import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
@@ -39,11 +39,12 @@ class LearningRemoteItemsDataSource @Inject constructor(
             }
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                this@callbackFlow.trySendBlocking(
-                    Result.Success(
-                        dataSnapshot.getValue<List<LearningItemAPI>>()?.filterNotNull() ?: listOf()
-                    )
-                )
+                Timber.d("onDataChange: ${dataSnapshot}")
+                val resultList = mutableListOf<LearningItemAPI>()
+                dataSnapshot.getValue<HashMap<String, LearningItemAPI>>()?.values?.forEach { data ->
+                    resultList.add(data)
+                }
+                trySendBlocking(Result.Success(resultList))
                 close()
             }
         }
@@ -61,28 +62,33 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
     }
 
-    suspend fun addLearningItems(learningItemAPI: List<LearningItemAPI>) =
+    suspend fun addLearningItems(learningItemsAPI: List<LearningItemAPI>) =
         suspendCancellableCoroutine<Result<List<LearningItem>>> { cancellableContinuation ->
-            cancellableContinuation.invokeOnCancellation {
-                cancellableContinuation.cancel(it)
-            }
             if (databaseRef == null) {
                 authService.getUserUUID()?.let {
                     databaseRef = database.getReference(it)
                 }
             }
             if (databaseRef != null) {
-                databaseRef!!.setValue(learningItemAPI).addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        cancellableContinuation.resume(Result.Complete)
-                    } else {
-                        Timber.e(it.exception)
-                        cancellableContinuation.resume(Result.Error())
+                if (learningItemsAPI.isEmpty()) {
+                    cancellableContinuation.resume(Result.Complete)
+                } else {
+                    databaseRef!!.setValue(learningItemsAPI).addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            cancellableContinuation.resume(Result.Complete)
+                        } else {
+                            Timber.e(it.exception)
+                            cancellableContinuation.resume(Result.Error())
+                        }
                     }
                 }
+
             } else {
                 Timber.e("databaseRef is nullable maybe token expired please check")
                 cancellableContinuation.resume(Result.Error())
+            }
+            cancellableContinuation.invokeOnCancellation {
+                cancellableContinuation.cancel(it)
             }
         }
 

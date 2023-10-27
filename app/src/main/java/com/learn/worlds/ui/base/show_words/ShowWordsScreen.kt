@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -63,6 +64,7 @@ import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
+import com.learn.worlds.utils.Result
 import kotlinx.coroutines.launch
 
 
@@ -96,6 +98,7 @@ fun ShowLearningWordsScreen(
 
         uiState.error?.let {
             SomethingWentWrongDialog(
+                message = it,
                 onTryAgain = {
                     viewModel.dropErrorDialog()
                 })
@@ -205,6 +208,15 @@ fun ShowLearningWordsScreen(
                                     contentDesc = R.string.desc_action_filter_list,
                                     action = {
                                         onNavigate.invoke(Screen.SubscribeScreen)
+                                    }
+                                ))
+                        } else {
+                            add(
+                                ActionTopBar(
+                                    imageVector = Icons.Default.Sync,
+                                    contentDesc = R.string.desc_action_synk_data,
+                                    action = {
+                                        onNavigate.invoke(Screen.SynchronizationScreen)
                                     }
                                 ))
                         }

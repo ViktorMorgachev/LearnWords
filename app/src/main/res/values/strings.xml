@@ -27,7 +27,6 @@
     <string name="desc_hide_password">Спрятать пароль</string>
 
     <!--Dialogs -->
-    <string name="error_limits_adding_words">Прывышено ограничение на добвление слов</string>
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
     <string name="well">Отлично</string>
     <string name="next">Далее</string>
@@ -60,5 +59,9 @@
     <string name="ok">ОК</string>
     <string name="auth_error_tittle">Что-то пошло не так</string>
     <string name="syncronize">Синхронизировать</string>
+
+    <!--Errors-->
+    <string name="error_not_auth">Необходимо войти в аккаунт</string>
+    <string name="error_limits_adding_words">Прывышено ограничение на добвление слов</string>
 
 </resources>

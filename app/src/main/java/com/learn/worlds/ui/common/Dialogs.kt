@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.learn.worlds.R
+import com.learn.worlds.utils.Result
 
 @Preview
 @Composable
@@ -176,22 +177,24 @@ fun SuccessDialog(
 @Composable
 fun SomethingWentWrongDialogPrewiew(
 ) {
-    SomethingWentWrongDialog()
+    SomethingWentWrongDialog(Result.Error())
 }
 
 @Composable
 fun SomethingWentWrongDialog(
-    message: String? = null,
+    message: Result.Error,
     onDismiss: () -> Unit = {},
     onTryAgain: (() -> Unit)? = null
 ) {
+
+
     Surface(modifier = Modifier,
         shadowElevation = 16.dp) {
         AlertDialog(
             icon = {
                 Icon(
                     imageVector = Icons.Filled.Info,
-                    contentDescription = message ?: stringResource(R.string.error_someshing_went_wrong),
+                    contentDescription = stringResource(message.errorType.resID),
                     tint = Color.Red
                 )
             },
@@ -200,7 +203,7 @@ fun SomethingWentWrongDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = message ?: stringResource(R.string.error_someshing_went_wrong))
+                    Text(text = stringResource(message.errorType.resID))
                 }
 
             },

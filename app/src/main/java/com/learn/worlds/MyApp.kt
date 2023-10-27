@@ -15,6 +15,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.Logger
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.remote.SynchronizationWorker
 import com.learn.worlds.data.repository.LearningItemsRepository
@@ -34,8 +35,7 @@ class MyApp : Application(), Configuration.Provider {
     @Inject lateinit var preferences: MySharedPreferences
     @Inject lateinit var hiltWorkerFactory: HiltWorkerFactory
     @Inject @IoDispatcher lateinit var ioDispather: CoroutineDispatcher
-    @Inject @MainDispatcher lateinit var mainDispather: CoroutineDispatcher
-    @Inject lateinit var repository: LearningItemsRepository
+    @Inject lateinit var learnItemsUseCase: LearnItemsUseCase
 
     override fun onCreate() {
         super.onCreate()
@@ -46,23 +46,25 @@ class MyApp : Application(), Configuration.Provider {
         preferences.isAuthentificated  = Firebase.auth.currentUser != null
         Firebase.database.setLogLevel(Logger.Level.DEBUG)
         FirebaseDatabase.getInstance()
-
-        if (preferences.isAuthentificated){
-            runPeriodicallySynchronization()
-        }
+        runPeriodicallySynchronization(preferences.isAuthentificated)
 
     }
 
     override fun getWorkManagerConfiguration(): Configuration {
         val myWorkerFactory = DelegatingWorkerFactory()
-        myWorkerFactory.addFactory(SynchronizationWorkerFactory(ioDispather, mainDispather, repository))
+        myWorkerFactory.addFactory(SynchronizationWorkerFactory(ioDispather, learnItemsUseCase))
         return Configuration.Builder()
             .setWorkerFactory(myWorkerFactory)
             .setMinimumLoggingLevel(Log.INFO)
             .build()
     }
 
-    private fun runPeriodicallySynchronization() {
+    private fun runPeriodicallySynchronization(isAuthentificated: Boolean) {
+        val workManager = WorkManager.getInstance(this)
+        if (!isAuthentificated) {
+            workManager.cancelUniqueWork(uniqueSyncronizationUniqueWorkName)
+            return
+        }
         val constraints = Constraints.Builder()
             .setRequiresCharging(true)
             .setRequiresBatteryNotLow(true)
@@ -70,7 +72,8 @@ class MyApp : Application(), Configuration.Provider {
         val workRequest = PeriodicWorkRequestBuilder<SynchronizationWorker>(  5, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .build()
-        val workManager = WorkManager.getInstance(this)
+
+
         workManager.enqueueUniquePeriodicWork(
             uniqueSyncronizationUniqueWorkName,
             ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,

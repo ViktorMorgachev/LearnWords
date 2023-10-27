@@ -77,7 +77,7 @@ class ShowLearningItemsViewModel @Inject constructor(
                     is Result.Error -> {
                         uiState.value = uiState.value.copy(
                             isLoading =  false,
-                            error = it.error
+                            error = it
                         )
                     }
 

@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LearningItemDao {
     @Query("SELECT * FROM learningItems")
-    fun getLearningItems(): Flow<List<LearningItemDB>>
+    fun getLearningItems(): List<LearningItemDB>
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertLearningItem(item: LearningItemDB)
 

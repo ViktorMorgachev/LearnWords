@@ -54,7 +54,7 @@ fun AddWordsScreen(
         val stateComplete by viewModel.stateWasSavedSuccessfully.collectAsStateWithLifecycle()
 
         addWordsState.error?.let {
-            SomethingWentWrongDialog(message = it.error, onDismiss = {
+            SomethingWentWrongDialog(message = it, onDismiss = {
                 viewModel.handleEvent(
                     AddWordsEvent.ErrorDismissed
                 )

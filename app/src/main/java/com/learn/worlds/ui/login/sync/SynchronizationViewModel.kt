@@ -9,9 +9,11 @@ import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -30,13 +32,13 @@ class SynchronizationViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            learningItemsUseCase.syncItems().catch {
+            learningItemsUseCase.synckItems().catch {
                 if (it == CancellationException()) {
                     uiState.value = uiState.value.copy(
                         cancelledByUser = true
                     )
                 }
-            }.collect {
+            }.flowOn(Dispatchers.IO).collect {
                 Timber.d("syncronization: $it")
                 when (it) {
                     is Result.Success -> {

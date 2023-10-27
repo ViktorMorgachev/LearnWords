@@ -59,8 +59,6 @@ fun SynchronizationScreen(
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation_loading))
 
-    var actualTestText by remember { mutableStateOf("DOWLOADING") }
-
     val scope = rememberCoroutineScope()
 
     var animationRunning by rememberSaveable { mutableStateOf(true) }
@@ -69,14 +67,10 @@ fun SynchronizationScreen(
         onSyncronizedSucces.invoke()
     }
 
-    if (synchronizationState.cancelledByUser == true) {
-        actualTestText = "Cancelled"
-    }
 
     if (synchronizationState.nothingToSync == true) {
         animationRunning = false
         InformationDialog(message = stringResource(R.string.nothing_to_sync), onDismiss = {
-
             scope.startDelayed(
                 deferrableJobs = listOf(
                     DeferrableJob(
@@ -90,14 +84,12 @@ fun SynchronizationScreen(
                         onSyncronizedSucces.invoke()
                     }
                 )
-
             )
-
         })
     }
 
     synchronizationState.dialogError?.let {
-        SomethingWentWrongDialog(message = it.error, onDismiss = {
+        SomethingWentWrongDialog(message = it, onDismiss = {
             handleEvent.invoke(SynchronizationEvent.DismissDialog)
             onSyncronizedSucces.invoke()
         })
