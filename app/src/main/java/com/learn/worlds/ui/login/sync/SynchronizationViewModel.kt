@@ -41,22 +41,9 @@ class SynchronizationViewModel @Inject constructor(
             }.flowOn(Dispatchers.IO).collect {
                 Timber.d("syncronization: $it")
                 when (it) {
-                    is Result.Success -> {
-                        if (it.data.isEmpty()) {
-                            nothingToSynk()
-                        } else {
-                            itemsLoaded()
-                        }
-                    }
-
-                    is Result.Complete -> {
-                        itemsLoaded()
-                    }
-
-                    is Result.Error -> {
-                        showError(it)
-                    }
-
+                    is Result.Success -> itemsLoaded()
+                    is Result.Complete ->  nothingToSynk()
+                    is Result.Error -> showError(it)
                     is Result.Loading -> {}
                 }
 

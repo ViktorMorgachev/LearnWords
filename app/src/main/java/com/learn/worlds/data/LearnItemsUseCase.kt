@@ -1,9 +1,7 @@
 package com.learn.worlds.data
 
 import android.content.Context
-import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.model.base.LearningItem
-import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.repository.LearningItemsRepository
 import com.learn.worlds.di.IoDispatcher
@@ -11,18 +9,10 @@ import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.lang.UnsupportedOperationException
 import javax.inject.Inject
 
 class LearnItemsUseCase @Inject constructor(
@@ -33,14 +23,16 @@ class LearnItemsUseCase @Inject constructor(
 ) {
 
     val actualData = learningItemsRepository.data
-    suspend fun addLearningItem(learningItem: LearningItem) = flow<Result<LearningItem>> {
+    suspend fun addLearningItem(learningItem: LearningItem) = flow<Result<Any>> {
         Timber.e("learningItem $learningItem")
         if (preferences.dataBaseLocked) {
             emit(Result.Error(ErrorType.DATABASE_LIMITS))
         } else {
             try {
-               var result: Result<LearningItem> = Result.Complete
-                learningItemsRepository.writeToLocalDatabase(learningItem).collect{ result = it }
+               var result: Result<Any> = Result.Complete
+                learningItemsRepository.writeToLocalDatabase(learningItem).collect{
+                    result = it
+                }
                 emit(result)
             } catch (t: Throwable) {
                 Timber.e(t)
@@ -60,44 +52,38 @@ class LearnItemsUseCase @Inject constructor(
                     remoteData.addAll(listOf())
                 }
             }
-        val databaseItems = mutableListOf<LearningItem>()
+        val localData = mutableListOf<LearningItem>()
         learningItemsRepository.getDataFromDatabase().collect{
-            databaseItems.addAll(it)
+            localData.addAll(it)
         }
         val dataForNetwork: MutableList<LearningItem> = mutableListOf()
         val dataForLocal: MutableList<LearningItem> = mutableListOf()
-        databaseItems.forEach { dbItem ->
-            if (!remoteData.contains(dbItem)) {
-                dataForNetwork.add(dbItem)
+        localData.plus(remoteData).forEach {
+            if (!localData.contains(it)){
+                dataForLocal.add(it)
             }
-        }
-        remoteData.forEach { remoteItem ->
-            if (!databaseItems.contains(remoteItem)) {
-                dataForLocal.add(remoteItem)
+            if (!remoteData.contains(it)){
+                dataForNetwork.add(it)
             }
         }
         Timber.d("dataForRemote: ${dataForNetwork.joinToString(", ")} " +
                 "\ndataForLocal: ${dataForLocal.joinToString(", ")}  ")
 
-        if (dataForNetwork.isEmpty() && dataForLocal.isEmpty()) {
-            emit(Result.Success(listOf<LearningItem>()))
+        val synckResult = mutableListOf<Result<Nothing>>()
+        learningItemsRepository.writeListToLocalDatabase(dataForLocal).collect {
+            synckResult.add(it)
+        }
+        learningItemsRepository.writeListToRemoteDatabase(dataForNetwork).collect {
+            synckResult.add(it)
+        }
+        if (synckResult.any{ it == Result.Error()}){
+            emit(synckResult.first { it == Result.Error() })
         } else {
-            val savedToRemoteItems = mutableListOf<LearningItem>()
-            learningItemsRepository.writeListToLocalDatabase(dataForLocal)
-                .transform<Result<List<LearningItem>>, List<LearningItem>> {
-                    if (it is Result.Success) emit(it.data) else emit(listOf())
-                }.collect {
-                    savedToRemoteItems.addAll(it)
-                }
-            val savedToDatabaseItems = mutableListOf<LearningItem>()
-            learningItemsRepository.writeListToRemoteDatabase(dataForNetwork)
-                .transform<Result<List<LearningItem>>, List<LearningItem>>
-                {
-                    if (it is Result.Success) emit(it.data) else emit(listOf())
-                }.collect {
-                    savedToDatabaseItems.addAll(it)
-                }
-            emit(Result.Success(savedToDatabaseItems.plus(savedToRemoteItems)))
+            if (synckResult.any { it == Result.Complete }){
+                emit(Result.Success(listOf()))
+            } else{
+                emit(Result.Complete)
+            }
         }
     }
 

@@ -4,6 +4,9 @@ import androidx.annotation.StringRes
 import com.learn.worlds.R
 
 val uniqueSyncronizationUniqueWorkName = "syncronization_work"
+enum class FirebaseDatabaseChild(val path: String){
+    LEARNING_ITEMS("learning_items")
+}
 
 enum class ErrorType(@StringRes val resID: Int) {
     NOT_AUTHENTICATED(R.string.error_not_auth),

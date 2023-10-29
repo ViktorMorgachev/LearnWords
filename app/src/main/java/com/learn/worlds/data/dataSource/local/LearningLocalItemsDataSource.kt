@@ -23,7 +23,7 @@ class LearningLocalItemsDataSource @Inject constructor(
 
    suspend fun fetchDatabaseItems() = flow<List<LearningItemDB>> { emit(learningItemDao.getLearningItems()) }.flowOn(Dispatchers.IO)
 
-    suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<LearningItemDB>> {
+    suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<Nothing>> {
         Timber.d("addLearningItem: learningItem $learningItemDB")
         try {
             learningItemDao.insertLearningItem(learningItemDB)
@@ -34,7 +34,7 @@ class LearningLocalItemsDataSource @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    suspend fun addLearningItems(learningItemDB: List<LearningItemDB>) = flow<Result<List<LearningItemDB>>> {
+    suspend fun addLearningItems(learningItemDB: List<LearningItemDB>) = flow<Result<Nothing>> {
             Timber.d("addLearningItems: learningItem $learningItemDB")
             try {
                 learningItemDao.insertLearningItems(learningItemDB)

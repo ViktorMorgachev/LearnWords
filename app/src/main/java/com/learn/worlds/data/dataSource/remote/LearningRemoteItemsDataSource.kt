@@ -12,6 +12,7 @@ import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.ErrorType
+import com.learn.worlds.utils.FirebaseDatabaseChild
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
@@ -31,39 +32,40 @@ class LearningRemoteItemsDataSource @Inject constructor(
     var databaseRef: DatabaseReference? = null
 
     suspend fun fetchDataFromNetwork() = callbackFlow<Result<List<LearningItemAPI>>> {
-        val dbListener = object : ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-                Timber.e(message = "${error.message} :${error.code}")
-                this@callbackFlow.trySendBlocking(Result.Error())
-                close(Throwable(message = "${error.message} :${error.code}"))
-            }
-
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                Timber.d("onDataChange: ${dataSnapshot}")
-                val resultList = mutableListOf<LearningItemAPI>()
-                dataSnapshot.getValue<HashMap<String, LearningItemAPI>>()?.values?.forEach { data ->
-                    resultList.add(data)
-                }
-                trySendBlocking(Result.Success(resultList))
-                close()
-            }
-        }
-
         if (!authService.isAuthentificated()) {
-            this@callbackFlow.trySendBlocking(Result.Error())
+            this@callbackFlow.trySendBlocking(Result.Error(ErrorType.NOT_AUTHENTICATED))
             close()
         } else {
             databaseRef = database.getReference(authService.getUserUUID()!!)
-            databaseRef?.addListenerForSingleValueEvent(dbListener)
+            databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).get().addOnCompleteListener {
+                if (it.isSuccessful){
+                    if (it.result != null){
+                        if (!it.result.exists()){
+                            trySendBlocking(Result.Success(listOf()))
+                        } else {
+                            var resultList = listOf<LearningItemAPI>()
+                            resultList =  it.result.children.map { it.getValue<LearningItemAPI>() }.filterNotNull()
+                            trySendBlocking(Result.Success(resultList))
+                        }
+                    } else {
+                        trySendBlocking(Result.Success(listOf()))
+                    }
+                    close()
+                } else {
+                    Timber.e(it.exception)
+                    trySendBlocking(Result.Error())
+                    close()
+                }
+            }
         }
         awaitClose {
-            databaseRef?.removeEventListener(dbListener)
+          close()
         }
 
     }
 
     suspend fun addLearningItems(learningItemsAPI: List<LearningItemAPI>) =
-        suspendCancellableCoroutine<Result<List<LearningItem>>> { cancellableContinuation ->
+        suspendCancellableCoroutine<Result<Nothing>> { cancellableContinuation ->
             if (databaseRef == null) {
                 authService.getUserUUID()?.let {
                     databaseRef = database.getReference(it)
@@ -73,14 +75,14 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 if (learningItemsAPI.isEmpty()) {
                     cancellableContinuation.resume(Result.Complete)
                 } else {
-                    databaseRef!!.setValue(learningItemsAPI).addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            cancellableContinuation.resume(Result.Complete)
-                        } else {
-                            Timber.e(it.exception)
-                            cancellableContinuation.resume(Result.Error())
+                    learningItemsAPI.forEach {
+                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${it.timeStampUIID}").setValue(it).addOnCompleteListener {
+                            if (!it.isSuccessful) {
+                                cancellableContinuation.resume(Result.Error())
+                            }
                         }
                     }
+                    cancellableContinuation.resume(Result.Complete)
                 }
 
             } else {
