@@ -22,9 +22,9 @@ class SynchronizationWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         Timber.d("SynchronizationWorker: doWork()")
-       /* learnItemsUseCase.synckItems().flowOn(ioDispather).collect{
+        learnItemsUseCase.synckItems().collect{
             Timber.d("SynchronizationWorker: result: ${it}")
-        }*/
+        }
         Timber.d("SynchronizationWorker: after syncItems()")
         return Result.success()
     }

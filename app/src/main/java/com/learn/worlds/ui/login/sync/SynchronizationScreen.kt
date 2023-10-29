@@ -23,11 +23,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.learn.worlds.R
+import com.learn.worlds.ui.base.show_words.ShowLearningItemsViewModel
+import com.learn.worlds.ui.base.show_words.ShowWordsState
 import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
@@ -44,8 +48,7 @@ fun SynchronizationScreenPreview() {
     LearnWordsTheme {
         SynchronizationScreen(
             synchronizationState = SynchronizationState(),
-            onSyncronizedSucces = {},
-            handleEvent = {})
+            onSyncronizedSucces = {})
     }
 }
 
@@ -53,9 +56,9 @@ fun SynchronizationScreenPreview() {
 @Composable
 fun SynchronizationScreen(
     modifier: Modifier = Modifier,
-    synchronizationState: SynchronizationState,
+    viewModel: SynchronizationViewModel = hiltViewModel(),
+    synchronizationState: SynchronizationState = viewModel.uiState.collectAsStateWithLifecycle().value,
     onSyncronizedSucces: () -> Unit,
-    handleEvent: (SynchronizationEvent) -> Unit
 ) {
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation_loading))
 
@@ -76,7 +79,7 @@ fun SynchronizationScreen(
                     DeferrableJob(
                         dispather = Dispatchers.Main
                     ) {
-                        handleEvent(SynchronizationEvent.DismissDialog)
+                       viewModel.handleEvent(SynchronizationEvent.DismissDialog)
                     },
                     DeferrableJob(
                         dispather = Dispatchers.Main, delay = 300L
@@ -90,7 +93,7 @@ fun SynchronizationScreen(
 
     synchronizationState.dialogError?.let {
         SomethingWentWrongDialog(message = it, onDismiss = {
-            handleEvent.invoke(SynchronizationEvent.DismissDialog)
+           viewModel.handleEvent(SynchronizationEvent.DismissDialog)
             onSyncronizedSucces.invoke()
         })
     }

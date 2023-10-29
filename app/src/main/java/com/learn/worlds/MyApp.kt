@@ -69,14 +69,14 @@ class MyApp : Application(), Configuration.Provider {
             .setRequiresCharging(true)
             .setRequiresBatteryNotLow(true)
             .build()
-        val workRequest = PeriodicWorkRequestBuilder<SynchronizationWorker>(  5, TimeUnit.MINUTES)
+        val workRequest = PeriodicWorkRequestBuilder<SynchronizationWorker>(  30, TimeUnit.MINUTES)
             .setConstraints(constraints)
             .build()
 
 
         workManager.enqueueUniquePeriodicWork(
             uniqueSyncronizationUniqueWorkName,
-            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            ExistingPeriodicWorkPolicy.KEEP,
             workRequest
         )
     }

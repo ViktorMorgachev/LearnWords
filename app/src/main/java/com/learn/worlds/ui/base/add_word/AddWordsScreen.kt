@@ -29,6 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
+import com.learn.worlds.ui.login.sync.SynchronizationState
+import com.learn.worlds.ui.login.sync.SynchronizationViewModel
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.Dispatchers
@@ -42,9 +44,9 @@ import timber.log.Timber
 @Composable
 fun AddWordsScreen(
     modifier: Modifier = Modifier,
+    viewModel: AddLearningItemsViewModel = hiltViewModel(),
+    addWordsState: AddWordsState = viewModel.uiState.collectAsStateWithLifecycle().value,
     navigateAfterSuccessWasAdded: () -> Unit,
-    addWordsState: AddWordsState,
-    viewModel: AddLearningItemsViewModel = hiltViewModel()
 ) {
     Surface(
         modifier = modifier.fillMaxSize(),

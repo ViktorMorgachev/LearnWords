@@ -21,10 +21,11 @@ class MySharedPreferences @Inject constructor(@MainPreferences private val share
     var isAuthentificated: Boolean
         get() {
             val isAuthentificated = sharedPrefs.getBoolean("isAuthentificated", false)
-            Timber.d("isAuthentificated: $isAuthentificated")
+            Timber.d("get isAuthentificated: $isAuthentificated")
             return isAuthentificated
         }
         set(value) {
+            Timber.d("set isAuthentificated: $value")
             sharedPrefs.edit().putBoolean("isAuthentificated", value).apply()
         }
 

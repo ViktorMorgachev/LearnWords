@@ -34,6 +34,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +51,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
@@ -64,27 +68,28 @@ import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
-import com.learn.worlds.utils.Result
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 
 @Composable
 fun ShowLearningWordsScreenPreview() {
     MaterialTheme {
-        ShowLearningWordsScreen(
+       /* ShowLearningWordsScreen(
             onNavigate = {},
             uiState = ShowWordsState(isAuthentificated = false)
-        )
+        )*/
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowLearningWordsScreen(
-    uiState: ShowWordsState,
     modifier: Modifier = Modifier,
+    viewModel: ShowLearningItemsViewModel = hiltViewModel(),
+    uiState: ShowWordsState = viewModel.uiState.collectAsStateWithLifecycle().value,
     onNavigate: (Screen) -> Unit,
-    viewModel: ShowLearningItemsViewModel = hiltViewModel()
 ) {
 
     Surface(

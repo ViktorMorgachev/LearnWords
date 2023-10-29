@@ -29,17 +29,15 @@ class LearnItemsUseCase @Inject constructor(
             emit(Result.Error(ErrorType.DATABASE_LIMITS))
         } else {
             try {
-               var result: Result<Any> = Result.Complete
                 learningItemsRepository.writeToLocalDatabase(learningItem).collect{
-                    result = it
+                    emit(it)
                 }
-                emit(result)
             } catch (t: Throwable) {
                 Timber.e(t)
                 emit(Result.Error())
             }
         }
-    }.flowOn(dispatcher)
+    }
 
 
     suspend fun synckItems() = flow<Result<List<LearningItem>>> {

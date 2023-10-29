@@ -61,6 +61,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.R
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.common.SuccessDialog
@@ -77,7 +78,7 @@ fun AuthScreenPreview() {
                 authenticationMode = AuthenticationMode.SIGN_UP,
                 dialogAuthSuccess = AuthSuccessEvent.SIGN_UP
             ),
-            onAuthSuccessAction = {})
+            onSyncAction = {})
     }
 
 }
@@ -85,10 +86,15 @@ fun AuthScreenPreview() {
 @Composable
 fun AuthScreen(
     modifier: Modifier = Modifier,
-    authenticationState: AuthenticationState,
-    onAuthSuccessAction: () -> Unit,
-    viewModel: AuthViewModel = hiltViewModel()
+    viewModel: AuthViewModel = hiltViewModel(),
+    authenticationState: AuthenticationState = viewModel.uiState.collectAsStateWithLifecycle().value,
+    onSyncAction: ()-> Unit
 ) {
+
+    if (authenticationState.isSynchronization == true){
+        onSyncAction.invoke()
+    }
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -117,7 +123,6 @@ fun AuthScreen(
                         SuccessDialog(
                             message = stringResource(R.string.account_was_sig_in)
                         ) {
-                            onAuthSuccessAction.invoke()
                             viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
                         }
                     }
@@ -126,7 +131,6 @@ fun AuthScreen(
                         SuccessDialog(
                             message = stringResource(R.string.account_was_sign_up)
                         ) {
-                            onAuthSuccessAction.invoke()
                             viewModel.handleEvent(AuthenticationEvent.DialogDismiss)
                         }
                     }
