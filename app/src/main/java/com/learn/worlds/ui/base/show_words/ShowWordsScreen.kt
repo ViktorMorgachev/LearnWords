@@ -6,6 +6,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -92,6 +93,7 @@ fun ShowLearningWordsScreen(
     onNavigate: (Screen) -> Unit,
 ) {
 
+    val actualList by viewModel.actualItems.collectAsStateWithLifecycle()
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -117,7 +119,7 @@ fun ShowLearningWordsScreen(
 
         LearningItemsScreen(modifier = modifier,
             isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
-            learningItems = uiState.learningItems,
+            learningItems = actualList,
             onChangeData = {},
             isAuthenticated = uiState.isAuthentificated,
             onLoginAction = { onNavigate.invoke(Screen.AuthScreen) },
@@ -205,27 +207,7 @@ fun ShowLearningWordsScreen(
                                 }
                             }
                         )
-                    ).apply {
-                        if (viewModel.isLockedApplication()) {
-                            add(
-                                ActionTopBar(
-                                    imageVector = Icons.Default.LockOpen,
-                                    contentDesc = R.string.desc_action_filter_list,
-                                    action = {
-                                        onNavigate.invoke(Screen.SubscribeScreen)
-                                    }
-                                ))
-                        } else {
-                            add(
-                                ActionTopBar(
-                                    imageVector = Icons.Default.Sync,
-                                    contentDesc = R.string.desc_action_synk_data,
-                                    action = {
-                                        onNavigate.invoke(Screen.SynchronizationScreen)
-                                    }
-                                ))
-                        }
-                    }
+                    )
                 )
             }
         )
@@ -429,6 +411,7 @@ fun EmptyScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardContent(
+    modifier: Modifier = Modifier,
     learningItem: LearningItem,
     onChangeData: (LearningItem) -> Unit,
     showDefaultNative: Boolean = true
@@ -496,20 +479,24 @@ fun CardContent(
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LearningList(
     modifier: Modifier = Modifier,
     learningItems: List<LearningItem>,
     onChangeData: (LearningItem) -> Unit,
-    needRememberLastScrollState: Boolean = true
+    needRememberLastScrollState: Boolean = false
 ) {
+    Timber.d("LearningList: Recompose: ${learningItems.joinToString(",\n")}")
     LazyColumn(
         state = if (needRememberLastScrollState) rememberLazyListState() else LazyListState(),
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         items(learningItems) { item ->
-            CardContent(learningItem = item, onChangeData = onChangeData)
+            CardContent(modifier = Modifier.animateItemPlacement(
+                tween(durationMillis = 250)
+            ), learningItem = item, onChangeData = onChangeData)
         }
     }
 }

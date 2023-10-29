@@ -15,7 +15,7 @@ class LearningMockItemsDataSource @Inject constructor() {
     private val _learningItems: MutableStateFlow<MutableList<LearningItemDB>> = MutableStateFlow(initMockData())
     val learningItems: Flow<List<LearningItemDB>> = _learningItems.asStateFlow()
 
-    private fun initMockData(): MutableList<LearningItemDB> {
+    fun initMockData(): MutableList<LearningItemDB> {
         return  mutableListOf(
             LearningItemDB("hello", "hola", "LEARNING", 1657977381211),
             LearningItemDB("goodbye", "adios", "LEARNING", 1657977381212),

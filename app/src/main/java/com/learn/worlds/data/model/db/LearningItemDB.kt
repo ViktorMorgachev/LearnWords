@@ -2,7 +2,6 @@ package com.learn.worlds.data.model.db
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -14,6 +13,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LearningItemDao {
+    @Query("SELECT * FROM learningItems")
+    fun getLearningItemsFlow(): Flow<List<LearningItemDB>>
+
     @Query("SELECT * FROM learningItems")
     fun getLearningItems(): List<LearningItemDB>
     @Insert(onConflict = OnConflictStrategy.ABORT)

@@ -12,10 +12,13 @@ import com.learn.worlds.data.prefs.UISharedPreferences
 import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -33,9 +36,9 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     val uiState = MutableStateFlow(ShowWordsState())
 
-    private val _stateLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
-    private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
+    val actualItems : MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
+    private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
     init {
         checkForAuthenticated()
@@ -57,45 +60,23 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            learnItemsUseCase.actualData.onEach {
-                val data = if (it is Result.Success) { it.data } else null
-                Timber.d("learningItemsState: type ${it.javaClass.simpleName} data $data")
-                when (it) {
-                    is Result.Loading -> {
-                        uiState.value = uiState.value.copy(
-                            isLoading = true,
-                            error = null
-                        )
-                    }
-                    is Result.Success -> {
-                        if (!preferences.subscribedByUser) {
-                            if (it.data.size >= preferences.defaultLimit) {
-                                preferences.dataBaseLocked = true
-                            }
-                        }
-                        uiState.value = uiState.value.copy(
-                            isLoading =  false,
-                            error = null,
-                            learningItems =  getSortedAndFilteringData(it.data)
-                        )
-                        allLearningItems.value = it.data
-                    }
+            learnItemsUseCase.actualData().collect { data->
+                allLearningItems.value = data
+                Timber.d("actualData: ${data.joinToString(",\n")}")
+                uiState.value = uiState.value.copy(
+                    isLoading =  false,
+                    error = null,
+                    learningItems = getSortedAndFilteringData(data)
+                )
+                actualItems.emit(getSortedAndFilteringData(data))
+                delay(2000)
+                sortBy(SortingType.SORT_BY_NEW)
+                delay(2000)
+                sortBy(SortingType.SORT_BY_OLD)
 
-                    is Result.Error -> {
-                        uiState.value = uiState.value.copy(
-                            isLoading =  false,
-                            error = it
-                        )
-                    }
-
-                    Result.Complete -> {}
-                }
-            }.stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5000),
-                Result.Loading
-            ).collect()
+            }
         }
+
     }
 
     fun dropErrorDialog() {
@@ -133,35 +114,21 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     suspend fun filterBy(filter: FilteringType) {
         preferences.savedFilteringType = filter.name
+        uiState.value = uiState.value.copy(
+            learningItems = getSortedAndFilteringData(allLearningItems.value)
+        )
+        actualItems.emit(getSortedAndFilteringData(allLearningItems.value))
         Timber.d("filterBy: ${filter.name}")
-        if (filter == FilteringType.LEARNED) {
-            _stateLearningItems.emit(allLearningItems.value.filter { it.learningStatus == LearningStatus.LEARNED.name })
-        }
-        if (filter == FilteringType.ALL) {
-            _stateLearningItems.emit(allLearningItems.value)
-        }
     }
 
     suspend fun sortBy(sortingType: SortingType) {
         preferences.savedSortingType = sortingType.name
-        Timber.d("sortBy: ${sortingType.name}")
-        if (sortingType == SortingType.SORT_BY_NEW) {
-            Timber.d("sorted: ${allLearningItems.value.sortedByDescending { it.timeStampUIID }.joinToString(", ")}")
-            _stateLearningItems.emit(allLearningItems.value.sortedByDescending { it.timeStampUIID })
-        }
-        if (sortingType == SortingType.SORT_BY_OLD) {
-            Timber.d("sorted: ${allLearningItems.value.sortedBy { it.timeStampUIID }.joinToString(", ")}")
-            _stateLearningItems.emit(allLearningItems.value.sortedBy { it.timeStampUIID })
-        }
-    }
-
-    fun isLockedApplication(): Boolean {
-        return preferences.dataBaseLocked
-    }
-
-    fun dropLimits() {
-        preferences.subscribedByUser = true
-        preferences.dataBaseLocked = false
+        val sortedData = getSortedAndFilteringData(allLearningItems.value)
+        Timber.d("sortBy: ${sortingType.name} result: ${sortedData.joinToString(", \n")}")
+        uiState.value = uiState.value.copy(
+            learningItems =  sortedData
+        )
+        actualItems.emit(sortedData)
     }
 
 }

@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -17,11 +16,10 @@ class LearningLocalItemsDataSource @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val learningItemDao: LearningItemDao
 ) {
-
-    val learningItems = flow<List<LearningItemDB>> { emit(learningItemDao.getLearningItems()) }.flowOn(Dispatchers.IO)
-
-
-   suspend fun fetchDatabaseItems() = flow<List<LearningItemDB>> { emit(learningItemDao.getLearningItems()) }.flowOn(Dispatchers.IO)
+    val learningItems = learningItemDao.getLearningItemsFlow().flowOn(Dispatchers.IO)
+   suspend fun fetchDatabaseItems() = flow<List<LearningItemDB>>{
+       emit(learningItemDao.getLearningItems())
+   }.flowOn(Dispatchers.IO)
 
     suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<Nothing>> {
         Timber.d("addLearningItem: learningItem $learningItemDB")

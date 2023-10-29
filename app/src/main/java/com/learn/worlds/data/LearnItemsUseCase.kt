@@ -22,20 +22,17 @@ class LearnItemsUseCase @Inject constructor(
     private val learningItemsRepository: LearningItemsRepository
 ) {
 
-    val actualData = learningItemsRepository.data
+    suspend fun actualData() = learningItemsRepository.data
+
     suspend fun addLearningItem(learningItem: LearningItem) = flow<Result<Any>> {
-        Timber.e("learningItem $learningItem")
-        if (preferences.dataBaseLocked) {
-            emit(Result.Error(ErrorType.DATABASE_LIMITS))
-        } else {
-            try {
-                learningItemsRepository.writeToLocalDatabase(learningItem).collect{
-                    emit(it)
-                }
-            } catch (t: Throwable) {
-                Timber.e(t)
-                emit(Result.Error())
+        Timber.d("learningItem $learningItem")
+        try {
+            learningItemsRepository.writeToLocalDatabase(learningItem).collect{
+                emit(it)
             }
+        } catch (t: Throwable) {
+            Timber.e(t)
+            emit(Result.Error())
         }
     }
 

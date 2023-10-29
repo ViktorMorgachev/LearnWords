@@ -21,7 +21,7 @@ class AddLearningItemsViewModel  @Inject constructor(
     val stateWasSavedSuccessfully = MutableStateFlow(false)
    private fun addLearningItem(learningItem: LearningItem){
        viewModelScope.launch {
-           learnItemsUseCase.addLearningItem(learningItem).collectLatest {
+           learnItemsUseCase.addLearningItem(learningItem).collect {
                when(it){
                    Result.Complete -> stateWasSavedSuccessfully.value = true
                    is Result.Error -> showError(it)
@@ -35,8 +35,8 @@ class AddLearningItemsViewModel  @Inject constructor(
     fun handleEvent(addWordsEvent: AddWordsEvent) {
         when (addWordsEvent) {
             AddWordsEvent.ErrorDismissed -> { dismissError()}
-            is AddWordsEvent.ForeignDataChanged -> { saveForeignData(addWordsEvent.foreignData) }
-            is AddWordsEvent.NativeDataChanged ->{saveNativeData(addWordsEvent.nativeData)}
+            is AddWordsEvent.ForeignDataChanged -> { saveForeignData(addWordsEvent.foreignData.trimEnd()) }
+            is AddWordsEvent.NativeDataChanged ->{saveNativeData(addWordsEvent.nativeData.trimEnd())}
             is AddWordsEvent.SaveLearningItem -> {saveData()}
         }
     }

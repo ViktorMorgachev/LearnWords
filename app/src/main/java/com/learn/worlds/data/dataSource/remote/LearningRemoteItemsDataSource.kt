@@ -14,6 +14,7 @@ import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.FirebaseDatabaseChild
 import com.learn.worlds.utils.Result
+import com.learn.worlds.utils.getCurrentDateTime
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
@@ -78,11 +79,18 @@ class LearningRemoteItemsDataSource @Inject constructor(
                     learningItemsAPI.forEach {
                         databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${it.timeStampUIID}").setValue(it).addOnCompleteListener {
                             if (!it.isSuccessful) {
+                                databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
+                                    if (it.isSuccessful){
+                                        cancellableContinuation.resume(Result.Complete)
+                                    } else {
+                                        cancellableContinuation.resume(Result.Error())
+                                    }
+                                }
+                            } else {
                                 cancellableContinuation.resume(Result.Error())
                             }
                         }
                     }
-                    cancellableContinuation.resume(Result.Complete)
                 }
 
             } else {
