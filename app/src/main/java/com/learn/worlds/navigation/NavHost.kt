@@ -15,6 +15,7 @@ import com.learn.worlds.ui.login.sync.SynchronizationScreen
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) { launchSingleTop = true }
 
+// todo refactoring (extract to other files)
 @Composable
 fun MyNavHost(
     navHostController: NavHostController,

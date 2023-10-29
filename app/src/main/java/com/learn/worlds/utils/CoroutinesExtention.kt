@@ -7,6 +7,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+// Only for others project, for this doesn't actual, maybe later
 interface Request<T> {
     fun execute(callback: Callback<T>)
     fun cancel()

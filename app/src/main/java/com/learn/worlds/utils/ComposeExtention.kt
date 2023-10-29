@@ -62,8 +62,6 @@ data class DeferrableJob(val dispather: CoroutineDispatcher, val delay: Long = 0
 /**
  * An extension that allows you to start the list of deferred coroutines postponed
  * */
-
-
 @ExperimentalCoroutinesApi
 inline fun CoroutineScope.startDelayed(deferrableJobs: List<DeferrableJob>, delay: Long = 0){
     launch(Dispatchers.Default) {

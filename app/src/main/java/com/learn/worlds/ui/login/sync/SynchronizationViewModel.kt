@@ -21,15 +21,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SynchronizationViewModel @Inject constructor(
     @IoDispatcher dispatcher: CoroutineDispatcher,
-    private val authService: AuthService,
     private val learningItemsUseCase: LearnItemsUseCase,
 ) : ViewModel() {
     val uiState = MutableStateFlow(SynchronizationState())
-
-    init {
-        Timber.d("viewModel init")
-    }
-
     init {
         viewModelScope.launch {
             learningItemsUseCase.synckItems().catch {
@@ -38,7 +32,7 @@ class SynchronizationViewModel @Inject constructor(
                         cancelledByUser = true
                     )
                 }
-            }.flowOn(Dispatchers.IO).collect {
+            }.flowOn(dispatcher).collect {
                 Timber.d("syncronization: $it")
                 when (it) {
                     is Result.Success -> itemsLoaded()
@@ -95,6 +89,5 @@ class SynchronizationViewModel @Inject constructor(
     private fun cancel() {
         viewModelScope.cancel()
     }
-
 
 }

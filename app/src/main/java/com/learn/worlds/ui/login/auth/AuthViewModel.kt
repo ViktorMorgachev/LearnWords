@@ -2,7 +2,6 @@ package com.learn.worlds.ui.login.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,10 +13,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authService: AuthService,
-    private val preferences: MySharedPreferences,
+    private val authService: AuthService
 ) : ViewModel() {
-    val uiState = MutableStateFlow(AuthenticationState(email = "morgachev@iksu.kg", password = "1qWertyu"))
+    val uiState = MutableStateFlow(AuthenticationState())
 
     private fun toggleAuthenticationMode() {
         val authenticationMode = uiState.value.authenticationMode
@@ -90,10 +88,8 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun syncronizeData() {
-        preferences.isAuthentificated = true
         uiState.value = uiState.value.copy(
             isSynchronization = true,
-
         )
     }
 

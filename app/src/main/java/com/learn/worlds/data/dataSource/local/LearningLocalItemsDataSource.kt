@@ -6,7 +6,6 @@ import com.learn.worlds.data.model.db.LearningItemDao
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
@@ -16,10 +15,10 @@ class LearningLocalItemsDataSource @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val learningItemDao: LearningItemDao
 ) {
-    val learningItems = learningItemDao.getLearningItemsFlow().flowOn(Dispatchers.IO)
+    val learningItems = learningItemDao.getLearningItemsFlow().flowOn(dispatcher)
    suspend fun fetchDatabaseItems() = flow<List<LearningItemDB>>{
        emit(learningItemDao.getLearningItems())
-   }.flowOn(Dispatchers.IO)
+   }.flowOn(dispatcher)
 
     suspend fun addLearningItem(learningItemDB: LearningItemDB) = flow<Result<Nothing>> {
         Timber.d("addLearningItem: learningItem $learningItemDB")
@@ -30,7 +29,7 @@ class LearningLocalItemsDataSource @Inject constructor(
             Timber.e(t)
             emit(Result.Error())
         }
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(dispatcher)
 
     suspend fun addLearningItems(learningItemDB: List<LearningItemDB>) = flow<Result<Nothing>> {
             Timber.d("addLearningItems: learningItem $learningItemDB")
@@ -41,6 +40,6 @@ class LearningLocalItemsDataSource @Inject constructor(
                 Timber.e(t)
                 emit(Result.Error())
             }
-        }.flowOn(Dispatchers.IO)
+        }.flowOn(dispatcher)
 
 }

@@ -3,14 +3,11 @@ package com.learn.worlds.navigation
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.learn.worlds.R
 
 data class BottomItem(val bottomIcon: ImageVector, @StringRes val bottomText: Int, @StringRes val description: Int? = null)
-data class AppBarItem(@StringRes val title: Int?)
-
 sealed class Screen(val route: String, val bottomItem: BottomItem? = null) {
     object LearnScreen : Screen(
         route = "screen_learn",

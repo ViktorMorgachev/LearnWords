@@ -4,14 +4,10 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.learn.worlds.data.local.AppDatabase
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.db.LearningItemDao
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After

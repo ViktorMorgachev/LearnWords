@@ -18,13 +18,9 @@ import com.google.firebase.ktx.Firebase
 import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.remote.SynchronizationWorker
-import com.learn.worlds.data.repository.LearningItemsRepository
-import com.learn.worlds.di.IoDispatcher
-import com.learn.worlds.di.MainDispatcher
 import com.learn.worlds.di.SynchronizationWorkerFactory
 import com.learn.worlds.utils.uniqueSyncronizationUniqueWorkName
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.CoroutineDispatcher
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -34,7 +30,6 @@ class MyApp : Application(), Configuration.Provider {
 
     @Inject lateinit var preferences: MySharedPreferences
     @Inject lateinit var hiltWorkerFactory: HiltWorkerFactory
-    @Inject @IoDispatcher lateinit var ioDispather: CoroutineDispatcher
     @Inject lateinit var learnItemsUseCase: LearnItemsUseCase
 
     override fun onCreate() {
@@ -43,16 +38,14 @@ class MyApp : Application(), Configuration.Provider {
             Timber.plant(Timber.DebugTree())
         }
         FirebaseApp.initializeApp(this)
-        preferences.isAuthentificated  = Firebase.auth.currentUser != null
         Firebase.database.setLogLevel(Logger.Level.DEBUG)
         FirebaseDatabase.getInstance()
-        runPeriodicallySynchronization(preferences.isAuthentificated)
-
+        runPeriodicallySynchronization(Firebase.auth.currentUser != null)
     }
 
     override fun getWorkManagerConfiguration(): Configuration {
         val myWorkerFactory = DelegatingWorkerFactory()
-        myWorkerFactory.addFactory(SynchronizationWorkerFactory(ioDispather, learnItemsUseCase))
+        myWorkerFactory.addFactory(SynchronizationWorkerFactory(learnItemsUseCase))
         return Configuration.Builder()
             .setWorkerFactory(myWorkerFactory)
             .setMinimumLoggingLevel(Log.INFO)

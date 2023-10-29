@@ -1,24 +1,15 @@
 package com.learn.worlds.data
 
-import android.content.Context
+
 import com.learn.worlds.data.model.base.LearningItem
-import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.repository.LearningItemsRepository
-import com.learn.worlds.di.IoDispatcher
-import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
 import javax.inject.Inject
 
 class LearnItemsUseCase @Inject constructor(
-    @IoDispatcher private val dispatcher: CoroutineDispatcher,
-    @ApplicationContext private val context: Context,
-    private val preferences: MySharedPreferences,
     private val learningItemsRepository: LearningItemsRepository
 ) {
 

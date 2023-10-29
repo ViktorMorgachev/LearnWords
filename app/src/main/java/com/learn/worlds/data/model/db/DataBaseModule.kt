@@ -18,6 +18,7 @@ class DatabaseModule {
         return appDatabase.learningItemsDao()
     }
 
+    // todo change soon AppDatabase name for package name (for so happy naming)
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext appContext: Context): AppDatabase {

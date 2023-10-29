@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -30,8 +29,6 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.learn.worlds.R
-import com.learn.worlds.ui.base.show_words.ShowLearningItemsViewModel
-import com.learn.worlds.ui.base.show_words.ShowWordsState
 import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
@@ -69,7 +66,6 @@ fun SynchronizationScreen(
     if (synchronizationState.success == true) {
         onSyncronizedSucces.invoke()
     }
-
 
     if (synchronizationState.nothingToSync == true) {
         animationRunning = false
@@ -123,10 +119,8 @@ fun SynchronizationScreen(
                     letterSpacing = (1.9).sp
                 )
             }
-
         }
     }
-
 }
 
 

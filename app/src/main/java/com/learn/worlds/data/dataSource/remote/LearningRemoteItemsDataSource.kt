@@ -1,21 +1,16 @@
 package com.learn.worlds.data.dataSource.remote
 
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
-import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.remote.LearningItemAPI
-import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.FirebaseDatabaseChild
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.getCurrentDateTime
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.callbackFlow
@@ -25,8 +20,7 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 
 class LearningRemoteItemsDataSource @Inject constructor(
-    private val authService: AuthService,
-    @IoDispatcher private val dispatcher: CoroutineDispatcher
+    private val authService: AuthService
 ) {
 
     val database by lazy { Firebase.database }
@@ -78,7 +72,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 } else {
                     learningItemsAPI.forEach {
                         databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${it.timeStampUIID}").setValue(it).addOnCompleteListener {
-                            if (!it.isSuccessful) {
+                            if (it.isSuccessful) {
                                 databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
                                     if (it.isSuccessful){
                                         cancellableContinuation.resume(Result.Complete)
@@ -94,7 +88,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 }
 
             } else {
-                Timber.e("databaseRef is nullable maybe token expired please check")
+                Timber.e("database reference = $databaseRef maybe token expired please check")
                 cancellableContinuation.resume(Result.Error())
             }
             cancellableContinuation.invokeOnCancellation {
