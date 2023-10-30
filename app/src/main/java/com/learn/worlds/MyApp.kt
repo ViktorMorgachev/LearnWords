@@ -19,11 +19,14 @@ import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.remote.SynchronizationWorker
 import com.learn.worlds.di.SynchronizationWorkerFactory
+import com.learn.worlds.utils.CrashReporter
 import com.learn.worlds.utils.uniqueSyncronizationUniqueWorkName
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
+import timber.log.Timber.Forest.plant
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
 
 @HiltAndroidApp
 class MyApp : Application(), Configuration.Provider {
@@ -31,25 +34,30 @@ class MyApp : Application(), Configuration.Provider {
     @Inject lateinit var preferences: MySharedPreferences
     @Inject lateinit var hiltWorkerFactory: HiltWorkerFactory
     @Inject lateinit var learnItemsUseCase: LearnItemsUseCase
+    @Inject lateinit var crashReporter: CrashReporter
 
     override fun onCreate() {
         super.onCreate()
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
         FirebaseApp.initializeApp(this)
-        Firebase.database.setLogLevel(Logger.Level.DEBUG)
+        initTimber()
+        Firebase.database.setLogLevel(Logger.Level.INFO)
         FirebaseDatabase.getInstance()
+
         runPeriodicallySynchronization(Firebase.auth.currentUser != null)
     }
 
     override fun getWorkManagerConfiguration(): Configuration {
+
         val myWorkerFactory = DelegatingWorkerFactory()
         myWorkerFactory.addFactory(SynchronizationWorkerFactory(learnItemsUseCase))
         return Configuration.Builder()
             .setWorkerFactory(myWorkerFactory)
-            .setMinimumLoggingLevel(Log.INFO)
+            .setMinimumLoggingLevel(Log.VERBOSE)
             .build()
+    }
+
+    private fun initTimber(){
+        plant(crashReporter)
     }
 
     private fun runPeriodicallySynchronization(isAuthentificated: Boolean) {

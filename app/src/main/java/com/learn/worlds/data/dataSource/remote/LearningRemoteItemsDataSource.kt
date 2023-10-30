@@ -47,7 +47,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                     }
                     close()
                 } else {
-                    Timber.e(it.exception)
+                    Timber.e(it.exception, "fetch from remote learning items")
                     trySendBlocking(Result.Error())
                     close()
                 }
@@ -70,17 +70,19 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 if (learningItemsAPI.isEmpty()) {
                     cancellableContinuation.resume(Result.Complete)
                 } else {
-                    learningItemsAPI.forEach {
-                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${it.timeStampUIID}").setValue(it).addOnCompleteListener {
+                    learningItemsAPI.forEach { itemAPI ->
+                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${itemAPI.timeStampUIID}").setValue(itemAPI).addOnCompleteListener {
                             if (it.isSuccessful) {
                                 databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
                                     if (it.isSuccessful){
                                         cancellableContinuation.resume(Result.Complete)
                                     } else {
+                                        Timber.e(it.exception, "add to remote datetime")
                                         cancellableContinuation.resume(Result.Error())
                                     }
                                 }
                             } else {
+                                Timber.e(it.exception, "add to remote learning items")
                                 cancellableContinuation.resume(Result.Error())
                             }
                         }

@@ -9,9 +9,17 @@ enum class FirebaseDatabaseChild(val path: String){
     LEARNING_ITEMS_LAST_SYNC_DATETIME("learning_items_last_sync_datetime")
 }
 
+sealed class FirebaseError{
+    data class UserDisabled(val errorType: ErrorType = ErrorType.ERROR_USER_DISABLED): FirebaseError()
+    data class InvalidLoginCredentials(val errorType: ErrorType = ErrorType.INVALID_LOGIN_CREDENTIALS): FirebaseError()
+    data class SomethingError(val errorType: ErrorType = ErrorType.SOMETHING_ERROR): FirebaseError()
+}
+
 enum class ErrorType(@StringRes val resID: Int) {
     NOT_AUTHENTICATED(R.string.error_not_auth),
     SOMETHING_ERROR(R.string.error_someshing_went_wrong),
     DATABASE_LIMITS(R.string.error_limits_adding_words),
-    INVALID_FIREBASE_LOGIN_CREDENTIALS(R.string.error_invalid_login)
+    INVALID_LOGIN_CREDENTIALS(R.string.error_invalid_login),
+    ERROR_USER_DISABLED(R.string.error_auth_disabled_account),
+    TRY_LATER(R.string.error_auth_try_later)
 }
