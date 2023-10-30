@@ -20,5 +20,6 @@ enum class ErrorType(@StringRes val resID: Int) {
     SOMETHING_ERROR(R.string.error_someshing_went_wrong),
     DATABASE_LIMITS(R.string.error_limits_adding_words),
     INVALID_LOGIN_CREDENTIALS(R.string.error_invalid_login),
-    ERROR_USER_DISABLED(R.string.error_auth_disabled_account)
+    ERROR_USER_DISABLED(R.string.error_auth_disabled_account),
+    TRY_LATER(R.string.error_auth_try_later)
 }

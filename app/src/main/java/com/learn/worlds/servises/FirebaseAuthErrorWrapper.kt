@@ -29,6 +29,9 @@ class FirebaseAuthErrorWrapper @Inject constructor(@ApplicationContext val conte
                 return ErrorType.INVALID_LOGIN_CREDENTIALS
             }
         }
+        if (throwable.message?.contains("Try again later") == true){
+            return ErrorType.TRY_LATER
+        }
         return ErrorType.SOMETHING_ERROR
     }
 }
