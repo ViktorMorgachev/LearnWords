@@ -1,13 +1,17 @@
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.daggerHiltAndroid)
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 
 }
 
 android {
+
 
     externalNativeBuild {
         cmake {
@@ -16,7 +20,6 @@ android {
         }
     }
 
-
     namespace = "com.learn.worlds"
     compileSdk = 34
 
@@ -24,8 +27,8 @@ android {
         applicationId = "com.learn.worlds"
         minSdk = 21
         targetSdk = 34
-        versionCode = 10100
-        versionName = "1.1.0"
+        versionCode = 10101
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -43,10 +46,9 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = false
+            }
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -80,7 +82,6 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     implementation(platform(libs.firebase.boom))
 
-
     // Core Android deps
     implementation(libs.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -94,7 +95,6 @@ dependencies {
     ksp(libs.hilt.compiler)
     ksp(libs.hilt.android.compiler)
 
-
     // Compose
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
@@ -102,7 +102,6 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.lifecycle.runtime.compose)
-
 
     //UI
     implementation(libs.lottie.compose)
@@ -129,6 +128,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.crashlytics)
 
     // Room Database
     implementation(libs.androidx.room.runtime)

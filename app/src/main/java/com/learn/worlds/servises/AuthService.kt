@@ -5,16 +5,10 @@ import com.google.firebase.auth.auth
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -51,17 +45,17 @@ class AuthService @Inject constructor(
     suspend fun signIn(password: String, email: String): Result<Any> {
         return suspendCancellableCoroutine { continuation ->
             auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener {
+                .addOnSuccessListener {
                     scope.launch {
-                        if (it.isSuccessful && it.result.user != null) {
-                            continuation.resume(Result.Complete)
-                            _authState.emit(true)
-                        } else {
-                            _authState.emit(false)
-                            continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it.exception?.localizedMessage)))
-                        }
+                        continuation.resume(Result.Complete)
+                        _authState.emit(true)
                     }
 
+                }.addOnFailureListener {
+                    scope.launch {
+                        _authState.emit(false)
+                        continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it)))
+                    }
                 }
         }
 
@@ -70,17 +64,17 @@ class AuthService @Inject constructor(
     suspend fun signUp(password: String, email: String):  Result<Any> {
         return suspendCancellableCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener {
+                .addOnSuccessListener {
                     scope.launch {
-                        if (it.isSuccessful && it.result.user != null) {
-                            _authState.emit(true)
-                            continuation.resume(Result.Complete)
-                        } else {
-                            _authState.emit(false)
-                            continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it.exception?.localizedMessage)))
-                        }
+                        continuation.resume(Result.Complete)
+                        _authState.emit(true)
                     }
 
+                }.addOnFailureListener {
+                    scope.launch {
+                        _authState.emit(false)
+                        continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it)))
+                    }
                 }
         }
     }

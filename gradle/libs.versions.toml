@@ -26,6 +26,7 @@ googleServices = "4.4.0"
 lottieCompose= "6.1.0"
 hiltWorkVersion = "1.0.0"
 androidWorkVersion = "2.8.1"
+firebaseCrashlytis = "2.9.9"
 
 
 [libraries]
@@ -47,7 +48,7 @@ firebase-boom = { group = "com.google.firebase",name="firebase-bom", version.ref
 firebase-analytics = { group = "com.google.firebase",name="firebase-analytics-ktx" }
 firebase-database = { group = "com.google.firebase", name="firebase-database-ktx" }
 firebase-auth = { group = "com.google.firebase", name="firebase-auth-ktx" }
-
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx"}
 
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivity" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
@@ -77,6 +78,8 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndr
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 daggerHiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinAndroid" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
-google-services = { id = "com.google.gms.google-services", version.ref = "googleServices"}
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytis" }
+
 

@@ -63,5 +63,6 @@
     <!--Errors-->
     <string name="error_not_auth">Необходимо войти в аккаунт</string>
     <string name="error_limits_adding_words">Прывышено ограничение на добвление слов</string>
+    <string name="error_auth_disabled_account">Аккаунт был отключён администратором</string>
 
 </resources>
