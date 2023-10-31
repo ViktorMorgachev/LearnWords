@@ -1,6 +1,7 @@
 package com.learn.worlds.data.repository
 
 import com.learn.worlds.data.dataSource.local.LearningLocalItemsDataSource
+import com.learn.worlds.data.dataSource.mock.LearningMockItemsDataSource
 import com.learn.worlds.data.dataSource.remote.LearningRemoteItemsDataSource
 import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.mappers.toLearningItemAPI
@@ -22,7 +23,8 @@ import javax.inject.Singleton
 class LearningItemsRepository @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val localDataSource: LearningLocalItemsDataSource,
-    private val remoteDataSource: LearningRemoteItemsDataSource
+    private val remoteDataSource: LearningRemoteItemsDataSource,
+    private val mockItemsDataSource: LearningMockItemsDataSource
 ) {
 
     val data: Flow<List<LearningItem>> = localDataSource.learningItems.transform<List<LearningItemDB>, List<LearningItem>>{ emit(it.map { it.toLearningItem() }) }

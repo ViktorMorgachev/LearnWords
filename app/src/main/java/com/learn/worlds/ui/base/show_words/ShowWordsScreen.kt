@@ -1,7 +1,8 @@
 package com.learn.worlds.ui.base.show_words
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Ease
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -41,7 +42,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,7 +54,6 @@ import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
-import com.learn.worlds.data.model.base.getActualText
 import com.learn.worlds.navigation.Screen
 import com.learn.worlds.ui.base.show_words.customization.getCardBackground
 import com.learn.worlds.ui.base.show_words.customization.getCardTextColor
@@ -87,7 +86,6 @@ fun ShowLearningWordsScreen(
     onNavigate: (Screen) -> Unit,
 ) {
 
-    val actualList by viewModel.actualItems.collectAsStateWithLifecycle()
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -113,7 +111,7 @@ fun ShowLearningWordsScreen(
 
         LearningItemsScreen(modifier = modifier,
             isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
-            learningItems = actualList,
+            learningItems = uiState.learningItems,
             onChangeData = {},
             isAuthenticated = uiState.isAuthentificated,
             onLoginAction = { onNavigate.invoke(Screen.AuthScreen) },
@@ -411,36 +409,47 @@ fun CardContent(
     showDefaultNative: Boolean = true
 ) {
     var switch by rememberSaveable { mutableStateOf(false) }
-    var actualText by rememberSaveable { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
+    var switchAction = { switch = !switch }
 
-    val bgColor: Color by animateColorAsState(
-        targetValue = getCardBackground(
-            isSystemDarkTheme = isSystemInDarkTheme(),
-            switch = switch,
-            learningStatus = learningItem.learningStatus
-        ),
-        animationSpec = tween(1000, easing = LinearEasing), label = ""
-    )
 
-    val textColor: Color by animateColorAsState(
-        targetValue = getCardTextColor(
-            isSystemDarkTheme = isSystemInDarkTheme(),
-            switch = switch,
-            learningStatus = learningItem.learningStatus
-        ),
-        animationSpec = tween(1000, easing = LinearEasing), label = ""
-    )
+    Crossfade(
+        targetState = switch,
+        animationSpec = tween(durationMillis = 700, easing = LinearEasing),
+        label = "crossroad_learning_card") { state ->
+        if (!state) {
+            if (showDefaultNative){
+                CardItemNative(
+                    learningItem = learningItem,
+                    onClickedAction = switchAction)
+            } else {
+                CardItemForeign(  learningItem = learningItem,
+                    onClickedAction = switchAction)
+            }
+        } else {
+            if (showDefaultNative){
+                CardItemForeign(  learningItem = learningItem,
+                    onClickedAction = switchAction)
+            } else {
+                CardItemNative(learningItem = learningItem,
+                    onClickedAction = switchAction)
+            }
+        }
+    }
 
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CardItemForeign(modifier: Modifier = Modifier, learningItem: LearningItem, onClickedAction: ()->Unit) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = bgColor),
+        colors = CardDefaults.cardColors(containerColor = getCardBackground(
+            isSystemDarkTheme = isSystemInDarkTheme(),
+            foreignCard = true,
+            learningStatus = learningItem.learningStatus
+        )),
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
         onClick = {
-            switch = !switch
-            if (switch) {
-                actualText = learningItem.getActualText(!showDefaultNative)
-            } else {
-                actualText = learningItem.getActualText(showDefaultNative)
-            }
+            onClickedAction.invoke()
         }
     ) {
         Row(
@@ -460,17 +469,69 @@ fun CardContent(
                     .padding(12.dp)
             ) {
                 Text(
-                    text = actualText.lowercase(),
+                    text = learningItem.foreignData.lowercase(),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = textColor
+                        color = getCardTextColor(
+                            isSystemDarkTheme = isSystemInDarkTheme(),
+                            foreignCard = true,
+                            learningStatus = learningItem.learningStatus
+                        )
                     )
                 )
 
             }
         }
     }
+}
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CardItemNative(modifier: Modifier = Modifier, learningItem: LearningItem, onClickedAction: ()->Unit) {
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = getCardBackground(
+            isSystemDarkTheme = isSystemInDarkTheme(),
+            foreignCard = false,
+            learningStatus = learningItem.learningStatus
+        )),
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+        onClick = {
+           onClickedAction.invoke()
+        }
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = learningItem.nativeData,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = getCardTextColor(
+                            isSystemDarkTheme = isSystemInDarkTheme(),
+                            foreignCard = false,
+                            learningStatus = learningItem.learningStatus
+                        )
+                    )
+                )
+
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

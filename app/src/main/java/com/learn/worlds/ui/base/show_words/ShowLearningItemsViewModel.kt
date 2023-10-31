@@ -28,9 +28,6 @@ class ShowLearningItemsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState = MutableStateFlow(ShowWordsState())
-
-    val actualItems : MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
-
     private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
     init {
@@ -54,19 +51,13 @@ class ShowLearningItemsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             learnItemsUseCase.actualData().collect { data->
-                allLearningItems.value = data
                 Timber.d("actualData: ${data.joinToString(",\n")}")
+                allLearningItems.emit(data)
                 uiState.value = uiState.value.copy(
                     isLoading =  false,
                     error = null,
                     learningItems = getSortedAndFilteringData(data)
                 )
-                actualItems.emit(getSortedAndFilteringData(data))
-                delay(2000)
-                sortBy(SortingType.SORT_BY_NEW)
-                delay(2000)
-                sortBy(SortingType.SORT_BY_OLD)
-
             }
         }
 
@@ -110,7 +101,6 @@ class ShowLearningItemsViewModel @Inject constructor(
         uiState.value = uiState.value.copy(
             learningItems = getSortedAndFilteringData(allLearningItems.value)
         )
-        actualItems.emit(getSortedAndFilteringData(allLearningItems.value))
         Timber.d("filterBy: ${filter.name}")
     }
 
@@ -121,7 +111,6 @@ class ShowLearningItemsViewModel @Inject constructor(
         uiState.value = uiState.value.copy(
             learningItems =  sortedData
         )
-        actualItems.emit(sortedData)
     }
 
 }

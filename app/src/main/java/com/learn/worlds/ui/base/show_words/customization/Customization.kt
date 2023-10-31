@@ -19,9 +19,9 @@ import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_lear
 import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_learning
 import com.learn.worlds.data.model.base.LearningStatus
 
-fun getCardBackground(isSystemDarkTheme: Boolean, switch: Boolean, learningStatus: String): Color{
+fun getCardBackground(isSystemDarkTheme: Boolean, foreignCard: Boolean, learningStatus: String): Color{
     return  if (!isSystemDarkTheme) {
-        if (switch) {
+        if (foreignCard) {
             if (learningStatus == LearningStatus.LEARNING.name) {
                 md_theme_light_cardbg_switch_on_learning
             } else {
@@ -35,7 +35,7 @@ fun getCardBackground(isSystemDarkTheme: Boolean, switch: Boolean, learningStatu
             }
         }
     } else {
-        if (switch) {
+        if (foreignCard) {
             if (learningStatus == LearningStatus.LEARNING.name) {
                 md_theme_dark_cardbg_switch_on_learning
             } else {
@@ -51,9 +51,9 @@ fun getCardBackground(isSystemDarkTheme: Boolean, switch: Boolean, learningStatu
     }
 }
 
-fun getCardTextColor(isSystemDarkTheme: Boolean, switch: Boolean, learningStatus: String): Color{
+fun getCardTextColor(isSystemDarkTheme: Boolean, foreignCard: Boolean, learningStatus: String): Color{
     return   if (!isSystemDarkTheme) {
-        if (switch) {
+        if (foreignCard) {
             if (learningStatus == LearningStatus.LEARNING.name) {
                 md_theme_light_textColor_switch_on_learning
             } else {
@@ -67,7 +67,7 @@ fun getCardTextColor(isSystemDarkTheme: Boolean, switch: Boolean, learningStatus
             }
         }
     } else {
-        if (switch) {
+        if (foreignCard) {
             if (learningStatus == LearningStatus.LEARNING.name) {
                 md_theme_dark_textColor_switch_on_learning
             } else {
