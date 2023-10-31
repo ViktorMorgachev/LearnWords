@@ -104,6 +104,8 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
 
     //UI
     implementation(libs.lottie.compose)

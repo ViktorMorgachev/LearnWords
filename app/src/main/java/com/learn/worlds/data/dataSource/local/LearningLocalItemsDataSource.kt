@@ -31,6 +31,17 @@ class LearningLocalItemsDataSource @Inject constructor(
         }
     }.flowOn(dispatcher)
 
+    suspend fun removeLearningItemByID(learningItemID: Long) = flow<Result<Nothing>> {
+        Timber.d("removeLearningItemByID: learningItemID $learningItemID")
+        try {
+            learningItemDao.deleteLearningItem(learningItemID)
+            emit(Result.Complete)
+        } catch (t: Throwable) {
+            Timber.e(t)
+            emit(Result.Error())
+        }
+    }.flowOn(dispatcher)
+
     suspend fun addLearningItems(learningItemDB: List<LearningItemDB>) = flow<Result<Nothing>> {
             Timber.d("addLearningItems: learningItem $learningItemDB")
             try {

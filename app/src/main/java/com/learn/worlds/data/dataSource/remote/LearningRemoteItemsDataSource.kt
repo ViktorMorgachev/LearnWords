@@ -11,6 +11,7 @@ import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.FirebaseDatabaseChild
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.getCurrentDateTime
+import com.learn.worlds.utils.safeResume
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.callbackFlow
@@ -68,22 +69,22 @@ class LearningRemoteItemsDataSource @Inject constructor(
             }
             if (databaseRef != null) {
                 if (learningItemsAPI.isEmpty()) {
-                    cancellableContinuation.resume(Result.Complete)
+                    cancellableContinuation.safeResume(Result.Complete)
                 } else {
                     learningItemsAPI.forEach { itemAPI ->
                         databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${itemAPI.timeStampUIID}").setValue(itemAPI).addOnCompleteListener {
                             if (it.isSuccessful) {
                                 databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
                                     if (it.isSuccessful){
-                                        cancellableContinuation.resume(Result.Complete)
+                                        cancellableContinuation.safeResume(Result.Complete)
                                     } else {
                                         Timber.e(it.exception, "add to remote datetime")
-                                        cancellableContinuation.resume(Result.Error())
+                                        cancellableContinuation.safeResume(Result.Error()){ }
                                     }
                                 }
                             } else {
                                 Timber.e(it.exception, "add to remote learning items")
-                                cancellableContinuation.resume(Result.Error())
+                                cancellableContinuation.safeResume(Result.Error())
                             }
                         }
                     }
@@ -91,7 +92,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
             } else {
                 Timber.e("database reference = $databaseRef maybe token expired please check")
-                cancellableContinuation.resume(Result.Error())
+                cancellableContinuation.safeResume(Result.Error())
             }
             cancellableContinuation.invokeOnCancellation {
                 cancellableContinuation.cancel(it)

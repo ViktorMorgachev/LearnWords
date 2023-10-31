@@ -1,11 +1,24 @@
 package com.learn.worlds.utils
 
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.callbackFlow
+import timber.log.Timber
+import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+
+
+inline fun <T> Continuation<T>.safeResume(value: T, onExceptionCalled: () -> Unit = {Timber.d("Job has already done")}) {
+    if (this is CancellableContinuation) {
+        if (isActive)
+            resume(value)
+        else
+            onExceptionCalled()
+    } else throw Exception("Must use suspendCancellableCoroutine instead of suspendCoroutine")
+}
 
 // Only for others project, for this doesn't actual, maybe later
 interface Request<T> {

@@ -43,6 +43,8 @@ class LearningItemsRepository @Inject constructor(
         }
     }
 
+    suspend fun removeItemFromLocalDatabase(learningItem: LearningItem) = localDataSource.removeLearningItemByID(learningItemID = learningItem.timeStampUIID)
+
     suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
 
     suspend fun writeListToLocalDatabase(learningItem: List<LearningItem>) = localDataSource.addLearningItems(learningItem.map { it.toLearningItemDB() })

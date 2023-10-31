@@ -3,6 +3,7 @@
 
     <string name="add">Добавить</string>
     <string name="subscribe">Подписаться</string>
+    <string name="demo">Демо</string>
 
     <!--LearnScreen-->
     <string name="learn">Учить</string>

@@ -3,6 +3,7 @@ package com.learn.worlds.data.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import com.learn.worlds.di.MainPreferences
+import com.learn.worlds.di.SynckPreferences
 import com.learn.worlds.di.UIPreferences
 import dagger.Module
 import dagger.Provides
@@ -26,6 +27,13 @@ object PreferenceModule {
     @Singleton
     fun provideUISharedPreference(@ApplicationContext context: Context): SharedPreferences {
         return context.getSharedPreferences("learnWords_preferences_ui", Context.MODE_PRIVATE)
+    }
+
+    @Provides
+    @SynckPreferences
+    @Singleton
+    fun provideSynckSharedPreference(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences("learnWords_preferences_synck", Context.MODE_PRIVATE)
     }
 
 

@@ -19,6 +19,8 @@ import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_lear
 import com.codelab.basiclayouts.ui.theme.md_theme_light_textColor_switch_on_learning
 import com.learn.worlds.data.model.base.LearningStatus
 
+data class LearnItemTransitionData(val rotation: Float, val background: Color, val textColor: Color)
+
 fun getCardBackground(isSystemDarkTheme: Boolean, foreignCard: Boolean, learningStatus: String): Color{
     return  if (!isSystemDarkTheme) {
         if (foreignCard) {
