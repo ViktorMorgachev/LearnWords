@@ -5,12 +5,16 @@ import com.learn.worlds.utils.Result
 
 
 sealed class ShowWordsEvent {
-    data class DeleteItemEvent(val learningItemID: Long): ShowWordsEvent()
-    data class ChangeCardEvent(val learningItem: LearningItem): ShowWordsEvent()
+    data class DeleteItemEvent(val learningItem: LearningItem): ShowWordsEvent()
+    data class UpdateCardStatusEvent(val learningItem: LearningItem): ShowWordsEvent()
+    object ShowChangeCardStatusDialog: ShowWordsEvent()
+    object DismisErrorDialog: ShowWordsEvent()
+    object DismisChangeStatusDialog: ShowWordsEvent()
 }
 data class ShowWordsState(
     val learningItems: List<LearningItem> = listOf(),
     val isLoading: Boolean = false,
-    val error: Result.Error? = null,
+    val changeStatusDialog: Boolean = false,
+    val errorDialog: Result.Error? = null,
     val isAuthentificated: Boolean? = null
 )

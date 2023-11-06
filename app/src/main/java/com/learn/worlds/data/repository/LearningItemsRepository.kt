@@ -42,26 +42,9 @@ class LearningItemsRepository @Inject constructor(
             emit(Result.Success(it.data.map { it.toLearningItem() }))
         }
     }
-
     suspend fun removeItemFromLocalDatabase(itemID: Long) = localDataSource.removeItemByIDs(learningItemID = itemID)
 
     suspend fun removeItemsFromLocalDatabase(itemIDs: List<Long>) = localDataSource.removeItemsByIDs(learningItemIDs = itemIDs)
-
-    suspend fun markItemStatusRemoved(itemID: Long) = remoteDataSource.markItemsStatusRemoved(itemID)
-
-    suspend fun markItemsStatusRemoved(itemIDs: List<Long>) = flow<Result<Nothing>> {
-        val resultList: MutableList<Result<Nothing>> = mutableListOf()
-        itemIDs.forEach{
-            resultList.add(remoteDataSource.markItemsStatusRemoved(it))
-        }
-        if (resultList.all { it is Result.Complete }){
-            emit(Result.Complete)
-        } else {
-            emit(Result.Error())
-        }
-    }.flowOn(dispatcher)
-    suspend fun fetchItemsIdsForRemoving() = remoteDataSource.fetchItemsIdsForRemoving()
-
     suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
 
     suspend fun writeToRemoteDatabase(learningItem: LearningItem) = remoteDataSource.addItem(learningItem.toLearningItemAPI())
@@ -79,5 +62,6 @@ class LearningItemsRepository @Inject constructor(
             emit(Result.Error())
         }
     }.flowOn(dispatcher)
+
 
 }

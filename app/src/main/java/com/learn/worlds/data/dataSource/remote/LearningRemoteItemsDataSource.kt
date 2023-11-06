@@ -132,7 +132,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
         }
 
 
-    suspend fun markItemsStatusRemoved(learningItemID: Long) =
+    suspend fun replaceRemoteItems(learningItem: LearningItemAPI) =
         suspendCancellableCoroutine<Result<Nothing>> { cancellableContinuation ->
             if (databaseRef == null) {
                 authService.getUserUUID()?.let {
@@ -140,7 +140,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 }
             }
             if (databaseRef != null) {
-                databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("$learningItemID").updateChildren(mapOf<String, Boolean>("deletedStatus" to true)).addOnCompleteListener {
+                databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).updateChildren(mapOf<String, LearningItemAPI>("${learningItem.timeStampUIID}" to learningItem)).addOnCompleteListener {
                     if (it.isSuccessful) {
                         cancellableContinuation.safeResume(Result.Complete)
                     } else {

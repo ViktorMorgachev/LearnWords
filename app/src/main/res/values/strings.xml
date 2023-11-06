@@ -32,9 +32,11 @@
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
     <string name="well">Отлично</string>
     <string name="next">Далее</string>
+    <string name="yes">Да</string>
     <string name="account_was_sign_up">Успешно зарегистрировались в системе</string>
     <string name="account_was_sig_in">Успешно прошли аутентификацию</string>
     <string name="nothing_to_sync">Нечего синхронизировать</string>
+    <string name="change_status_learned">Изменить статус на выученый?</string>
 
     <!--Auth Screen-->
     <string name="password_requirement_characters">Не менее 8 символов</string>

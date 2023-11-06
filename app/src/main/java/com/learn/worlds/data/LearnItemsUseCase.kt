@@ -1,9 +1,14 @@
 package com.learn.worlds.data
 
 
+import com.learn.worlds.data.mappers.toLearningItem
+import com.learn.worlds.data.mappers.toLearningItemAPI
+import com.learn.worlds.data.mappers.toLearningItemDB
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.data.prefs.SynckSharedPreferences
 import com.learn.worlds.data.repository.LearningItemsRepository
+import com.learn.worlds.data.repository.LearningSynchronizationRepository
 import com.learn.worlds.servises.AuthService
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.flow.collectLatest
@@ -14,7 +19,8 @@ import javax.inject.Inject
 class LearnItemsUseCase @Inject constructor(
     private val authService: AuthService,
     private val synkPreferences: SynckSharedPreferences,
-    private val learningItemsRepository: LearningItemsRepository
+    private val learningItemsRepository: LearningItemsRepository,
+    private val learningSynchronizationRepository: LearningSynchronizationRepository
 ) {
 
     suspend fun actualData() = learningItemsRepository.data
@@ -22,10 +28,10 @@ class LearnItemsUseCase @Inject constructor(
     suspend fun addLearningItem(learningItem: LearningItem) = flow<Result<Any>> {
         Timber.d("learningItem $learningItem")
         try {
-            if (authService.isAuthentificated()){
+            if (authService.isAuthentificated()) {
                 learningItemsRepository.writeToRemoteDatabase(learningItem)
             }
-            learningItemsRepository.writeToLocalDatabase(learningItem).collect{
+            learningItemsRepository.writeToLocalDatabase(learningItem).collect {
                 emit(it)
             }
         } catch (t: Throwable) {
@@ -34,33 +40,33 @@ class LearnItemsUseCase @Inject constructor(
         }
     }
 
+    /*1. Пишем данные из преференсов как есть заменяя данные в базе удалённой
+    * 2. Чистим локальную базу, учитывая флаг deletedStatus
+    * 3. После уже синхронизируем как обычно*/
     suspend fun synckItems() = flow<Result<List<LearningItem>>> {
         val remoteData = mutableListOf<LearningItem>()
-        val itemsForRemoving = synkPreferences.getActualLearnItemsForRemoving()
+        val itemsForRemoving = synkPreferences.getActualLearnItemsSynronization()
         var resultMarkedItems: Result<Nothing>? = null
-        if (itemsForRemoving.isNotEmpty()){
-            learningItemsRepository.markItemsStatusRemoved(itemsForRemoving.map { it.toLong() }).collectLatest {
+        if (itemsForRemoving.isNotEmpty()) {
+            learningSynchronizationRepository.replaceRemoteItems(itemsForRemoving).collectLatest {
                 resultMarkedItems = it
             }
-            if(resultMarkedItems == null || resultMarkedItems is Result.Error ){
+            if (resultMarkedItems == null || resultMarkedItems is Result.Error) {
                 emit(Result.Error())
                 return@flow
             }
         }
-
-        synkPreferences.removeAllItemsIdsForRemoving()
+        synkPreferences.removeAllItemsIdsForSynshronization()
 
         var itemsRemovedIds = listOf<Long>()
-        learningItemsRepository.fetchItemsIdsForRemoving().collectLatest {
-            if (it is Result.Success && it.data.isNotEmpty()){
-               itemsRemovedIds = it.data
+        learningSynchronizationRepository.fetchItemsIdsForRemoving().collectLatest {
+            if (it is Result.Success && it.data.isNotEmpty()) {
+                itemsRemovedIds = it.data
             }
         }
 
-        Timber.d("Item ids for removing: ${itemsRemovedIds.joinToString(", ")}}")
-
-        if(itemsRemovedIds.isNotEmpty()){
-            learningItemsRepository.removeItemsFromLocalDatabase(itemsRemovedIds).collect{}
+        if (itemsRemovedIds.isNotEmpty()) {
+            learningItemsRepository.removeItemsFromLocalDatabase(itemsRemovedIds).collect {}
         }
 
         learningItemsRepository.fetchDataFromNetwork(needIgnoreRemovingItems = true)
@@ -72,21 +78,23 @@ class LearnItemsUseCase @Inject constructor(
                 }
             }
         val localData = mutableListOf<LearningItem>()
-        learningItemsRepository.getDataFromDatabase().collect{
+        learningItemsRepository.getDataFromDatabase().collect {
             localData.addAll(it)
         }
         val dataForNetwork: MutableList<LearningItem> = mutableListOf()
         val dataForLocal: MutableList<LearningItem> = mutableListOf()
         localData.plus(remoteData).forEach {
-            if (!localData.contains(it)){
+            if (!localData.contains(it)) {
                 dataForLocal.add(it)
             }
-            if (!remoteData.contains(it)){
+            if (!remoteData.contains(it)) {
                 dataForNetwork.add(it)
             }
         }
-        Timber.d("dataForRemote: ${dataForNetwork.joinToString(", ")} " +
-                "\ndataForLocal: ${dataForLocal.joinToString(", ")}  ")
+        Timber.d(
+            "dataForRemote: ${dataForNetwork.joinToString(", ")} " +
+                    "\ndataForLocal: ${dataForLocal.joinToString(", ")}  "
+        )
 
         val synckResult = mutableListOf<Result<Nothing>>()
         learningItemsRepository.writeListToLocalDatabase(dataForLocal).collect {
@@ -95,25 +103,41 @@ class LearnItemsUseCase @Inject constructor(
         learningItemsRepository.writeListToRemoteDatabase(dataForNetwork).collect {
             synckResult.add(it)
         }
-        if (synckResult.any { it is Result.Error}){
+        if (synckResult.any { it is Result.Error }) {
             emit(synckResult.first { it is Result.Error })
         } else {
-            if (synckResult.any { it is Result.Complete }){
+            if (synckResult.any { it is Result.Complete }) {
                 emit(Result.Success(listOf()))
-            } else{
+            } else {
                 emit(Result.Complete)
             }
         }
     }
 
-   suspend fun deleteWordItem(itemID: Long) = flow<Result<Long>>{
+    suspend fun deleteWordItem(learningItem: LearningItem) = flow<Result<Long>> {
+        val itemForSynshronization = learningItem.toLearningItemAPI().copy(deletedStatus = true)
+        learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
+        val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
+        if (result is Result.Error) {
+            synkPreferences.addWordForSync(itemForSynshronization)
+        }
+        emit(Result.Success(learningItem.timeStampUIID))
+    }
 
-        learningItemsRepository.removeItemFromLocalDatabase(itemID).collect{}
-        val result = learningItemsRepository.markItemStatusRemoved(itemID)
-       if (result is Result.Error){
-           synkPreferences.addWordForRemoving(itemID.toString())
-       }
-        emit(Result.Success(itemID))
+    private fun getActualItemForSynk(learningItem: LearningItem): LearningItemAPI{
+        var itemForSynshronization = synkPreferences.getActualLearnItemsSynronization().firstOrNull { it.timeStampUIID == learningItem.timeStampUIID }
+        return  itemForSynshronization ?: learningItem.toLearningItemAPI()
+    }
+
+    suspend fun changeItemsStatus(learningItem: LearningItem) = flow<Result<Long>> {
+        var itemForSynshronization = getActualItemForSynk(learningItem).copy(learningStatus = learningItem.learningStatus)
+        learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
+        learningItemsRepository.writeToLocalDatabase(itemForSynshronization.toLearningItem())
+        val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
+        if (result is Result.Error) {
+            synkPreferences.addWordForSync(itemForSynshronization)
+        }
+        emit(Result.Success(learningItem.timeStampUIID))
     }
 
 

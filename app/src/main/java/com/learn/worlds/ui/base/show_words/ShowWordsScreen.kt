@@ -85,7 +85,6 @@ import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
-import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.model.base.getActualText
 import com.learn.worlds.navigation.Screen
 import com.learn.worlds.ui.base.show_words.customization.LearnItemTransitionData
@@ -131,11 +130,11 @@ fun ShowLearningWordsScreen(
         var showSortMenu by remember { mutableStateOf(false) }
 
 
-        uiState.error?.let {
+        uiState.errorDialog?.let {
             SomethingWentWrongDialog(
                 message = it,
                 onTryAgain = {
-                    viewModel.dropErrorDialog()
+                    viewModel.handleEvent(ShowWordsEvent.DismisErrorDialog)
                 })
         }
 
@@ -149,7 +148,7 @@ fun ShowLearningWordsScreen(
             isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
             learningItems = uiState.learningItems,
             onDeleteItemAction = {
-                viewModel.handleEvent(ShowWordsEvent.DeleteItemEvent(it.timeStampUIID))
+                viewModel.handleEvent(ShowWordsEvent.DeleteItemEvent(it))
             },
             isAuthenticated = uiState.isAuthentificated,
             onLoginAction = { onNavigate.invoke(Screen.AuthScreen) },
@@ -209,6 +208,12 @@ fun ShowLearningWordsScreen(
                         )
                     )
                 )
+            },
+            onShowedCardTips = {
+                viewModel.handleEvent(ShowWordsEvent.UpdateCardStatusEvent(it.copy(learningStatus = LearningStatus.LEARNING.name)))
+            },
+            onShowDialogChangeCardStatus = {
+                viewModel.handleEvent(ShowWordsEvent.ShowChangeCardStatusDialog)
             }
         )
     }
@@ -247,8 +252,9 @@ private fun ShowLearningItemsScreenPreview() {
                             )
                         )
                     )
-                }
-
+                },
+                onShowedCardTips = {},
+                onShowDialogChangeCardStatus = {}
             )
         }
     }
@@ -263,6 +269,8 @@ fun LearningItemsScreen(
     appBar: @Composable (() -> Unit)? = null,
     onLoginAction: () -> Unit,
     onSyncAction: () -> Unit,
+    onShowedCardTips: (LearningItem)->Unit,
+    onShowDialogChangeCardStatus: (LearningItem)->Unit,
     isWasShowedLoginInformationDialog: Boolean = false,
     onShowedLoginInformationDialogAction: () -> Unit,
 ) {
@@ -271,6 +279,7 @@ fun LearningItemsScreen(
 
     Column {
         appBar?.invoke()
+
         if (isShowLoginInfoDialog) {
             InformationDialog(
                 message = stringResource(R.string.information_login),
@@ -301,12 +310,9 @@ fun LearningItemsScreen(
             LearningList(
                 modifier = Modifier,
                 learningItems = learningItems,
-                onDeleteItemAction = {
-                    onDeleteItemAction.invoke(it)
-                },
-                onChangeCardAction = {
-
-                }
+                onDeleteItemAction = onDeleteItemAction,
+                onShowedCardTips = onShowedCardTips,
+                onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
             )
         } else EmptyScreen(
             isAuthenticated = isAuthenticated,
@@ -665,7 +671,8 @@ private fun LearningList(
     learningItems: List<LearningItem>,
     needRememberLastScrollState: Boolean = false,
     onDeleteItemAction: (LearningItem) -> Unit,
-    onChangeCardAction: (LearningItem) -> Unit
+    onShowedCardTips: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem)->Unit
 ) {
     LazyColumn(
         state = if (needRememberLastScrollState) rememberLazyListState() else LazyListState(),
@@ -679,9 +686,10 @@ private fun LearningList(
                         tween(durationMillis = 250)
                     ),
                 learningItem = item,
-                onChangeCardAction = onChangeCardAction,
+                onShowedCardTips = onShowedCardTips,
                 onDeleteItemAction = onDeleteItemAction,
-                showDefaultNative = true
+                showDefaultNative = true,
+                onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
             )
 
         }
@@ -695,10 +703,19 @@ fun SwipeableCardItem(
     learningItem: LearningItem,
     showDefaultNative: Boolean = true,
     onDeleteItemAction: (LearningItem) -> Unit,
-    onChangeCardAction: (LearningItem) -> Unit
+    onShowedCardTips: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem)->Unit
 ) {
     var draggableState by remember { mutableStateOf(DraggableState.CENTER) }
     var cardTipsState by remember { mutableStateOf(false) }
+
+    LaunchedEffect(cardTipsState){
+        if (cardTipsState){
+            if (learningItem.learningStatus == LearningStatus.LEARNED.name){
+                onShowedCardTips.invoke(learningItem.copy(learningStatus = LearningStatus.LEARNING.name))
+            }
+        }
+    }
 
     Box(
         modifier = modifier
@@ -711,7 +728,7 @@ fun SwipeableCardItem(
             cardTipsState = cardTipsState,
             learningItem = learningItem,
             onDeleteItemAction = onDeleteItemAction,
-            onChangeCardAction = onChangeCardAction
+            onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
         )
         CardContent(
             modifier = Modifier
@@ -773,7 +790,7 @@ fun BackgroundSwipeable(
     cardTipsState: Boolean,
     learningItem: LearningItem,
     onDeleteItemAction: (LearningItem) -> Unit,
-    onChangeCardAction: (LearningItem) -> Unit
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit
 ) {
 
 
@@ -834,7 +851,7 @@ fun BackgroundSwipeable(
                 icon = Icons.Outlined.Edit,
                 contentDescription = "",
                 onClick = {
-                    onChangeCardAction.invoke(learningItem)
+                    onShowDialogChangeCardStatus.invoke(learningItem)
                 },
                 tintColor = Color.Black
             )

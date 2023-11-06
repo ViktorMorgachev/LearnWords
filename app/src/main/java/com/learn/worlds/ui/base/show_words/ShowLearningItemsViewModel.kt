@@ -10,13 +10,10 @@ import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.prefs.UISharedPreferences
 import com.learn.worlds.servises.AuthService
-import com.learn.worlds.ui.login.auth.AuthenticationEvent
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -49,20 +46,24 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     fun handleEvent(showWordsEvent: ShowWordsEvent) {
         when (showWordsEvent) {
-            is ShowWordsEvent.ChangeCardEvent -> {
-
-            }
-            is ShowWordsEvent.DeleteItemEvent -> {
+            is ShowWordsEvent.UpdateCardStatusEvent -> {
                 viewModelScope.launch {
-                    learnItemsUseCase.deleteWordItem(itemID = showWordsEvent.learningItemID).collect { result->
-                        if (result is Result.Success){
-                            val itemForRemoving = allLearningItems.value.firstOrNull { it.timeStampUIID == result.data}
-                            allLearningItems.value.toMutableList().remove(itemForRemoving)
-                        }
-
+                    learnItemsUseCase.changeItemsStatus(learningItem = showWordsEvent.learningItem).collect { result->
+                        Timber.d("UpdateCardStatusEvent: $showWordsEvent result: $result")
                     }
                 }
             }
+            is ShowWordsEvent.DeleteItemEvent -> {
+                viewModelScope.launch {
+                    learnItemsUseCase.deleteWordItem(learningItem = showWordsEvent.learningItem).collect { result->
+                        Timber.d("DeleteItemEvent: $showWordsEvent result: $result")
+                    }
+                }
+            }
+
+            ShowWordsEvent.ShowChangeCardStatusDialog ->  showChangeStatusDialog()
+            ShowWordsEvent.DismisErrorDialog -> dropErrorDialog()
+            ShowWordsEvent.DismisChangeStatusDialog -> dropChangeStatusDialog()
         }
     }
 
@@ -77,7 +78,7 @@ class ShowLearningItemsViewModel @Inject constructor(
                 allLearningItems.emit(data)
                 uiState.value = uiState.value.copy(
                     isLoading =  false,
-                    error = null,
+                    errorDialog = null,
                     learningItems = getSortedAndFilteringData(data)
                 )
             }
@@ -85,9 +86,21 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     }
 
-    fun dropErrorDialog() {
+    private fun dropChangeStatusDialog() {
         uiState.value = uiState.value.copy(
-            error = null
+            changeStatusDialog = false
+        )
+    }
+
+    private fun showChangeStatusDialog() {
+        uiState.value = uiState.value.copy(
+           changeStatusDialog = true
+        )
+    }
+
+   private fun dropErrorDialog() {
+        uiState.value = uiState.value.copy(
+            errorDialog = null
         )
     }
 
