@@ -27,7 +27,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
     val database by lazy { Firebase.database }
     var databaseRef: DatabaseReference? = null
 
-    suspend fun fetchDataFromNetwork() = callbackFlow<Result<List<LearningItemAPI>>> {
+    suspend fun fetchDataFromNetwork(ignoreRemovingItems: Boolean) = callbackFlow<Result<List<LearningItemAPI>>> {
         if (!authService.isAuthentificated()) {
             this@callbackFlow.trySendBlocking(Result.Error(ErrorType.NOT_AUTHENTICATED))
             close()
@@ -41,7 +41,12 @@ class LearningRemoteItemsDataSource @Inject constructor(
                         } else {
                             var resultList = listOf<LearningItemAPI>()
                             resultList =  it.result.children.map { it.getValue<LearningItemAPI>() }.filterNotNull()
-                            trySendBlocking(Result.Success(resultList))
+                            if (ignoreRemovingItems){
+                                trySendBlocking(Result.Success(resultList))
+                            } else {
+                                trySendBlocking(Result.Success(resultList.filter { !it.deleted }))
+                            }
+
                         }
                     } else {
                         trySendBlocking(Result.Success(listOf()))
@@ -119,7 +124,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                     cancellableContinuation.safeResume(Result.Complete)
                 } else {
                     learningItemIDs.forEach {
-                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("$it").removeValue().addOnCompleteListener {
+                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("$it").updateChildren(mapOf<String, Boolean>("deleted" to true)).addOnCompleteListener {
                             if (it.isSuccessful) {
                                 resultList.add(Result.Complete)
                             } else {

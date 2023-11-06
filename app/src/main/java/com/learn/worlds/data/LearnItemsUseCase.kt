@@ -34,21 +34,17 @@ class LearnItemsUseCase @Inject constructor(
         }
     }
 
-
-    // TODO: Переделать с учётом сохранённых данных в prefs
-    //  1. Самым первым методом запускать метод удаления данных с remote базой,
-    //  в случае ошибки и наличии данных для удаления с базы сразу прекращаь работу */
     suspend fun synckItems() = flow<Result<List<LearningItem>>> {
         val remoteData = mutableListOf<LearningItem>()
         val itemsForRemoving = synkPreferences.getActualLearnItemsForRemoving()
-       val removingResult =  learningItemsRepository.removeItemListFromRemoteDatabase(itemsForRemoving.map { it.toLong() })
+        val removingResult =  learningItemsRepository.removeItemListFromRemoteDatabase(itemsForRemoving.map { it.toLong() })
         if(removingResult is Result.Error){
             emit(Result.Error())
             return@flow
         }
         synkPreferences.removeAllItemsIdsForRemoving()
 
-        learningItemsRepository.fetchDataFromNetwork()
+        learningItemsRepository.fetchDataFromNetwork(ignoreRemovingItems = false)
             .collectLatest {
                 if (it is Result.Success) {
                     remoteData.addAll(it.data)

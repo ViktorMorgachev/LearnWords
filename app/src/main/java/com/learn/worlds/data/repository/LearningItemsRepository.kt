@@ -34,7 +34,7 @@ class LearningItemsRepository @Inject constructor(
     }.flowOn(dispatcher)
 
 
-    suspend fun fetchDataFromNetwork() = remoteDataSource.fetchDataFromNetwork().transform<Result<List<LearningItemAPI>>, Result<List<LearningItem>>> {
+    suspend fun fetchDataFromNetwork(ignoreRemovingItems: Boolean = true) = remoteDataSource.fetchDataFromNetwork(ignoreRemovingItems).transform<Result<List<LearningItemAPI>>, Result<List<LearningItem>>> {
         if (it is Result.Error){
             emit(it)
         }
