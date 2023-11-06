@@ -1,5 +1,6 @@
 package com.learn.worlds.ui.base.show_words
 
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
@@ -54,6 +55,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -156,7 +158,7 @@ fun ShowLearningWordsScreen(
             },
             appBar = {
                 ActualTopBar(
-                    title = R.string.learn,
+                    title = R.string.list_of_words,
                     actions = mutableListOf(
                         ActionTopBar(
                             imageVector = Icons.Default.FilterList,
@@ -258,7 +260,7 @@ private fun ShowLearningItemsScreenPreview() {
                 onSyncAction = {},
                 appBar = {
                     ActualTopBar(
-                        title = R.string.learn,
+                        title = R.string.list_of_words,
                         actions = listOf(
                             ActionTopBar(
                                 imageVector = Icons.Default.FilterList,
@@ -439,6 +441,7 @@ fun CardContent(
     showDefaultNative: Boolean = true,
     maxLimitHorizontalOffset: Float,
     onDragState: (DraggableState) -> Unit,
+    onTipsShowed: (Boolean) -> Unit
 ) {
     val duration = 1000
     var switch by rememberSaveable { mutableStateOf(false) }
@@ -463,10 +466,11 @@ fun CardContent(
     )
 
     val transitionData = updateTransitionData(
-        switchState = switch,
+        showTipsState = switch,
         learningItem = learningItem,
         duration = duration
     )
+
 
     var actualText by remember {
         mutableStateOf(
@@ -494,6 +498,7 @@ fun CardContent(
 
     val switchAction = {
         switch = !switch
+        onTipsShowed.invoke(switch)
     }
 
     CardItem(
@@ -531,9 +536,11 @@ fun CardContent(
                         dragAmount > 0 -> {
                             DragDirection.TO_RIGHT
                         }
+
                         dragAmount < 0 -> {
                             DragDirection.TO_LEFT
                         }
+
                         else -> {
                             DragDirection.NONE
                         }
@@ -566,12 +573,12 @@ fun CardContent(
 
 @Composable
 private fun updateTransitionData(
-    switchState: Boolean,
+    showTipsState: Boolean,
     learningItem: LearningItem,
     duration: Int
 ): LearnItemTransitionData {
     val rootLabel = screenLabel + "_card_item"
-    val transition = updateTransition(switchState, label = rootLabel)
+    val transition = updateTransition(showTipsState, label = rootLabel)
 
     val rotation by transition.animateFloat(
         transitionSpec = { tween(durationMillis = duration) }, label = rootLabel + "_rotation",
@@ -620,14 +627,13 @@ private fun CardItem(
 
     Card(
         colors = CardDefaults.cardColors(containerColor = cardBackground),
-        modifier = modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+        modifier = modifier.padding(horizontal = 8.dp),
         onClick = {
             onClickedAction.invoke()
         }
     ) {
         Row(
-            modifier = Modifier
-                .padding(12.dp)
+            modifier = modifier
                 .animateContentSize(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -637,9 +643,10 @@ private fun CardItem(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
+                modifier = modifier
+                    .fillMaxWidth()
                     .weight(1f)
-                    .padding(12.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 Crossfade(
                     targetState = state,
@@ -648,18 +655,18 @@ private fun CardItem(
                 ) { state ->
                     if (state) {
                         Text(
-                            modifier = modifier,
+                            modifier = Modifier,
                             text = text,
-                            style = MaterialTheme.typography.headlineMedium.copy(
+                            style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 color = textColor.copy(alpha = textAlpha)
                             )
                         )
                     } else {
                         Text(
-                            modifier = modifier,
+                            modifier = Modifier,
                             text = text,
-                            style = MaterialTheme.typography.headlineMedium.copy(
+                            style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
                                 color = textColor.copy(alpha = textAlpha)
                             )
@@ -711,27 +718,35 @@ fun SwipeableCardItem(
     showDefaultNative: Boolean = true
 ) {
     var draggableState by remember { mutableStateOf(DraggableState.CENTER) }
+    var cardTipsState by remember { mutableStateOf(false) }
+
     Box(
         modifier = modifier
-            .padding(vertical = 4.dp)
     ) {
         BackgroundSwipeable(
-            modifier = modifier.fillMaxHeight(),
-            draggableState = draggableState
+            modifier = modifier
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            draggableState = draggableState,
+            cardTipsState = cardTipsState,
+            learningItem = learningItem
         )
         CardContent(
-            modifier = modifier,
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
             maxLimitHorizontalOffset = dragLimitHorizontalPx,
             onDragState = { draggableState = it },
             learningItem = learningItem,
             onChangeData = onChangeData,
-            showDefaultNative = showDefaultNative
+            showDefaultNative = showDefaultNative,
+            onTipsShowed = { cardTipsState = it }
         )
     }
 
 }
 
-fun computeActualTargetValue(
+private fun computeActualTargetValue(
     dragDirection: DragDirection,
     actualOffsetX: Float,
     maxLimitHorizontalOffset: Float
@@ -771,11 +786,22 @@ fun computeActualTargetValue(
 }
 
 @Composable
-fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState) {
+fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState, cardTipsState: Boolean, learningItem: LearningItem) {
+
+
+    var cardColor = remember { Animatable(Color.Cyan) }
+
+    LaunchedEffect(cardTipsState) {
+        cardColor.animateTo( getCardBackground(
+            isSystemDarkTheme = false,
+            foreignCard = cardTipsState,
+            learningStatus = learningItem.learningStatus
+        ), animationSpec = tween(1000))
+    }
 
     Row(
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxSize(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -787,7 +813,7 @@ fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState) {
             IconControlButton(
                 modifier = modifier
                     .offset(x = (-10).dp)
-                    .background(color = Color.Cyan, shape = RoundedCornerShape(14.dp))
+                    .background(color = cardColor.value, shape = RoundedCornerShape(14.dp))
                     .padding(start = 20.dp, end = 8.dp),
                 icon = Icons.Outlined.Delete,
                 contentDescription = "Delete item",
@@ -811,7 +837,7 @@ fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState) {
             IconControlButton(
                 modifier = modifier
                     .offset(x = (10).dp)
-                    .background(color = Color.Cyan, shape = RoundedCornerShape(14.dp))
+                    .background(color = cardColor.value, shape = RoundedCornerShape(14.dp))
                     .padding(end = 20.dp, start = 8.dp),
                 icon = Icons.Outlined.Edit,
                 contentDescription = "",

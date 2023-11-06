@@ -7,6 +7,7 @@
 
     <!--LearnScreen-->
     <string name="learn">Учить</string>
+    <string name="list_of_words">Список слов</string>
     <string name="filter_all">Все фразы</string>
     <string name="filter_learned">Выученые</string>
     <string name="sort_by_new">Новые</string>

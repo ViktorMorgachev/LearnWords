@@ -19,6 +19,7 @@ package com.learn.worlds.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -30,6 +31,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.codelab.basiclayouts.ui.theme.md_theme_dark_background
 import com.codelab.basiclayouts.ui.theme.md_theme_dark_error
@@ -130,6 +132,7 @@ private val DarkColors = darkColorScheme(
     onSurfaceVariant = md_theme_dark_onSurfaceVariant,
     outline = md_theme_dark_outline
 )
+
 
 @Composable
 fun LearnWordsTheme(
