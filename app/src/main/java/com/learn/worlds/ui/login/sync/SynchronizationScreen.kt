@@ -78,7 +78,7 @@ fun SynchronizationScreen(
                        viewModel.handleEvent(SynchronizationEvent.DismissDialog)
                     },
                     DeferrableJob(
-                        dispather = Dispatchers.Main, delay = 300L
+                        dispather = Dispatchers.Main, delay = 600L
                     ){
                         onSyncronizedSucces.invoke()
                     }

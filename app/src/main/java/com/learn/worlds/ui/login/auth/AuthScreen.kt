@@ -137,6 +137,7 @@ fun AuthScreen(
             }
             authenticationState.dialogError?.let { error ->
                 SomethingWentWrongDialog(
+
                     message = error,
                     onDismiss = { viewModel.handleEvent(AuthenticationEvent.DialogDismiss) })
             }

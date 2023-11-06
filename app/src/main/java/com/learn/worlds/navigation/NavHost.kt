@@ -1,5 +1,6 @@
 package com.learn.worlds.navigation
 
+import DemoScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -38,6 +39,7 @@ fun MyNavHost(
                         navHostController.navigateUp()
                     })
             }
+
         }
         navigation(startDestination = Screen.LearnScreen.route, route = "MAIN") {
             composable(route = Screen.AddScreen.route) {
@@ -46,6 +48,7 @@ fun MyNavHost(
                     modifier = modifier
                 )
             }
+
             composable(route = Screen.LearnScreen.route) {
                 ShowLearningWordsScreen(
                     onNavigate = { screen -> navHostController.navigate(screen.route) },
@@ -55,6 +58,11 @@ fun MyNavHost(
             composable(route = Screen.SubscribeScreen.route) {
                 SubscribeScreen(
                     onByCoffeeAction = { navHostController.popBackStack() },
+                    modifier = modifier
+                )
+            }
+            composable(route = Screen.DemoScreen.route) {
+                DemoScreen(
                     modifier = modifier
                 )
             }
