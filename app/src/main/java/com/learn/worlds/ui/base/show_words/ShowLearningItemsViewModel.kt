@@ -47,6 +47,7 @@ class ShowLearningItemsViewModel @Inject constructor(
     fun handleEvent(showWordsEvent: ShowWordsEvent) {
         when (showWordsEvent) {
             is ShowWordsEvent.UpdateCardStatusEvent -> {
+                dropChangeStatusDialog()
                 viewModelScope.launch {
                     learnItemsUseCase.changeItemsStatus(learningItem = showWordsEvent.learningItem).collect { result->
                         Timber.d("UpdateCardStatusEvent: $showWordsEvent result: $result")
@@ -61,7 +62,7 @@ class ShowLearningItemsViewModel @Inject constructor(
                 }
             }
 
-            ShowWordsEvent.ShowChangeCardStatusDialog ->  showChangeStatusDialog()
+            is ShowWordsEvent.ShowChangeCardStatusDialog -> showChangeStatusDialog(showWordsEvent.learningItem)
             ShowWordsEvent.DismisErrorDialog -> dropErrorDialog()
             ShowWordsEvent.DismisChangeStatusDialog -> dropChangeStatusDialog()
         }
@@ -88,13 +89,13 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     private fun dropChangeStatusDialog() {
         uiState.value = uiState.value.copy(
-            changeStatusDialog = false
+            changeStatusDialog = null
         )
     }
 
-    private fun showChangeStatusDialog() {
+    private fun showChangeStatusDialog(learningItem: LearningItem) {
         uiState.value = uiState.value.copy(
-           changeStatusDialog = true
+           changeStatusDialog = learningItem
         )
     }
 

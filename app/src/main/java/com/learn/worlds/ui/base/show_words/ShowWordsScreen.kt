@@ -92,6 +92,7 @@ import com.learn.worlds.ui.base.show_words.customization.getCardBackground
 import com.learn.worlds.ui.base.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
+import com.learn.worlds.ui.common.ChangeStatusDialog
 import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
@@ -138,6 +139,12 @@ fun ShowLearningWordsScreen(
                 })
         }
 
+
+        uiState.changeStatusDialog?.let {
+            ChangeStatusDialog {
+                viewModel.handleEvent(ShowWordsEvent.UpdateCardStatusEvent(it.copy(learningStatus = LearningStatus.LEARNED.name)))
+            }
+        }
 
 
         if (uiState.isLoading) {
@@ -213,7 +220,7 @@ fun ShowLearningWordsScreen(
                 viewModel.handleEvent(ShowWordsEvent.UpdateCardStatusEvent(it.copy(learningStatus = LearningStatus.LEARNING.name)))
             },
             onShowDialogChangeCardStatus = {
-                viewModel.handleEvent(ShowWordsEvent.ShowChangeCardStatusDialog)
+                viewModel.handleEvent(ShowWordsEvent.ShowChangeCardStatusDialog(it))
             }
         )
     }
