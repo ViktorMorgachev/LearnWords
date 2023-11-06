@@ -655,7 +655,7 @@ private fun CardItem(
                 ) { state ->
                     if (state) {
                         Text(
-                            modifier = Modifier,
+                            modifier = modifier,
                             text = text,
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
@@ -664,7 +664,7 @@ private fun CardItem(
                         )
                     } else {
                         Text(
-                            modifier = Modifier,
+                            modifier = modifier,
                             text = text,
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
