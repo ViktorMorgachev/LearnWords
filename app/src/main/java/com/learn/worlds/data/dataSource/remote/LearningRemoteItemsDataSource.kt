@@ -62,6 +62,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
     suspend fun addLearningItems(learningItemsAPI: List<LearningItemAPI>) =
         suspendCancellableCoroutine<Result<Nothing>> { cancellableContinuation ->
+            val resultList = mutableListOf<Result<Nothing>>()
             if (databaseRef == null) {
                 authService.getUserUUID()?.let {
                     databaseRef = database.getReference(it)
@@ -76,20 +77,63 @@ class LearningRemoteItemsDataSource @Inject constructor(
                             if (it.isSuccessful) {
                                 databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
                                     if (it.isSuccessful){
-                                        cancellableContinuation.safeResume(Result.Complete)
+                                        resultList.add(Result.Complete)
                                     } else {
                                         Timber.e(it.exception, "add to remote datetime")
-                                        cancellableContinuation.safeResume(Result.Error()){ }
+                                        resultList.add(Result.Error())
                                     }
                                 }
                             } else {
                                 Timber.e(it.exception, "add to remote learning items")
-                                cancellableContinuation.safeResume(Result.Error())
+                                resultList.add(Result.Error())
                             }
                         }
                     }
+                    if (resultList.all { it == Result.Complete }){
+                        cancellableContinuation.safeResume(Result.Complete)
+                    } else {
+                        cancellableContinuation.safeResume(Result.Error())
+                    }
                 }
 
+            } else {
+                Timber.e("database reference = $databaseRef maybe token expired please check")
+                cancellableContinuation.safeResume(Result.Error())
+            }
+            cancellableContinuation.invokeOnCancellation {
+                cancellableContinuation.cancel(it)
+            }
+        }
+
+
+    suspend fun removeRemoteItemByID(learningItemIDs: List<Long>) =
+        suspendCancellableCoroutine<Result<Nothing>> { cancellableContinuation ->
+            val resultList = mutableListOf<Result<Nothing>>()
+            if (databaseRef == null) {
+                authService.getUserUUID()?.let {
+                    databaseRef = database.getReference(it)
+                }
+            }
+            if (databaseRef != null) {
+                if (learningItemIDs.isEmpty()) {
+                    cancellableContinuation.safeResume(Result.Complete)
+                } else {
+                    learningItemIDs.forEach {
+                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("$it").removeValue().addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                resultList.add(Result.Complete)
+                            } else {
+                                Timber.e(it.exception, "remove remote learning item")
+                                resultList.add(Result.Error())
+                            }
+                        }
+                    }
+                    if (resultList.all { it == Result.Complete }){
+                        cancellableContinuation.safeResume(Result.Complete)
+                    } else {
+                        cancellableContinuation.safeResume(Result.Error())
+                    }
+                }
             } else {
                 Timber.e("database reference = $databaseRef maybe token expired please check")
                 cancellableContinuation.safeResume(Result.Error())

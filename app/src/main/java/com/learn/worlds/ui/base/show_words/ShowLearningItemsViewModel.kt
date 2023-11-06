@@ -10,10 +10,13 @@ import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.prefs.UISharedPreferences
 import com.learn.worlds.servises.AuthService
+import com.learn.worlds.ui.login.auth.AuthenticationEvent
+import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -40,6 +43,25 @@ class ShowLearningItemsViewModel @Inject constructor(
                 uiState.value = uiState.value.copy(
                     isAuthentificated = it
                 )
+            }
+        }
+    }
+
+    fun handleEvent(showWordsEvent: ShowWordsEvent) {
+        when (showWordsEvent) {
+            is ShowWordsEvent.ChangeCardEvent -> {
+
+            }
+            is ShowWordsEvent.DeleteItemEvent -> {
+                viewModelScope.launch {
+                    learnItemsUseCase.deleteWordItem(itemID = showWordsEvent.learningItemID).collect { result->
+                        if (result is Result.Success){
+                            val itemForRemoving = allLearningItems.value.firstOrNull { it.timeStampUIID == result.data}
+                            allLearningItems.value.toMutableList().remove(itemForRemoving)
+                        }
+
+                    }
+                }
             }
         }
     }

@@ -147,7 +147,9 @@ fun ShowLearningWordsScreen(
         LearningItemsScreen(modifier = modifier,
             isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
             learningItems = uiState.learningItems,
-            onChangeData = {},
+            onDeleteItemAction = {
+                viewModel.handleEvent(ShowWordsEvent.DeleteItemEvent(it.timeStampUIID))
+            },
             isAuthenticated = uiState.isAuthentificated,
             onLoginAction = { onNavigate.invoke(Screen.AuthScreen) },
             onShowedLoginInformationDialogAction = {
@@ -255,7 +257,7 @@ private fun ShowLearningItemsScreenPreview() {
                     )
                 ),
                 onShowedLoginInformationDialogAction = {},
-                onChangeData = {},
+                onDeleteItemAction = {},
                 onLoginAction = {},
                 onSyncAction = {},
                 appBar = {
@@ -286,7 +288,7 @@ fun LearningItemsScreen(
     modifier: Modifier = Modifier,
     isAuthenticated: Boolean? = null,
     learningItems: List<LearningItem>,
-    onChangeData: (LearningItem) -> Unit,
+    onDeleteItemAction: (LearningItem) -> Unit,
     appBar: @Composable (() -> Unit)? = null,
     onLoginAction: () -> Unit,
     onSyncAction: () -> Unit,
@@ -328,7 +330,12 @@ fun LearningItemsScreen(
             LearningList(
                 modifier = Modifier,
                 learningItems = learningItems,
-                onChangeData = onChangeData
+                onDeleteItemAction = {
+                    onDeleteItemAction.invoke(it)
+                },
+                onChangeCardAction = {
+
+                }
             )
         } else EmptyScreen(
             isAuthenticated = isAuthenticated,
@@ -437,7 +444,6 @@ fun EmptyScreen(
 fun CardContent(
     modifier: Modifier = Modifier,
     learningItem: LearningItem,
-    onChangeData: (LearningItem) -> Unit,
     showDefaultNative: Boolean = true,
     maxLimitHorizontalOffset: Float,
     onDragState: (DraggableState) -> Unit,
@@ -686,8 +692,9 @@ private fun CardItem(
 private fun LearningList(
     modifier: Modifier = Modifier,
     learningItems: List<LearningItem>,
-    onChangeData: (LearningItem) -> Unit,
-    needRememberLastScrollState: Boolean = false
+    needRememberLastScrollState: Boolean = false,
+    onDeleteItemAction: (LearningItem) -> Unit,
+    onChangeCardAction: (LearningItem) -> Unit
 ) {
     LazyColumn(
         state = if (needRememberLastScrollState) rememberLazyListState() else LazyListState(),
@@ -701,8 +708,9 @@ private fun LearningList(
                         tween(durationMillis = 250)
                     ),
                 learningItem = item,
-                onChangeData = onChangeData,
-                showDefaultNative = false
+                onChangeCardAction = onChangeCardAction,
+                onDeleteItemAction = onDeleteItemAction,
+                showDefaultNative = true
             )
 
         }
@@ -714,8 +722,9 @@ fun SwipeableCardItem(
     modifier: Modifier,
     dragLimitHorizontalPx: Float = 80.dp.dpToPx(),
     learningItem: LearningItem,
-    onChangeData: (LearningItem) -> Unit,
-    showDefaultNative: Boolean = true
+    showDefaultNative: Boolean = true,
+    onDeleteItemAction: (LearningItem) -> Unit,
+    onChangeCardAction: (LearningItem) -> Unit
 ) {
     var draggableState by remember { mutableStateOf(DraggableState.CENTER) }
     var cardTipsState by remember { mutableStateOf(false) }
@@ -729,7 +738,9 @@ fun SwipeableCardItem(
                 .padding(vertical = 4.dp),
             draggableState = draggableState,
             cardTipsState = cardTipsState,
-            learningItem = learningItem
+            learningItem = learningItem,
+            onDeleteItemAction = onDeleteItemAction,
+            onChangeCardAction = onChangeCardAction
         )
         CardContent(
             modifier = Modifier
@@ -738,7 +749,6 @@ fun SwipeableCardItem(
             maxLimitHorizontalOffset = dragLimitHorizontalPx,
             onDragState = { draggableState = it },
             learningItem = learningItem,
-            onChangeData = onChangeData,
             showDefaultNative = showDefaultNative,
             onTipsShowed = { cardTipsState = it }
         )
@@ -786,17 +796,26 @@ private fun computeActualTargetValue(
 }
 
 @Composable
-fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState, cardTipsState: Boolean, learningItem: LearningItem) {
+fun BackgroundSwipeable(
+    modifier: Modifier,
+    draggableState: DraggableState,
+    cardTipsState: Boolean,
+    learningItem: LearningItem,
+    onDeleteItemAction: (LearningItem) -> Unit,
+    onChangeCardAction: (LearningItem) -> Unit
+) {
 
 
     var cardColor = remember { Animatable(Color.Cyan) }
 
     LaunchedEffect(cardTipsState) {
-        cardColor.animateTo( getCardBackground(
-            isSystemDarkTheme = false,
-            foreignCard = cardTipsState,
-            learningStatus = learningItem.learningStatus
-        ), animationSpec = tween(1000))
+        cardColor.animateTo(
+            getCardBackground(
+                isSystemDarkTheme = false,
+                foreignCard = cardTipsState,
+                learningStatus = learningItem.learningStatus
+            ), animationSpec = tween(1000)
+        )
     }
 
     Row(
@@ -817,7 +836,9 @@ fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState, card
                     .padding(start = 20.dp, end = 8.dp),
                 icon = Icons.Outlined.Delete,
                 contentDescription = "Delete item",
-                onClick = {},
+                onClick = {
+                    onDeleteItemAction.invoke(learningItem)
+                },
                 tintColor = Color.Black
             )
         }
@@ -841,7 +862,9 @@ fun BackgroundSwipeable(modifier: Modifier, draggableState: DraggableState, card
                     .padding(end = 20.dp, start = 8.dp),
                 icon = Icons.Outlined.Edit,
                 contentDescription = "",
-                onClick = {},
+                onClick = {
+                    onChangeCardAction.invoke(learningItem)
+                },
                 tintColor = Color.Black
             )
         }
