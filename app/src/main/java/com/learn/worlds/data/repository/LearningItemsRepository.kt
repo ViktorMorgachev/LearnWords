@@ -34,7 +34,7 @@ class LearningItemsRepository @Inject constructor(
     }.flowOn(dispatcher)
 
 
-    suspend fun fetchDataFromNetwork(ignoreRemovingItems: Boolean = true) = remoteDataSource.fetchDataFromNetwork(ignoreRemovingItems).transform<Result<List<LearningItemAPI>>, Result<List<LearningItem>>> {
+    suspend fun fetchDataFromNetwork(needIgnoreRemovingItems: Boolean = true) = remoteDataSource.fetchDataFromNetwork(needIgnoreRemovingItems).transform<Result<List<LearningItemAPI>>, Result<List<LearningItem>>> {
         if (it is Result.Error){
             emit(it)
         }
@@ -43,20 +43,41 @@ class LearningItemsRepository @Inject constructor(
         }
     }
 
-    suspend fun removeItemFromLocalDatabase(learningItemID: Long) = localDataSource.removeLearningItemByID(learningItemID = learningItemID)
+    suspend fun removeItemFromLocalDatabase(itemID: Long) = localDataSource.removeItemByIDs(learningItemID = itemID)
 
-    suspend fun removeItemFromRemoteDatabase(learningItemID: Long) = remoteDataSource.removeRemoteItemByID(listOf(learningItemID))
+    suspend fun removeItemsFromLocalDatabase(itemIDs: List<Long>) = localDataSource.removeItemsByIDs(learningItemIDs = itemIDs)
 
-    suspend fun removeItemListFromRemoteDatabase(learningItemIDs: List<Long>) = remoteDataSource.removeRemoteItemByID(learningItemIDs)
+    suspend fun markItemStatusRemoved(itemID: Long) = remoteDataSource.markItemsStatusRemoved(itemID)
+
+    suspend fun markItemsStatusRemoved(itemIDs: List<Long>) = flow<Result<Nothing>> {
+        val resultList: MutableList<Result<Nothing>> = mutableListOf()
+        itemIDs.forEach{
+            resultList.add(remoteDataSource.markItemsStatusRemoved(it))
+        }
+        if (resultList.all { it is Result.Complete }){
+            emit(Result.Complete)
+        } else {
+            emit(Result.Error())
+        }
+    }.flowOn(dispatcher)
+    suspend fun fetchItemsIdsForRemoving() = remoteDataSource.fetchItemsIdsForRemoving()
 
     suspend fun writeToLocalDatabase(learningItem: LearningItem) = localDataSource.addLearningItem(learningItem.toLearningItemDB())
 
-    suspend fun writeToRemoteDatabase(learningItem: LearningItem) = remoteDataSource.addLearningItems(listOf(learningItem).map { it.toLearningItemAPI() })
+    suspend fun writeToRemoteDatabase(learningItem: LearningItem) = remoteDataSource.addItem(learningItem.toLearningItemAPI())
 
     suspend fun writeListToLocalDatabase(learningItem: List<LearningItem>) = localDataSource.addLearningItems(learningItem.map { it.toLearningItemDB() })
 
-    suspend fun writeListToRemoteDatabase(learningItem: List<LearningItem>) = flow<Result<Nothing>> {
-        emit(remoteDataSource.addLearningItems(learningItem.map { it.toLearningItemAPI() }))
+    suspend fun writeListToRemoteDatabase(learningItems: List<LearningItem>) = flow<Result<Nothing>> {
+        val resultList: MutableList<Result<Nothing>> = mutableListOf()
+        learningItems.forEach{
+            resultList.add(remoteDataSource.addItem(it.toLearningItemAPI()))
+        }
+        if (resultList.all { it is Result.Complete }){
+            emit(Result.Complete)
+        } else {
+            emit(Result.Error())
+        }
     }.flowOn(dispatcher)
 
 }

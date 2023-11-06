@@ -41,6 +41,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.Abc
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -200,40 +201,10 @@ fun ShowLearningWordsScreen(
                             }
                         ),
                         ActionTopBar(
-                            imageVector = Icons.Default.Sort,
-                            contentDesc = R.string.desc_action_sort_list,
+                            imageVector = Icons.Default.Sync,
+                            contentDesc = R.string.desc_action_synk_data,
                             action = {
-                                showSortMenu = true
-                            },
-                            dropDownContent = {
-                                DropdownMenu(
-                                    expanded = showSortMenu,
-                                    onDismissRequest = { showSortMenu = false }
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.sort_by_new),
-                                        modifier = Modifier
-                                            .padding(10.dp)
-                                            .clickable(onClick = {
-                                                showSortMenu = false
-                                                coroutineScope.launch {
-                                                    viewModel.sortBy(SortingType.SORT_BY_NEW)
-                                                }
-
-                                            })
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.sort_by_old),
-                                        modifier = Modifier
-                                            .padding(10.dp)
-                                            .clickable(onClick = {
-                                                showSortMenu = false
-                                                coroutineScope.launch {
-                                                    viewModel.sortBy(SortingType.SORT_BY_OLD)
-                                                }
-                                            })
-                                    )
-                                }
+                              onNavigate.invoke(Screen.SynchronizationScreen)
                             }
                         )
                     )

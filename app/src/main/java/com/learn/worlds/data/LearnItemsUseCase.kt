@@ -37,14 +37,33 @@ class LearnItemsUseCase @Inject constructor(
     suspend fun synckItems() = flow<Result<List<LearningItem>>> {
         val remoteData = mutableListOf<LearningItem>()
         val itemsForRemoving = synkPreferences.getActualLearnItemsForRemoving()
-        val removingResult =  learningItemsRepository.removeItemListFromRemoteDatabase(itemsForRemoving.map { it.toLong() })
-        if(removingResult is Result.Error){
-            emit(Result.Error())
-            return@flow
+        var resultMarkedItems: Result<Nothing>? = null
+        if (itemsForRemoving.isNotEmpty()){
+            learningItemsRepository.markItemsStatusRemoved(itemsForRemoving.map { it.toLong() }).collectLatest {
+                resultMarkedItems = it
+            }
+            if(resultMarkedItems == null || resultMarkedItems is Result.Error ){
+                emit(Result.Error())
+                return@flow
+            }
         }
+
         synkPreferences.removeAllItemsIdsForRemoving()
 
-        learningItemsRepository.fetchDataFromNetwork(ignoreRemovingItems = false)
+        var itemsRemovedIds = listOf<Long>()
+        learningItemsRepository.fetchItemsIdsForRemoving().collectLatest {
+            if (it is Result.Success && it.data.isNotEmpty()){
+               itemsRemovedIds = it.data
+            }
+        }
+
+        Timber.d("Item ids for removing: ${itemsRemovedIds.joinToString(", ")}}")
+
+        if(itemsRemovedIds.isNotEmpty()){
+            learningItemsRepository.removeItemsFromLocalDatabase(itemsRemovedIds).collect{}
+        }
+
+        learningItemsRepository.fetchDataFromNetwork(needIgnoreRemovingItems = true)
             .collectLatest {
                 if (it is Result.Success) {
                     remoteData.addAll(it.data)
@@ -88,13 +107,12 @@ class LearnItemsUseCase @Inject constructor(
     }
 
    suspend fun deleteWordItem(itemID: Long) = flow<Result<Long>>{
-        synkPreferences.addWordForRemoving(itemID.toString())
-        learningItemsRepository.removeItemFromLocalDatabase(itemID).collectLatest {
-            if (it is Result.Complete){
-                synkPreferences.removeItemForRemoving(itemID.toString())
-            }
-        }
-        learningItemsRepository.removeItemFromRemoteDatabase(itemID)
+
+        learningItemsRepository.removeItemFromLocalDatabase(itemID).collect{}
+        val result = learningItemsRepository.markItemStatusRemoved(itemID)
+       if (result is Result.Error){
+           synkPreferences.addWordForRemoving(itemID.toString())
+       }
         emit(Result.Success(itemID))
     }
 
