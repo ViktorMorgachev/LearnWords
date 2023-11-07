@@ -3,6 +3,7 @@ package com.learn.worlds.navigation
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.learn.worlds.R
@@ -15,9 +16,12 @@ sealed class Screen(val route: String, val bottomItem: BottomItem? = null) {
     object AddScreen : Screen(route = "screen_add",
         bottomItem = BottomItem(bottomIcon = Icons.Default.Add, bottomText = R.string.add))
 
+    object DemoScreen : Screen(route = "screen_demo",
+        bottomItem = BottomItem(bottomIcon = Icons.Default.Cake, bottomText = R.string.demo))
+
     object SubscribeScreen : Screen(route = "screen_subscribe")
 
     object AuthScreen: Screen(route = "screen_auth")
 
-    object SynchronizationScreen: Screen(route = "sync_auth")
+    object  SynchronizationScreen: Screen(route = "sync_auth")
 }

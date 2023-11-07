@@ -27,6 +27,9 @@ lottieCompose= "6.1.0"
 hiltWorkVersion = "1.0.0"
 androidWorkVersion = "2.8.1"
 firebaseCrashlytis = "2.9.9"
+kotlinSerializationJson = "1.1.0"
+kotlinSerializationPlugin = "1.4.30"
+
 
 
 [libraries]
@@ -43,6 +46,8 @@ timber-logging = { group = "com.jakewharton.timber", name = "timber", version.re
 androidx-room-runtime = { group = "androidx.room", name="room-runtime", version.ref = "androidxRoom" }
 androidx-room-ktx = { group = "androidx.room",name="room-ktx", version.ref = "androidxRoom" }
 androidx-room-compiler = { group = "androidx.room",name="room-compiler", version.ref = "androidxRoom" }
+
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerializationJson" }
 
 firebase-boom = { group = "com.google.firebase",name="firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { group = "com.google.firebase",name="firebase-analytics-ktx" }
@@ -74,12 +79,14 @@ dataStore-preferences-core = { group = "androidx.datastore", name="datastore-pre
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "androidGradlePlugin" }
-kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroid" }
-android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
-daggerHiltAndroid = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinAndroid" }
+kotlinAndroidPlugin = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroid" }
+androidLibrary = { id = "com.android.library", version.ref = "androidGradlePlugin" }
+daggerHiltAndroidPlugin = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+kotlinKapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinAndroid" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytis" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+firebaseCrashlyticsPlugin = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytis" }
+kotlinSerializationPlugin = { id ="org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerializationPlugin" }
+
 
 

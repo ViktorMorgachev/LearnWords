@@ -1,38 +1,62 @@
 package com.learn.worlds.ui.base.show_words
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.Animatable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.outlined.Abc
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,11 +65,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,20 +85,23 @@ import com.learn.worlds.R
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
-import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.model.base.getActualText
 import com.learn.worlds.navigation.Screen
+import com.learn.worlds.ui.base.show_words.customization.LearnItemTransitionData
 import com.learn.worlds.ui.base.show_words.customization.getCardBackground
 import com.learn.worlds.ui.base.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
+import com.learn.worlds.ui.common.ChangeStatusDialog
 import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import kotlin.math.abs
 
+
+val screenLabel = "show_words_screen"
 
 @Preview
 @Composable
@@ -85,9 +120,12 @@ fun ShowLearningWordsScreen(
     viewModel: ShowLearningItemsViewModel = hiltViewModel(),
     uiState: ShowWordsState = viewModel.uiState.collectAsStateWithLifecycle().value,
     onNavigate: (Screen) -> Unit,
+    isWasShowedLoginInformationDialog: Boolean = viewModel.isShowedLoginInfoDialogForUser(),
 ) {
 
-    val actualList by viewModel.actualItems.collectAsStateWithLifecycle()
+    var actualItems by remember { mutableStateOf(uiState.learningItems) }
+
+
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -97,24 +135,39 @@ fun ShowLearningWordsScreen(
         var showSortMenu by remember { mutableStateOf(false) }
 
 
-        uiState.error?.let {
+        uiState.errorDialog?.let {
             SomethingWentWrongDialog(
-                message = it,
-                onTryAgain = {
-                    viewModel.dropErrorDialog()
-                })
+                onDismiss = {
+                    viewModel.handleEvent(ShowWordsEvent.DismisErrorDialog)
+                },
+                message = it)
+        }
+
+        // Финт ушами из-за боли неразрешимой
+        if (uiState.composeNeedUpdate){
+            actualItems = uiState.learningItems
+            viewModel.handleEvent(ShowWordsEvent.ListWasUpdated)
         }
 
 
+        uiState.changeStatusDialog?.let {
+            ChangeStatusDialog(onDismiss = {
+                viewModel.handleEvent(ShowWordsEvent.DismisChangeStatusDialog)
+            }) {
+                viewModel.handleEvent(ShowWordsEvent.UpdateCardStatusEvent(it.copy(learningStatus = LearningStatus.LEARNED.name)))
+            }
+        }
 
         if (uiState.isLoading) {
             LoadingDialog()
         }
 
         LearningItemsScreen(modifier = modifier,
-            isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
-            learningItems = actualList,
-            onChangeData = {},
+            isWasShowedLoginInformationDialog = isWasShowedLoginInformationDialog,
+            learningItems = actualItems,
+            onDeleteItemAction = {
+                viewModel.handleEvent(ShowWordsEvent.DeleteItemEvent(it))
+            },
             isAuthenticated = uiState.isAuthentificated,
             onLoginAction = { onNavigate.invoke(Screen.AuthScreen) },
             onShowedLoginInformationDialogAction = {
@@ -125,7 +178,7 @@ fun ShowLearningWordsScreen(
             },
             appBar = {
                 ActualTopBar(
-                    title = R.string.learn,
+                    title = R.string.list_of_words,
                     actions = mutableListOf(
                         ActionTopBar(
                             imageVector = Icons.Default.FilterList,
@@ -165,44 +218,20 @@ fun ShowLearningWordsScreen(
                             }
                         ),
                         ActionTopBar(
-                            imageVector = Icons.Default.Sort,
-                            contentDesc = R.string.desc_action_sort_list,
+                            imageVector = Icons.Default.Sync,
+                            contentDesc = R.string.desc_action_synk_data,
                             action = {
-                                showSortMenu = true
-                            },
-                            dropDownContent = {
-                                DropdownMenu(
-                                    expanded = showSortMenu,
-                                    onDismissRequest = { showSortMenu = false }
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.sort_by_new),
-                                        modifier = Modifier
-                                            .padding(10.dp)
-                                            .clickable(onClick = {
-                                                showSortMenu = false
-                                                coroutineScope.launch {
-                                                    viewModel.sortBy(SortingType.SORT_BY_NEW)
-                                                }
-
-                                            })
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.sort_by_old),
-                                        modifier = Modifier
-                                            .padding(10.dp)
-                                            .clickable(onClick = {
-                                                showSortMenu = false
-                                                coroutineScope.launch {
-                                                    viewModel.sortBy(SortingType.SORT_BY_OLD)
-                                                }
-                                            })
-                                    )
-                                }
+                                onNavigate.invoke(Screen.SynchronizationScreen)
                             }
                         )
                     )
                 )
+            },
+            onShowedCardTips = {
+                viewModel.handleEvent(ShowWordsEvent.UpdateCardStatusEvent(it.copy(learningStatus = LearningStatus.LEARNING.name)))
+            },
+            onShowDialogChangeCardStatus = {
+                viewModel.handleEvent(ShowWordsEvent.ShowChangeCardStatusDialog(it))
             }
         )
     }
@@ -222,12 +251,12 @@ private fun ShowLearningItemsScreenPreview() {
                     )
                 ),
                 onShowedLoginInformationDialogAction = {},
-                onChangeData = {},
+                onDeleteItemAction = {},
                 onLoginAction = {},
                 onSyncAction = {},
                 appBar = {
                     ActualTopBar(
-                        title = R.string.learn,
+                        title = R.string.list_of_words,
                         actions = listOf(
                             ActionTopBar(
                                 imageVector = Icons.Default.FilterList,
@@ -241,8 +270,9 @@ private fun ShowLearningItemsScreenPreview() {
                             )
                         )
                     )
-                }
-
+                },
+                onShowedCardTips = {},
+                onShowDialogChangeCardStatus = {}
             )
         }
     }
@@ -253,18 +283,22 @@ fun LearningItemsScreen(
     modifier: Modifier = Modifier,
     isAuthenticated: Boolean? = null,
     learningItems: List<LearningItem>,
-    onChangeData: (LearningItem) -> Unit,
+    onDeleteItemAction: (LearningItem) -> Unit,
     appBar: @Composable (() -> Unit)? = null,
     onLoginAction: () -> Unit,
     onSyncAction: () -> Unit,
+    onShowedCardTips: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit,
     isWasShowedLoginInformationDialog: Boolean = false,
     onShowedLoginInformationDialogAction: () -> Unit,
 ) {
 
     var isShowLoginInfoDialog by rememberSaveable { mutableStateOf(false) }
 
+
     Column {
         appBar?.invoke()
+
         if (isShowLoginInfoDialog) {
             InformationDialog(
                 message = stringResource(R.string.information_login),
@@ -295,12 +329,15 @@ fun LearningItemsScreen(
             LearningList(
                 modifier = Modifier,
                 learningItems = learningItems,
-                onChangeData = onChangeData
+                onDeleteItemAction = onDeleteItemAction,
+                onShowedCardTips = onShowedCardTips,
+                onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
             )
         } else EmptyScreen(
             isAuthenticated = isAuthenticated,
             modifier = modifier,
-            onSyncAction = onSyncAction)
+            onSyncAction = onSyncAction
+        )
     }
 
 }
@@ -393,11 +430,7 @@ fun EmptyScreen(
                     Text(text = stringResource(R.string.syncronize))
                 }
             }
-
-
         }
-
-
     }
 }
 
@@ -407,45 +440,202 @@ fun EmptyScreen(
 fun CardContent(
     modifier: Modifier = Modifier,
     learningItem: LearningItem,
-    onChangeData: (LearningItem) -> Unit,
-    showDefaultNative: Boolean = true
+    showDefaultNative: Boolean = true,
+    maxLimitHorizontalOffset: Float,
+    onDragState: (DraggableState) -> Unit,
+    onTipsShowed: (Boolean) -> Unit
 ) {
+    val duration = 1000
     var switch by rememberSaveable { mutableStateOf(false) }
-    var actualText by rememberSaveable { mutableStateOf(learningItem.getActualText(showDefaultNative)) }
 
-    val bgColor: Color by animateColorAsState(
-        targetValue = getCardBackground(
-            isSystemDarkTheme = isSystemInDarkTheme(),
-            switch = switch,
-            learningStatus = learningItem.learningStatus
+    val almostLimitPercent by remember { mutableStateOf(maxLimitHorizontalOffset * 0.1) }
+
+    var stateAnimation by remember { mutableStateOf(false) }
+    var targetValue by remember { mutableStateOf(0.0f) }
+    val scope = rememberCoroutineScope()
+    val cardOffset = remember { mutableStateOf(Offset(0.0f, 0.0f)) }
+    val offsetTransition by animateFloatAsState(
+        targetValue = targetValue,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
         ),
-        animationSpec = tween(1000, easing = LinearEasing), label = ""
+        label = "cardOffsetTransition",
+        finishedListener = {
+            cardOffset.value = Offset(it, 0.0f)
+            stateAnimation = false
+        }
     )
 
-    val textColor: Color by animateColorAsState(
-        targetValue = getCardTextColor(
-            isSystemDarkTheme = isSystemInDarkTheme(),
-            switch = switch,
-            learningStatus = learningItem.learningStatus
-        ),
-        animationSpec = tween(1000, easing = LinearEasing), label = ""
+    val transitionData = updateTransitionData(
+        showTipsState = switch,
+        learningItem = learningItem,
+        duration = duration
     )
+
+
+    var actualText by remember {
+        mutableStateOf(
+            learningItem.getActualText(
+                showDefaultNative = showDefaultNative,
+                switched = switch
+            )
+        )
+    }
+
+    val textAlpha by animateFloatAsState(
+        animationSpec = tween(durationMillis = duration / 4, easing = LinearEasing),
+        targetValue = if (transitionData.rotation == 0f || transitionData.rotation == 180f) {
+            1f
+        } else 0f,
+        label = "animation_alpha"
+    ) {
+        if (it == 0f || it == 1f) {
+            actualText = learningItem.getActualText(
+                showDefaultNative = showDefaultNative,
+                switched = switch
+            )
+        }
+    }
+
+    val switchAction = {
+        switch = !switch
+        onTipsShowed.invoke(switch)
+    }
+
+    CardItem(
+        modifier = modifier
+            .offset {
+                scope.launch {
+                    val targetValueWithinBounds = offsetTransition.coerceIn(
+                        -maxLimitHorizontalOffset,
+                        maxLimitHorizontalOffset
+                    )
+                    if (abs(maxLimitHorizontalOffset) - abs(targetValueWithinBounds) <= almostLimitPercent) {
+                        if (offsetTransition > 0) {
+                            onDragState.invoke(DraggableState.RIGHT)
+                        }
+                        if (offsetTransition < 0) {
+                            onDragState.invoke(DraggableState.LEFT)
+                        }
+                        return@launch
+                    }
+                    onDragState.invoke(DraggableState.CENTER)
+                }
+
+                IntOffset(
+                    offsetTransition.toInt(),
+                    0
+                )
+            }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures() { change, dragAmount ->
+
+                    if (offsetTransition == abs(maxLimitHorizontalOffset)) {
+                        stateAnimation = false
+                    }
+                    val dragableDirection = when {
+                        dragAmount > 0 -> {
+                            DragDirection.TO_RIGHT
+                        }
+
+                        dragAmount < 0 -> {
+                            DragDirection.TO_LEFT
+                        }
+
+                        else -> {
+                            DragDirection.NONE
+                        }
+                    }
+
+                    val offsetX = cardOffset.value.x
+
+                    if (change.positionChange() != Offset.Zero) change.consume()
+                    if (stateAnimation) return@detectHorizontalDragGestures
+                    targetValue = computeActualTargetValue(
+                        dragDirection = dragableDirection,
+                        actualOffsetX = offsetX,
+                        maxLimitHorizontalOffset = maxLimitHorizontalOffset
+                    )
+                    stateAnimation = true
+                }
+            }
+            .graphicsLayer {
+                rotationX = transitionData.rotation
+            },
+        state = switch,
+        text = actualText,
+        cardBackground = transitionData.background,
+        textColor = transitionData.textColor,
+        onClickedAction = switchAction,
+        textAlpha = textAlpha
+    )
+
+}
+
+@Composable
+private fun updateTransitionData(
+    showTipsState: Boolean,
+    learningItem: LearningItem,
+    duration: Int
+): LearnItemTransitionData {
+    val rootLabel = screenLabel + "_card_item"
+    val transition = updateTransition(showTipsState, label = rootLabel)
+
+    val rotation by transition.animateFloat(
+        transitionSpec = { tween(durationMillis = duration) }, label = rootLabel + "_rotation",
+    ) { state -> if (state) 180f else 0f }
+
+    val background by transition.animateColor(
+        transitionSpec = { tween(durationMillis = duration) }, label = rootLabel + "_background",
+    ) { state ->
+        getCardBackground(
+            isSystemDarkTheme = isSystemInDarkTheme(),
+            foreignCard = state,
+            learningStatus = learningItem.learningStatus
+        )
+    }
+
+    val textColor by transition.animateColor(
+        transitionSpec = { tween(durationMillis = duration) }, label = rootLabel + "_background",
+    ) { state ->
+        getCardTextColor(
+            isSystemDarkTheme = isSystemInDarkTheme(),
+            foreignCard = state,
+            learningStatus = learningItem.learningStatus
+        )
+    }
+
+    return LearnItemTransitionData(
+        rotation = rotation,
+        background = background,
+        textColor = textColor
+    )
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CardItem(
+    modifier: Modifier = Modifier,
+    text: String,
+    textAlpha: Float,
+    cardBackground: Color,
+    textColor: Color,
+    state: Boolean,
+    onClickedAction: () -> Unit
+) {
+    val rootLabel = "card_item"
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = bgColor),
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBackground),
+        modifier = modifier.padding(horizontal = 8.dp),
         onClick = {
-            switch = !switch
-            if (switch) {
-                actualText = learningItem.getActualText(!showDefaultNative)
-            } else {
-                actualText = learningItem.getActualText(showDefaultNative)
-            }
+            onClickedAction.invoke()
         }
     ) {
         Row(
-            modifier = Modifier
-                .padding(12.dp)
+            modifier = modifier
                 .animateContentSize(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -456,21 +646,41 @@ fun CardContent(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .weight(1f)
-                    .padding(12.dp)
+                    .padding(vertical = 8.dp)
             ) {
-                Text(
-                    text = actualText.lowercase(),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        color = textColor
-                    )
-                )
+                Crossfade(
+                    targetState = state,
+                    animationSpec = tween(durationMillis = 2000, easing = LinearEasing),
+                    label = rootLabel + "_crossfade"
+                ) { state ->
+                    if (state) {
+                        Text(
+                            modifier = Modifier,
+                            text = text,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = textColor.copy(alpha = textAlpha)
+                            )
+                        )
+                    } else {
+                        Text(
+                            modifier = Modifier,
+                            text = text,
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = textColor.copy(alpha = textAlpha)
+                            )
+                        )
+                    }
+
+                }
+
 
             }
         }
     }
-
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -478,19 +688,232 @@ fun CardContent(
 private fun LearningList(
     modifier: Modifier = Modifier,
     learningItems: List<LearningItem>,
-    onChangeData: (LearningItem) -> Unit,
-    needRememberLastScrollState: Boolean = false
+    needRememberLastScrollState: Boolean = false,
+    onDeleteItemAction: (LearningItem) -> Unit,
+    onShowedCardTips: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit
 ) {
-    Timber.d("LearningList: Recompose: ${learningItems.joinToString(",\n")}")
+
     LazyColumn(
         state = if (needRememberLastScrollState) rememberLazyListState() else LazyListState(),
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(learningItems) { item ->
-            CardContent(modifier = Modifier.animateItemPlacement(
-                tween(durationMillis = 250)
-            ), learningItem = item, onChangeData = onChangeData)
+        items(learningItems, key = { itemID ->
+            itemID.timeStampUIID
+        }) { item ->
+            SwipeableCardItem(
+                modifier = Modifier
+                    .animateItemPlacement(
+                        tween(durationMillis = 1000)
+                    ),
+                learningItem = item,
+                onShowedCardTips = onShowedCardTips,
+                onDeleteItemAction = {
+                    onDeleteItemAction.invoke(it)
+                },
+                showDefaultNative = true,
+                onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
+            )
         }
     }
 }
+
+@Composable
+fun SwipeableCardItem(
+    modifier: Modifier,
+    dragLimitHorizontalPx: Float = 80.dp.dpToPx(),
+    learningItem: LearningItem,
+    showDefaultNative: Boolean = true,
+    onDeleteItemAction: (LearningItem) -> Unit,
+    onShowedCardTips: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit
+) {
+    var draggableState by remember { mutableStateOf(DraggableState.CENTER) }
+    var cardTipsState by remember { mutableStateOf(false) }
+
+    LaunchedEffect(cardTipsState) {
+        if (cardTipsState) {
+            if (learningItem.learningStatus == LearningStatus.LEARNED.name) {
+                onShowedCardTips.invoke(learningItem.copy(learningStatus = LearningStatus.LEARNING.name))
+            }
+        }
+    }
+
+    Box(
+        modifier = modifier
+    ) {
+        BackgroundSwipeable(
+            modifier = modifier
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            draggableState = draggableState,
+            cardTipsState = cardTipsState,
+            learningItem = learningItem,
+            onDeleteItemAction = onDeleteItemAction,
+            onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
+        )
+        CardContent(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            maxLimitHorizontalOffset = dragLimitHorizontalPx,
+            onDragState = { draggableState = it },
+            learningItem = learningItem,
+            showDefaultNative = showDefaultNative,
+            onTipsShowed = { cardTipsState = it }
+        )
+    }
+
+}
+
+private fun computeActualTargetValue(
+    dragDirection: DragDirection,
+    actualOffsetX: Float,
+    maxLimitHorizontalOffset: Float
+): Float {
+
+    val actualState = if (actualOffsetX < 0) DraggableState.LEFT else
+        if (actualOffsetX > 0) DraggableState.RIGHT else DraggableState.CENTER
+
+
+    val targetOffset = when (actualState) {
+        DraggableState.CENTER -> {
+            when (dragDirection) {
+                DragDirection.TO_RIGHT -> maxLimitHorizontalOffset
+                DragDirection.TO_LEFT -> -maxLimitHorizontalOffset
+                DragDirection.NONE -> 0.0f
+            }
+        }
+
+        DraggableState.RIGHT -> {
+            when (dragDirection) {
+                DragDirection.TO_RIGHT -> maxLimitHorizontalOffset
+                DragDirection.TO_LEFT -> 0.0f
+                DragDirection.NONE -> maxLimitHorizontalOffset
+            }
+        }
+
+        DraggableState.LEFT -> {
+            when (dragDirection) {
+                DragDirection.TO_RIGHT -> 0.0f
+                DragDirection.TO_LEFT -> -maxLimitHorizontalOffset
+                DragDirection.NONE -> -maxLimitHorizontalOffset
+
+            }
+        }
+    }
+    return targetOffset
+}
+
+@Composable
+fun BackgroundSwipeable(
+    modifier: Modifier,
+    draggableState: DraggableState,
+    cardTipsState: Boolean,
+    learningItem: LearningItem,
+    onDeleteItemAction: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit
+) {
+
+
+    val cardColor = remember { Animatable(Color.Cyan) }
+
+    LaunchedEffect(cardTipsState) {
+        cardColor.animateTo(
+            getCardBackground(
+                isSystemDarkTheme = false,
+                foreignCard = cardTipsState,
+                learningStatus = learningItem.learningStatus
+            ), animationSpec = tween(1000)
+        )
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxSize(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AnimatedVisibility(
+            visible = draggableState == DraggableState.RIGHT,
+            enter = slideInHorizontally() + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { fullWidth -> -fullWidth }) + fadeOut(),
+        ) {
+            IconControlButton(
+                modifier = modifier
+                    .offset(x = (-10).dp)
+                    .background(color = cardColor.value, shape = RoundedCornerShape(14.dp))
+                    .padding(start = 20.dp, end = 8.dp),
+                icon = Icons.Outlined.Delete,
+                contentDescription = "Delete item",
+                onClick = {
+                    onDeleteItemAction.invoke(learningItem)
+                },
+                tintColor = Color.Black
+            )
+        }
+
+        IconControlButton(
+            icon = Icons.Outlined.Abc,
+            contentDescription = "Delete item",
+            onClick = {},
+            tintColor = Color.Blue.copy(alpha = 0.0f)
+        )
+
+        AnimatedVisibility(
+            visible = draggableState == DraggableState.LEFT,
+            enter = slideInHorizontally() + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(),
+        ) {
+            IconControlButton(
+                modifier = modifier
+                    .offset(x = (10).dp)
+                    .background(color = cardColor.value, shape = RoundedCornerShape(14.dp))
+                    .padding(end = 20.dp, start = 8.dp),
+                icon = Icons.Outlined.Edit,
+                contentDescription = "",
+                onClick = {
+                    onShowDialogChangeCardStatus.invoke(learningItem)
+                },
+                tintColor = Color.Black
+            )
+        }
+
+
+    }
+}
+
+@Composable
+private fun IconControlButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tintColor: Color = Color.White,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier
+            .size(48.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = tintColor,
+            modifier = Modifier.size(32.dp)
+        )
+    }
+}
+
+enum class DragDirection {
+    TO_RIGHT, TO_LEFT, NONE
+}
+
+enum class DraggableState {
+    CENTER, RIGHT, LEFT
+}
+
+
+@Composable
+private fun Dp.dpToPx() = with(LocalDensity.current) { this@dpToPx.toPx() }

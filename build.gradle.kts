@@ -2,10 +2,11 @@
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidApplication) apply false
-    alias(libs.plugins.kotlinAndroid) apply false
-    alias(libs.plugins.daggerHiltAndroid) apply false
+    alias(libs.plugins.kotlinAndroidPlugin) apply false
+    alias(libs.plugins.daggerHiltAndroidPlugin) apply false
     alias(libs.plugins.ksp) apply false
-    alias(libs.plugins.google.services) apply false
-    alias(libs.plugins.firebase.crashlytics) apply false
+    alias(libs.plugins.googleServices) apply false
+    alias(libs.plugins.firebaseCrashlyticsPlugin) apply false
+    alias(libs.plugins.kotlinSerializationPlugin) apply false
 }
 true // Needed to make the Suppress annotation work for the plugins block

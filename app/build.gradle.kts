@@ -2,11 +2,12 @@ import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
-    alias(libs.plugins.daggerHiltAndroid)
+    alias(libs.plugins.kotlinAndroidPlugin)
+    alias(libs.plugins.daggerHiltAndroidPlugin)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
-    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlyticsPlugin)
+    alias(libs.plugins.kotlinSerializationPlugin)
 
 }
 
@@ -104,12 +105,17 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
 
     //UI
     implementation(libs.lottie.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines)
+
+    // Json Serialization
+    implementation(libs.kotlinx.serialization.json)
 
     // Tooling
     implementation(libs.compose.ui.tooling.preview)

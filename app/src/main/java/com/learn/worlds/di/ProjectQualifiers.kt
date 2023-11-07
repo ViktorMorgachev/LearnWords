@@ -6,4 +6,7 @@ import javax.inject.Qualifier
 annotation class UIPreferences
 @Qualifier
 annotation class MainPreferences
+@Qualifier
+annotation class SynckPreferences
+
 

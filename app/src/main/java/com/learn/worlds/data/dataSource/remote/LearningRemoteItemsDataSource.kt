@@ -11,13 +11,13 @@ import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.FirebaseDatabaseChild
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.getCurrentDateTime
+import com.learn.worlds.utils.safeResume
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import javax.inject.Inject
-import kotlin.coroutines.resume
 
 class LearningRemoteItemsDataSource @Inject constructor(
     private val authService: AuthService
@@ -26,7 +26,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
     val database by lazy { Firebase.database }
     var databaseRef: DatabaseReference? = null
 
-    suspend fun fetchDataFromNetwork() = callbackFlow<Result<List<LearningItemAPI>>> {
+    suspend fun fetchItemsIdsForRemoving() = callbackFlow<Result<List<Long>>> {
         if (!authService.isAuthentificated()) {
             this@callbackFlow.trySendBlocking(Result.Error(ErrorType.NOT_AUTHENTICATED))
             close()
@@ -40,7 +40,47 @@ class LearningRemoteItemsDataSource @Inject constructor(
                         } else {
                             var resultList = listOf<LearningItemAPI>()
                             resultList =  it.result.children.map { it.getValue<LearningItemAPI>() }.filterNotNull()
-                            trySendBlocking(Result.Success(resultList))
+                            trySendBlocking(Result.Success(resultList.filter { it.deletedStatus }.map { it.timeStampUIID }))
+
+                        }
+                    } else {
+                        trySendBlocking(Result.Success(listOf()))
+                    }
+                    close()
+                } else {
+                    Timber.e(it.exception, "fetch from remote learning deleted items")
+                    trySendBlocking(Result.Error())
+                    close()
+                }
+            }
+        }
+        awaitClose {
+          close()
+        }
+
+    }
+
+
+    suspend fun fetchDataFromNetwork(ignoreRemovingItems: Boolean) = callbackFlow<Result<List<LearningItemAPI>>> {
+        if (!authService.isAuthentificated()) {
+            this@callbackFlow.trySendBlocking(Result.Error(ErrorType.NOT_AUTHENTICATED))
+            close()
+        } else {
+            databaseRef = database.getReference(authService.getUserUUID()!!)
+            databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).get().addOnCompleteListener {
+                if (it.isSuccessful){
+                    if (it.result != null){
+                        if (!it.result.exists()){
+                            trySendBlocking(Result.Success(listOf()))
+                        } else {
+                            var resultList = listOf<LearningItemAPI>()
+                            resultList =  it.result.children.map { it.getValue<LearningItemAPI>() }.filterNotNull()
+                            if (ignoreRemovingItems){
+                                trySendBlocking(Result.Success(resultList.filter { !it.deletedStatus }))
+                            } else {
+                                trySendBlocking(Result.Success(resultList))
+                            }
+
                         }
                     } else {
                         trySendBlocking(Result.Success(listOf()))
@@ -54,12 +94,12 @@ class LearningRemoteItemsDataSource @Inject constructor(
             }
         }
         awaitClose {
-          close()
+            close()
         }
 
     }
 
-    suspend fun addLearningItems(learningItemsAPI: List<LearningItemAPI>) =
+    suspend fun addItem(learningItem: LearningItemAPI) =
         suspendCancellableCoroutine<Result<Nothing>> { cancellableContinuation ->
             if (databaseRef == null) {
                 authService.getUserUUID()?.let {
@@ -67,31 +107,50 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 }
             }
             if (databaseRef != null) {
-                if (learningItemsAPI.isEmpty()) {
-                    cancellableContinuation.resume(Result.Complete)
-                } else {
-                    learningItemsAPI.forEach { itemAPI ->
-                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${itemAPI.timeStampUIID}").setValue(itemAPI).addOnCompleteListener {
-                            if (it.isSuccessful) {
-                                databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
-                                    if (it.isSuccessful){
-                                        cancellableContinuation.resume(Result.Complete)
-                                    } else {
-                                        Timber.e(it.exception, "add to remote datetime")
-                                        cancellableContinuation.resume(Result.Error())
-                                    }
-                                }
+                databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).child("${learningItem.timeStampUIID}").setValue(learningItem).addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS_LAST_SYNC_DATETIME.path).setValue(getCurrentDateTime()).addOnCompleteListener {
+                            if (it.isSuccessful){
+                                cancellableContinuation.safeResume(Result.Complete)
                             } else {
-                                Timber.e(it.exception, "add to remote learning items")
-                                cancellableContinuation.resume(Result.Error())
+                                Timber.e(it.exception, "add to remote datetime")
+                                cancellableContinuation.safeResume(Result.Error())
                             }
                         }
+                    } else {
+                        Timber.e(it.exception, "add to remote learning item")
+                        cancellableContinuation.safeResume(Result.Error())
                     }
                 }
-
             } else {
                 Timber.e("database reference = $databaseRef maybe token expired please check")
-                cancellableContinuation.resume(Result.Error())
+                cancellableContinuation.safeResume(Result.Error())
+            }
+            cancellableContinuation.invokeOnCancellation {
+                cancellableContinuation.cancel(it)
+            }
+        }
+
+
+    suspend fun replaceRemoteItems(learningItem: LearningItemAPI) =
+        suspendCancellableCoroutine<Result<Nothing>> { cancellableContinuation ->
+            if (databaseRef == null) {
+                authService.getUserUUID()?.let {
+                    databaseRef = database.getReference(it)
+                }
+            }
+            if (databaseRef != null) {
+                databaseRef!!.child(FirebaseDatabaseChild.LEARNING_ITEMS.path).updateChildren(mapOf<String, LearningItemAPI>("${learningItem.timeStampUIID}" to learningItem)).addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        cancellableContinuation.safeResume(Result.Complete)
+                    } else {
+                        Timber.e(it.exception, "mark items as deleted learning item")
+                        cancellableContinuation.safeResume(Result.Error())
+                    }
+                }
+            } else {
+                Timber.e("database reference = $databaseRef maybe token expired please check")
+                cancellableContinuation.safeResume(Result.Error())
             }
             cancellableContinuation.invokeOnCancellation {
                 cancellableContinuation.cancel(it)
