@@ -1,5 +1,6 @@
 package com.learn.worlds.navigation
 
+import DemoScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -55,6 +56,11 @@ fun MyNavHost(
             composable(route = Screen.SubscribeScreen.route) {
                 SubscribeScreen(
                     onByCoffeeAction = { navHostController.popBackStack() },
+                    modifier = modifier
+                )
+            }
+            composable(route = Screen.DemoScreen.route) {
+                DemoScreen(
                     modifier = modifier
                 )
             }

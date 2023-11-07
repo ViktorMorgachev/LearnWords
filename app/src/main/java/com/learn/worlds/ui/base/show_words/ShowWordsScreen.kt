@@ -120,7 +120,11 @@ fun ShowLearningWordsScreen(
     viewModel: ShowLearningItemsViewModel = hiltViewModel(),
     uiState: ShowWordsState = viewModel.uiState.collectAsStateWithLifecycle().value,
     onNavigate: (Screen) -> Unit,
+    isWasShowedLoginInformationDialog: Boolean = viewModel.isShowedLoginInfoDialogForUser(),
 ) {
+
+    var actualItems by remember { mutableStateOf(uiState.learningItems) }
+
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -133,27 +137,34 @@ fun ShowLearningWordsScreen(
 
         uiState.errorDialog?.let {
             SomethingWentWrongDialog(
-                message = it,
-                onTryAgain = {
+                onDismiss = {
                     viewModel.handleEvent(ShowWordsEvent.DismisErrorDialog)
-                })
+                },
+                message = it)
+        }
+
+        // Финт ушами из-за боли неразрешимой
+        if (uiState.composeNeedUpdate){
+            actualItems = uiState.learningItems
+            viewModel.handleEvent(ShowWordsEvent.ListWasUpdated)
         }
 
 
         uiState.changeStatusDialog?.let {
-            ChangeStatusDialog {
+            ChangeStatusDialog(onDismiss = {
+                viewModel.handleEvent(ShowWordsEvent.DismisChangeStatusDialog)
+            }) {
                 viewModel.handleEvent(ShowWordsEvent.UpdateCardStatusEvent(it.copy(learningStatus = LearningStatus.LEARNED.name)))
             }
         }
-
 
         if (uiState.isLoading) {
             LoadingDialog()
         }
 
         LearningItemsScreen(modifier = modifier,
-            isWasShowedLoginInformationDialog = viewModel.isShowedLoginInfoDialogForUser(),
-            learningItems = uiState.learningItems,
+            isWasShowedLoginInformationDialog = isWasShowedLoginInformationDialog,
+            learningItems = actualItems,
             onDeleteItemAction = {
                 viewModel.handleEvent(ShowWordsEvent.DeleteItemEvent(it))
             },
@@ -210,7 +221,7 @@ fun ShowLearningWordsScreen(
                             imageVector = Icons.Default.Sync,
                             contentDesc = R.string.desc_action_synk_data,
                             action = {
-                              onNavigate.invoke(Screen.SynchronizationScreen)
+                                onNavigate.invoke(Screen.SynchronizationScreen)
                             }
                         )
                     )
@@ -276,13 +287,14 @@ fun LearningItemsScreen(
     appBar: @Composable (() -> Unit)? = null,
     onLoginAction: () -> Unit,
     onSyncAction: () -> Unit,
-    onShowedCardTips: (LearningItem)->Unit,
-    onShowDialogChangeCardStatus: (LearningItem)->Unit,
+    onShowedCardTips: (LearningItem) -> Unit,
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit,
     isWasShowedLoginInformationDialog: Boolean = false,
     onShowedLoginInformationDialogAction: () -> Unit,
 ) {
 
     var isShowLoginInfoDialog by rememberSaveable { mutableStateOf(false) }
+
 
     Column {
         appBar?.invoke()
@@ -633,10 +645,10 @@ private fun CardItem(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(vertical = 4.dp)
+                    .padding(vertical = 8.dp)
             ) {
                 Crossfade(
                     targetState = state,
@@ -645,7 +657,7 @@ private fun CardItem(
                 ) { state ->
                     if (state) {
                         Text(
-                            modifier = modifier,
+                            modifier = Modifier,
                             text = text,
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
@@ -654,7 +666,7 @@ private fun CardItem(
                         )
                     } else {
                         Text(
-                            modifier = modifier,
+                            modifier = Modifier,
                             text = text,
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.ExtraBold,
@@ -679,26 +691,30 @@ private fun LearningList(
     needRememberLastScrollState: Boolean = false,
     onDeleteItemAction: (LearningItem) -> Unit,
     onShowedCardTips: (LearningItem) -> Unit,
-    onShowDialogChangeCardStatus: (LearningItem)->Unit
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit
 ) {
+
     LazyColumn(
         state = if (needRememberLastScrollState) rememberLazyListState() else LazyListState(),
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        items(learningItems) { item ->
+        items(learningItems, key = { itemID ->
+            itemID.timeStampUIID
+        }) { item ->
             SwipeableCardItem(
                 modifier = Modifier
                     .animateItemPlacement(
-                        tween(durationMillis = 250)
+                        tween(durationMillis = 1000)
                     ),
                 learningItem = item,
                 onShowedCardTips = onShowedCardTips,
-                onDeleteItemAction = onDeleteItemAction,
+                onDeleteItemAction = {
+                    onDeleteItemAction.invoke(it)
+                },
                 showDefaultNative = true,
                 onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
             )
-
         }
     }
 }
@@ -711,14 +727,14 @@ fun SwipeableCardItem(
     showDefaultNative: Boolean = true,
     onDeleteItemAction: (LearningItem) -> Unit,
     onShowedCardTips: (LearningItem) -> Unit,
-    onShowDialogChangeCardStatus: (LearningItem)->Unit
+    onShowDialogChangeCardStatus: (LearningItem) -> Unit
 ) {
     var draggableState by remember { mutableStateOf(DraggableState.CENTER) }
     var cardTipsState by remember { mutableStateOf(false) }
 
-    LaunchedEffect(cardTipsState){
-        if (cardTipsState){
-            if (learningItem.learningStatus == LearningStatus.LEARNED.name){
+    LaunchedEffect(cardTipsState) {
+        if (cardTipsState) {
+            if (learningItem.learningStatus == LearningStatus.LEARNED.name) {
                 onShowedCardTips.invoke(learningItem.copy(learningStatus = LearningStatus.LEARNING.name))
             }
         }
@@ -761,7 +777,7 @@ private fun computeActualTargetValue(
         if (actualOffsetX > 0) DraggableState.RIGHT else DraggableState.CENTER
 
 
-    var targetOffset = when (actualState) {
+    val targetOffset = when (actualState) {
         DraggableState.CENTER -> {
             when (dragDirection) {
                 DragDirection.TO_RIGHT -> maxLimitHorizontalOffset
@@ -801,7 +817,7 @@ fun BackgroundSwipeable(
 ) {
 
 
-    var cardColor = remember { Animatable(Color.Cyan) }
+    val cardColor = remember { Animatable(Color.Cyan) }
 
     LaunchedEffect(cardTipsState) {
         cardColor.animateTo(

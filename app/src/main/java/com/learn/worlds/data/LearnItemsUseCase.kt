@@ -114,14 +114,14 @@ class LearnItemsUseCase @Inject constructor(
         }
     }
 
-    suspend fun deleteWordItem(learningItem: LearningItem) = flow<Result<Long>> {
+    suspend fun deleteWordItem(learningItem: LearningItem) = flow<Result<Nothing>> {
         val itemForSynshronization = learningItem.toLearningItemAPI().copy(deletedStatus = true)
         learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
         val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
         if (result is Result.Error) {
             synkPreferences.addWordForSync(itemForSynshronization)
         }
-        emit(Result.Success(learningItem.timeStampUIID))
+        emit(Result.Complete)
     }
 
     private fun getActualItemForSynk(learningItem: LearningItem): LearningItemAPI{
@@ -132,7 +132,7 @@ class LearnItemsUseCase @Inject constructor(
     suspend fun changeItemsStatus(learningItem: LearningItem) = flow<Result<Long>> {
         var itemForSynshronization = getActualItemForSynk(learningItem).copy(learningStatus = learningItem.learningStatus)
         learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
-        learningItemsRepository.writeToLocalDatabase(itemForSynshronization.toLearningItem())
+        learningItemsRepository.writeToLocalDatabase(itemForSynshronization.toLearningItem()).collect{}
         val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
         if (result is Result.Error) {
             synkPreferences.addWordForSync(itemForSynshronization)
