@@ -28,8 +28,8 @@ android {
         applicationId = "com.learn.worlds"
         minSdk = 21
         targetSdk = 34
-        versionCode = 112
-        versionName = "1.1.2"
+        versionCode = 10202
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
