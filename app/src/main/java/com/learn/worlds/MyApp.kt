@@ -7,6 +7,7 @@ import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.DelegatingWorkerFactory
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
@@ -67,10 +68,10 @@ class MyApp : Application(), Configuration.Provider {
             return
         }
         val constraints = Constraints.Builder()
-            .setRequiresCharging(true)
+            .setRequiredNetworkType(NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
             .build()
-        val workRequest = PeriodicWorkRequestBuilder<SynchronizationWorker>(  30, TimeUnit.MINUTES)
+        val workRequest = PeriodicWorkRequestBuilder<SynchronizationWorker>(  5, TimeUnit.HOURS)
             .setConstraints(constraints)
             .build()
 

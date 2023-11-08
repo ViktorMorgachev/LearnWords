@@ -16,7 +16,7 @@ import kotlin.coroutines.resume
 
 
 @Singleton
-class AuthService @Inject constructor(
+class FirebaseAuthService @Inject constructor(
     private val firebaseAuthErrorWrapper: FirebaseAuthErrorWrapper
 ) {
 
@@ -35,7 +35,7 @@ class AuthService @Inject constructor(
         }
     }
     fun isAuthentificated(): Boolean {
-        return auth.currentUser != null
+        return getUserUUID() != null
     }
 
     fun getUserUUID(): String? {

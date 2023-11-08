@@ -59,11 +59,6 @@ fun MyNavHost(
                     modifier = modifier
                 )
             }
-            composable(route = Screen.DemoScreen.route) {
-                DemoScreen(
-                    modifier = modifier
-                )
-            }
         }
     }
 

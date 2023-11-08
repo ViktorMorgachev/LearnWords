@@ -1,23 +1,38 @@
 package com.learn.worlds.data
 
 
+import android.content.Context
 import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.mappers.toLearningItemAPI
-import com.learn.worlds.data.mappers.toLearningItemDB
+import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.model.base.TextToSpeech
+import com.learn.worlds.data.model.remote.CommonLanguage
 import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.data.prefs.SynckSharedPreferences
+import com.learn.worlds.data.remote.ai.SpeechFileNameUtils
 import com.learn.worlds.data.repository.LearningItemsRepository
 import com.learn.worlds.data.repository.LearningSynchronizationRepository
-import com.learn.worlds.servises.AuthService
+import com.learn.worlds.di.IoDispatcher
+import com.learn.worlds.servises.FirebaseAuthService
 import com.learn.worlds.utils.Result
+import com.learn.worlds.utils.isImage
+import com.learn.worlds.utils.isMp3File
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.io.File
 import javax.inject.Inject
 
 class LearnItemsUseCase @Inject constructor(
-    private val authService: AuthService,
+    @IoDispatcher private val dispatcher: CoroutineDispatcher,
+    @ApplicationContext private val context: Context,
+    private val firebaseAuthService: FirebaseAuthService,
     private val synkPreferences: SynckSharedPreferences,
     private val learningItemsRepository: LearningItemsRepository,
     private val learningSynchronizationRepository: LearningSynchronizationRepository
@@ -25,10 +40,12 @@ class LearnItemsUseCase @Inject constructor(
 
     suspend fun actualData() = learningItemsRepository.data
 
+    private val scope = CoroutineScope(dispatcher)
+
     suspend fun addLearningItem(learningItem: LearningItem) = flow<Result<Any>> {
         Timber.d("learningItem $learningItem")
         try {
-            if (authService.isAuthentificated()) {
+            if (firebaseAuthService.isAuthentificated()) {
                 learningItemsRepository.writeToRemoteDatabase(learningItem)
             }
             learningItemsRepository.writeToLocalDatabase(learningItem).collect {
@@ -39,6 +56,88 @@ class LearnItemsUseCase @Inject constructor(
             emit(Result.Error())
         }
     }
+
+    suspend fun getImage(text: String) = flow<Result<String>> {
+        val imageName = "${text}.jpg"
+        var imageGeneration = ImageGeneration(file = File(context.cacheDir, imageName))
+        val file = imageGeneration.file
+
+        Timber.d("cardGeneration getImage: getLocalFile result: ${file.isImage()}")
+        if (file.isImage()) {
+            emit(Result.Success(imageName))
+        } else {
+            learningItemsRepository.getImageFromFirebase(imageGeneration).collectLatest {}
+            Timber.d("cardGeneration getImage: getImageFromFirebase  result: ${file.isImage()}")
+            if (file.isImage()){
+                emit(Result.Success(imageName))
+            } else {
+                emit(Result.Error())
+            }
+            learningItemsRepository.getImageUrlFromApi(imageGeneration).collectLatest {
+                if (it is Result.Success){
+                    imageGeneration = imageGeneration.copy(actualFileUrl = it.data.actualFileUrl)
+                }
+            }
+            Timber.d("cardGeneration getImage: getImageUrlFromApi  result: ${imageGeneration.actualFileUrl}")
+            if (imageGeneration.actualFileUrl == null) {
+                emit(Result.Error())
+                return@flow
+            }
+            learningItemsRepository.loadImageFromApi(imageGeneration).collectLatest {}
+            Timber.d("cardGeneration getImage: loadImageFromApi  result: ${imageGeneration.file.isImage()}")
+            if (!imageGeneration.file.isImage()){
+                emit(Result.Error())
+            }
+            learningItemsRepository.uploadImageToFirebase(imageGeneration).collectLatest {
+                Timber.d("cardGeneration getImage: uploadImageToFirebase  result: ${it::class.java}")
+                if (it is Result.Error){
+                    synkPreferences.addImageNameForSync(imageName)
+                }
+            }
+            emit(Result.Success(imageName))
+        }
+    }.flowOn(dispatcher)
+
+
+    suspend fun getTextSpeech(text: String, language: CommonLanguage) = flow<Result<String>> {
+        val mp3FileName = SpeechFileNameUtils.getFileNameForFirebaseStorage(language = language, name =  text)
+        var textToSpeech = TextToSpeech(file = File(context.cacheDir, mp3FileName))
+        val file = textToSpeech.file
+        Timber.d("cardGeneration getTextSpeech: getLocalFile result: ${file.isMp3File()}")
+        if (file.exists() && file.isMp3File()) {
+            emit(Result.Success(mp3FileName))
+        } else {
+            learningItemsRepository.getTextsSpeechFromFirebase(textToSpeech).collectLatest {}
+            Timber.d("cardGeneration getTextSpeech: getTextsSpeechFromFirebase  result: ${file.isMp3File()}")
+            if (file.isMp3File()){
+                emit(Result.Success(mp3FileName))
+                return@flow
+            }
+
+            learningItemsRepository.getTextsSpeechUrlFromApi(textToSpeech).collectLatest {
+                if (it is Result.Success){
+                    textToSpeech = textToSpeech.copy(actualFileUrl = it.data.actualFileUrl)
+                }
+            }
+            Timber.d("cardGeneration getTextSpeech: getTextsSpeechUrlFromApi  result: ${textToSpeech.actualFileUrl}")
+            if (textToSpeech.actualFileUrl == null) {
+                emit(Result.Error())
+                return@flow
+            }
+            learningItemsRepository.loadFileSpeechFromApi(textToSpeech).collectLatest {}
+            if (!textToSpeech.file.isMp3File()){
+                emit(Result.Error())
+            }
+            Timber.d("cardGeneration getTextSpeech: loadFileSpeechFromApi  result: ${textToSpeech.file.isMp3File()}")
+            learningItemsRepository.uploadTextSpeechToFirebase(textToSpeech).collectLatest {
+                Timber.d("cardGeneration getTextSpeech: uploadTextSpeechToFirebase  result: ${it::class.java}")
+                if (it is Result.Error){
+                    synkPreferences.addMp3FileNameForSync(mp3FileName)
+                }
+            }
+            emit(Result.Success(mp3FileName))
+        }
+    }.flowOn(dispatcher)
 
     /*1. Пишем данные из преференсов как есть заменяя данные в базе удалённой
     * 2. Чистим локальную базу, учитывая флаг deletedStatus
@@ -58,16 +157,32 @@ class LearnItemsUseCase @Inject constructor(
         }
         synkPreferences.removeAllItemsIdsForSynshronization()
 
-        var itemsRemovedIds = listOf<Long>()
-        learningSynchronizationRepository.fetchItemsIdsForRemoving().collectLatest {
-            if (it is Result.Success && it.data.isNotEmpty()) {
-                itemsRemovedIds = it.data
+        scope.launch {
+            val allMp3FileNames = synkPreferences.getActualMp3NamesItemsSynronization()
+            if (allMp3FileNames.data.isNotEmpty()){
+                learningSynchronizationRepository.uploadAllMp3Files(allMp3FileNames).collectLatest {}
             }
         }
 
-        if (itemsRemovedIds.isNotEmpty()) {
-            learningItemsRepository.removeItemsFromLocalDatabase(itemsRemovedIds).collect {}
+        scope.launch {
+            val allImagesForFirebase = synkPreferences.getActualImageNamesItemsSynronization()
+            if (allImagesForFirebase.data.isNotEmpty()){
+                learningSynchronizationRepository.uploadImageFiles(allImagesForFirebase).collectLatest {}
+            }
         }
+
+        scope.launch {
+            var itemsRemovedIds = listOf<Long>()
+            learningSynchronizationRepository.fetchItemsIdsForRemoving().collectLatest {
+                if (it is Result.Success && it.data.isNotEmpty()) {
+                    itemsRemovedIds = it.data
+                }
+            }
+            if (itemsRemovedIds.isNotEmpty()) {
+                learningItemsRepository.removeItemsFromLocalDatabase(itemsRemovedIds).collect {}
+            }
+        }
+
 
         learningItemsRepository.fetchDataFromNetwork(needIgnoreRemovingItems = true)
             .collectLatest {
@@ -124,15 +239,18 @@ class LearnItemsUseCase @Inject constructor(
         emit(Result.Complete)
     }
 
-    private fun getActualItemForSynk(learningItem: LearningItem): LearningItemAPI{
-        var itemForSynshronization = synkPreferences.getActualLearnItemsSynronization().firstOrNull { it.timeStampUIID == learningItem.timeStampUIID }
-        return  itemForSynshronization ?: learningItem.toLearningItemAPI()
+    private fun getActualItemForSynk(learningItem: LearningItem): LearningItemAPI {
+        var itemForSynshronization = synkPreferences.getActualLearnItemsSynronization()
+            .firstOrNull { it.timeStampUIID == learningItem.timeStampUIID }
+        return itemForSynshronization ?: learningItem.toLearningItemAPI()
     }
 
     suspend fun changeItemsStatus(learningItem: LearningItem) = flow<Result<Long>> {
-        var itemForSynshronization = getActualItemForSynk(learningItem).copy(learningStatus = learningItem.learningStatus)
+        var itemForSynshronization =
+            getActualItemForSynk(learningItem).copy(learningStatus = learningItem.learningStatus)
         learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
-        learningItemsRepository.writeToLocalDatabase(itemForSynshronization.toLearningItem()).collect{}
+        learningItemsRepository.writeToLocalDatabase(itemForSynshronization.toLearningItem())
+            .collect {}
         val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
         if (result is Result.Error) {
             synkPreferences.addWordForSync(itemForSynshronization)
