@@ -16,6 +16,7 @@ sealed class FirebaseError{
 }
 
 enum class ErrorType(@StringRes val resID: Int) {
+    FAILED_TO_CHECK_SPELL_TEXT(R.string.failed_to_check_spell_text),
     NOT_AUTHENTICATED(R.string.error_not_auth),
     SOMETHING_ERROR(R.string.error_someshing_went_wrong),
     DATABASE_LIMITS(R.string.error_limits_adding_words),

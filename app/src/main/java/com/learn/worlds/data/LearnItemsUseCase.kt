@@ -6,6 +6,7 @@ import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.mappers.toLearningItemAPI
 import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.remote.CommonLanguage
 import com.learn.worlds.data.model.remote.LearningItemAPI
@@ -15,15 +16,18 @@ import com.learn.worlds.data.repository.LearningItemsRepository
 import com.learn.worlds.data.repository.LearningSynchronizationRepository
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.FirebaseAuthService
+import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.isImage
 import com.learn.worlds.utils.isMp3File
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
@@ -54,6 +58,20 @@ class LearnItemsUseCase @Inject constructor(
         } catch (t: Throwable) {
             Timber.e(t)
             emit(Result.Error())
+        }
+    }
+
+    suspend fun spellCheck(spellTextCheck: SpellTextCheck) = flow<Result<SpellTextCheck>> {
+        var spellCheckActual: SpellTextCheck = spellTextCheck
+        learningItemsRepository.spellCheck(spellTextCheck).collectLatest {
+            if (it is Result.Success){
+                spellCheckActual = spellCheckActual.copy(suggestion = it.data.suggestion)
+            }
+        }
+        if (spellCheckActual.suggestion == null){
+            emit(Result.Error(ErrorType.FAILED_TO_CHECK_SPELL_TEXT))
+        } else {
+            emit(Result.Success(spellCheckActual))
         }
     }
 

@@ -2,11 +2,13 @@ package com.learn.worlds.data.mappers
 
 import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.data.model.remote.request.ImageGenerationRequest
 import com.learn.worlds.data.model.remote.response.EidenImageGenerationResponse
+import com.learn.worlds.data.model.remote.response.EidenSpellCheckResponse
 import com.learn.worlds.data.model.remote.response.EidenTextToSpeechResponse
 
 fun LearningItemDB.toLearningItem(): LearningItem {
@@ -39,5 +41,9 @@ fun EidenImageGenerationResponse.toImageGeneration(imageGeneration: ImageGenerat
 }
 fun EidenTextToSpeechResponse.toTextToSpeech(actualTextToSpeech: TextToSpeech): TextToSpeech{
     return actualTextToSpeech.copy(actualFileUrl = actualTextSpeechUri(), totalCost = totalCost())
+}
+
+fun EidenSpellCheckResponse.toSpellTextCheck(spellTextCheck: SpellTextCheck): SpellTextCheck{
+    return spellTextCheck.copy(suggestion = actualSuggestion(), cost = totalCost())
 }
 

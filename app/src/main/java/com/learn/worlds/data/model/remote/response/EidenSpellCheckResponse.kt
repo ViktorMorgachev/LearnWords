@@ -21,7 +21,7 @@ data class EidenSpellCheckResponse(
         @SerializedName("cost")
         val cost: Double? = null,
         @SerializedName("items")
-        val items: List<Item?>? = null,
+        val items: List<Item>? = null,
         @SerializedName("status")
         val status: String? = null,
         @SerializedName("text")
@@ -33,7 +33,7 @@ data class EidenSpellCheckResponse(
             @SerializedName("offset")
             val offset: Int? = null,
             @SerializedName("suggestions")
-            val suggestions: List<Suggestion?>? = null,
+            val suggestions: List<Suggestion>? = null,
             @SerializedName("text")
             val text: String? = null,
             @SerializedName("type")
@@ -52,7 +52,7 @@ data class EidenSpellCheckResponse(
         @SerializedName("cost")
         val cost: Double? = null,
         @SerializedName("items")
-        val items: List<Item?>? = null,
+        val items: List<Item>? = null,
         @SerializedName("status")
         val status: String? = null,
         @SerializedName("text")
@@ -64,7 +64,7 @@ data class EidenSpellCheckResponse(
             @SerializedName("offset")
             val offset: Int? = null,
             @SerializedName("suggestions")
-            val suggestions: List<Suggestion?>? = null,
+            val suggestions: List<Suggestion>? = null,
             @SerializedName("text")
             val text: String? = null,
             @SerializedName("type")
@@ -83,7 +83,7 @@ data class EidenSpellCheckResponse(
         @SerializedName("cost")
         val cost: Double? = null,
         @SerializedName("items")
-        val items: List<Item?>? = null,
+        val items: List<Item>? = null,
         @SerializedName("status")
         val status: String? = null,
         @SerializedName("text")
@@ -95,7 +95,7 @@ data class EidenSpellCheckResponse(
             @SerializedName("offset")
             val offset: Int? = null,
             @SerializedName("suggestions")
-            val suggestions: List<Suggestion?>? = null,
+            val suggestions: List<Suggestion>? = null,
             @SerializedName("text")
             val text: String? = null,
             @SerializedName("type")
@@ -114,7 +114,7 @@ data class EidenSpellCheckResponse(
         @SerializedName("cost")
         val cost: Double? = null,
         @SerializedName("items")
-        val items: List<Item?>? = null,
+        val items: List<Item>? = null,
         @SerializedName("status")
         val status: String? = null,
         @SerializedName("text")
@@ -126,7 +126,7 @@ data class EidenSpellCheckResponse(
             @SerializedName("offset")
             val offset: Int? = null,
             @SerializedName("suggestions")
-            val suggestions: List<Suggestion?>? = null,
+            val suggestions: List<Suggestion>? = null,
             @SerializedName("text")
             val text: String? = null,
             @SerializedName("type")
@@ -145,7 +145,7 @@ data class EidenSpellCheckResponse(
         @SerializedName("cost")
         val cost: Double? = null,
         @SerializedName("items")
-        val items: List<Item?>? = null,
+        val items: List<Item>? = null,
         @SerializedName("status")
         val status: String? = null,
         @SerializedName("text")
@@ -157,7 +157,7 @@ data class EidenSpellCheckResponse(
             @SerializedName("offset")
             val offset: Int? = null,
             @SerializedName("suggestions")
-            val suggestions: List<Suggestion?>? = null,
+            val suggestions: List<Suggestion>? = null,
             @SerializedName("text")
             val text: String? = null,
             @SerializedName("type")
@@ -176,7 +176,7 @@ data class EidenSpellCheckResponse(
         @SerializedName("cost")
         val cost: Double? = null,
         @SerializedName("items")
-        val items: List<Item?>? = null,
+        val items: List<Item>? = null,
         @SerializedName("status")
         val status: String? = null,
         @SerializedName("text")
@@ -188,7 +188,7 @@ data class EidenSpellCheckResponse(
             @SerializedName("offset")
             val offset: Int? = null,
             @SerializedName("suggestions")
-            val suggestions: List<Suggestion?>? = null,
+            val suggestions: List<Suggestion>? = null,
             @SerializedName("text")
             val text: String? = null,
             @SerializedName("type")
@@ -202,4 +202,32 @@ data class EidenSpellCheckResponse(
             )
         }
     }
+
+    fun totalCost(): Double{
+        return  (microsoft?.cost ?: 0.0) + (openai?.cost ?: 0.0)
+    }
+
+    fun actualSuggestion() : String?{
+        var suggestionResult: String? = null
+        nlpcloud?.items?.map { it.suggestions }?.filterNotNull()?.forEach {
+            suggestionResult = it.map { it.suggestion }.firstOrNull()
+        }
+        if (suggestionResult != null){
+            return suggestionResult
+        }
+        val resultList: MutableList<String> = mutableListOf()
+        openai?.items?.map { it.suggestions }?.filterNotNull()?.forEach { suggestion->
+            suggestion.map { it.suggestion }.firstOrNull()?.let {
+                resultList.add(it)
+                resultList.add("\t")
+            }
+        }
+        if (resultList.isNotEmpty()){
+            suggestionResult = resultList.joinToString(separator = "")
+        }
+       return suggestionResult?.trimEnd()
+    }
+
+
+
 }

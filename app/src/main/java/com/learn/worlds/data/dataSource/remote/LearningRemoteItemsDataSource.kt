@@ -5,11 +5,14 @@ import android.content.Context
 import com.google.firebase.database.getValue
 import com.google.firebase.storage.StorageException
 import com.learn.worlds.data.model.base.ImageGeneration
+import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.data.model.remote.request.ImageGenerationRequest
+import com.learn.worlds.data.model.remote.request.SpellingCheckRequest
 import com.learn.worlds.data.model.remote.request.TextToSpeechRequest
 import com.learn.worlds.data.model.remote.response.EidenImageGenerationResponse
+import com.learn.worlds.data.model.remote.response.EidenSpellCheckResponse
 import com.learn.worlds.data.model.remote.response.EidenTextToSpeechResponse
 import com.learn.worlds.data.remote.ApiService
 import com.learn.worlds.data.remote.ai.ImageFileNameUtils
@@ -190,6 +193,17 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
         }.flowOn(dispatcher)
 
+
+    suspend fun spellingCheck(spellTextCheck: SpellTextCheck) = flow<Result<EidenSpellCheckResponse>> {
+        try {
+            val result =  apiService.spellCheck(spellingCheckRequest = SpellingCheckRequest(text = spellTextCheck.requestText))
+            emit(Result.Success(result))
+        } catch (t: Throwable){
+            Timber.e(t)
+            emit(Result.Error())
+        }
+
+    }.flowOn(dispatcher)
 
     suspend fun getImageFromApi(imageGeneration: ImageGeneration) = flow<Result<EidenImageGenerationResponse>> {
             if (imageGeneration.file.isImage()) {

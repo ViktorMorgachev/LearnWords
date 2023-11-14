@@ -7,13 +7,16 @@ import com.learn.worlds.data.mappers.toImageGeneration
 import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.mappers.toLearningItemAPI
 import com.learn.worlds.data.mappers.toLearningItemDB
+import com.learn.worlds.data.mappers.toSpellTextCheck
 import com.learn.worlds.data.mappers.toTextToSpeech
 import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.remote.LearningItemAPI
 import com.learn.worlds.data.model.remote.response.EidenImageGenerationResponse
+import com.learn.worlds.data.model.remote.response.EidenSpellCheckResponse
 import com.learn.worlds.data.model.remote.response.EidenTextToSpeechResponse
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
@@ -44,6 +47,14 @@ class LearningItemsRepository @Inject constructor(
     suspend fun uploadImageToFirebase(imageGeneration: ImageGeneration) = remoteDataSource.uploadImageToFirebase(imageGeneration.file)
 
     suspend fun getTextsSpeechFromFirebase(textToSpeech: TextToSpeech) = remoteDataSource.downloadTextsSpeechFromFirebase(textToSpeech)
+
+    suspend fun spellCheck(spellTextCheck: SpellTextCheck) = remoteDataSource.spellingCheck(spellTextCheck).transform<Result<EidenSpellCheckResponse>, Result<SpellTextCheck>> {
+        if (it is Result.Success){
+            emit(Result.Success(it.data.toSpellTextCheck(spellTextCheck)))
+        } else {
+            emit(Result.Error())
+        }
+    }
 
     suspend fun getImageFromFirebase(imageGeneration: ImageGeneration) = remoteDataSource.downloadImageFromFirebase(imageGeneration)
     suspend fun getTextsSpeechUrlFromApi(textToSpeech: TextToSpeech) = remoteDataSource.getTextsSpeechFromApi(textToSpeech).transform<Result<EidenTextToSpeechResponse>, Result<TextToSpeech>> {

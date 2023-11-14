@@ -20,14 +20,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -39,18 +37,28 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -76,8 +84,9 @@ private fun AddWordsScreenPrewiew() {
     LearnWordsTheme {
         AddWordsUndependentScreen(
             uistate = AddWordsState(
+                actualSuggestionForeign = MutableStateFlow(SpellingCheckState.None),
                 nativeText = MutableStateFlow("Что-то"),
-                foreignText = MutableStateFlow("Something")
+                foreignText = MutableStateFlow("Somthing")
             ),
             navigateAfterSuccessWasAdded = {},
             onErrorDismissed = {},
@@ -87,9 +96,10 @@ private fun AddWordsScreenPrewiew() {
             onInitCardData = {},
             onPlayAudioAction = {},
             onSaveCardData = {},
-            onGetImageFile = {null})
+            onGetImageFile = { null })
     }
 }
+
 @Composable
 fun AddWordsScreen(
     modifier: Modifier = Modifier,
@@ -99,22 +109,23 @@ fun AddWordsScreen(
     navigateAfterSuccessWasAdded: () -> Unit,
 ) {
 
-    val handleEventMediator: (AddWordsEvent)->Unit = {
+    val handleEventMediator: (AddWordsEvent) -> Unit = {
         viewModel.handleEvent(it)
     }
 
     AddWordsUndependentScreen(
         modifier = modifier,
         onPlayAudioAction = { handleEventMediator(AddWordsEvent.OnPlayAudio) },
-        onStopPlayerAction = { handleEventMediator(AddWordsEvent.OnStopPlayer)},
-        onForeignDataChanged = { handleEventMediator(AddWordsEvent.OnForeignDataChanged(it))},
-        onNativeDataChanged = { handleEventMediator(AddWordsEvent.OnNativeDataChanged(it))},
-        onErrorDismissed = { handleEventMediator(AddWordsEvent.OnErrorDismissed)},
+        onStopPlayerAction = { handleEventMediator(AddWordsEvent.OnStopPlayer) },
+        onForeignDataChanged = { handleEventMediator(AddWordsEvent.OnForeignDataChanged(it)) },
+        onNativeDataChanged = { handleEventMediator(AddWordsEvent.OnNativeDataChanged(it)) },
+        onErrorDismissed = { handleEventMediator(AddWordsEvent.OnErrorDismissed) },
         onGetImageFile = { getImageFile(it, context).toBitmap() },
-        onInitCardData = { handleEventMediator(AddWordsEvent.InitCardData)},
-        onSaveCardData = { handleEventMediator(AddWordsEvent.OnSaveLearningItem)},
+        onInitCardData = { handleEventMediator(AddWordsEvent.InitCardData) },
+        onSaveCardData = { handleEventMediator(AddWordsEvent.OnSaveLearningItem) },
         navigateAfterSuccessWasAdded = navigateAfterSuccessWasAdded,
-        uistate = uistate)
+        uistate = uistate
+    )
 }
 
 @Composable
@@ -123,13 +134,13 @@ fun AddWordsUndependentScreen(
     onStopPlayerAction: () -> Unit,
     onErrorDismissed: () -> Unit,
     onInitCardData: () -> Unit,
-    onSaveCardData: ()->Unit,
+    onSaveCardData: () -> Unit,
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     onPlayAudioAction: () -> Unit,
     onForeignDataChanged: (String) -> Unit,
     onNativeDataChanged: (String) -> Unit,
     navigateAfterSuccessWasAdded: () -> Unit,
-    onGetImageFile: (String?)->Bitmap?,
+    onGetImageFile: (String?) -> Bitmap?,
     uistate: AddWordsState = AddWordsState()
 ) {
 
@@ -138,6 +149,7 @@ fun AddWordsUndependentScreen(
     val cardWasAdded = uistate.cardWasAdded.collectAsStateWithLifecycle().value
     val foreignText = uistate.foreignText.collectAsStateWithLifecycle().value
     val nativeText = uistate.nativeText.collectAsStateWithLifecycle().value
+    val foreignSpellingState = uistate.actualSuggestionForeign.collectAsStateWithLifecycle().value
     val playerIsPlaying = uistate.playerIsPlaying.collectAsStateWithLifecycle().value
     val actualImageFileName = uistate.imageFile.collectAsStateWithLifecycle().value
     val speechFileName = uistate.speechFile.collectAsStateWithLifecycle().value
@@ -188,27 +200,26 @@ fun AddWordsUndependentScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        text = "Слово на иностраном языке",
-                        textAlign = TextAlign.Center
-                    )
                     EditTextCustom(
+                        spellingState = foreignSpellingState,
+                        label = "Слово на иностраном языке",
                         actualText = foreignText,
+
                         modifier = Modifier.fillMaxWidth(),
                         onValueChange = {
                             onForeignDataChanged.invoke(it)
-                        })
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        text = "Перевод",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        },
+                        enabled = (speechFileName == null && actualImageFileName == null && foreignSpellingState == SpellingCheckState.None)
                     )
+                    Spacer(Modifier.height(16.dp))
                     EditTextCustom(
+                        label = "Перевод",
                         actualText = nativeText,
                         modifier = Modifier.fillMaxWidth(),
-                        onValueChange = {onNativeDataChanged.invoke(it)})
+                        onValueChange = { onNativeDataChanged.invoke(it) },
+                        enabled = (speechFileName == null && actualImageFileName == null && foreignSpellingState == SpellingCheckState.None),
+                        spellingState = SpellingCheckState.None
+                    )
                     Spacer(Modifier.height(16.dp))
 
                     PlayerButton(
@@ -220,21 +231,22 @@ fun AddWordsUndependentScreen(
                     CardImage(fileName = actualImageFileName, getImageFileAction = onGetImageFile)
                 }
             }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp)
-                .align(Alignment.BottomCenter),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+                    .align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OutlineButton(
-                    text = "Предпросмотр",
+                    text = "Проверить",
                     onClick = { onInitCardData.invoke() },
-                    enabled =  uistate.isCanToGenerate()
+                    enabled = uistate.isCanToGenerate()
                 )
                 OutlineButton(
                     text = "Сохранить",
                     onClick = { onSaveCardData.invoke() },
-                    enabled =  uistate.isCanToSave()
+                    enabled = uistate.isCanToSave()
                 )
             }
         }
@@ -245,9 +257,19 @@ fun AddWordsUndependentScreen(
 
 @Preview
 @Composable
-fun OutlineButton(modifier: Modifier = Modifier, onClick: ()->Unit = {}, enabled: Boolean = true, text: String = "") {
+fun OutlineButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+    enabled: Boolean = true,
+    text: String = ""
+) {
     OutlinedButton(
-        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black, disabledContentColor = Color.White, disabledContainerColor = Color.Gray),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White,
+            contentColor = Color.Black,
+            disabledContentColor = Color.White,
+            disabledContainerColor = Color.Gray
+        ),
         onClick = onClick,
         enabled = enabled
     ) {
@@ -321,9 +343,13 @@ fun PlayerButton(
 
 
 @Composable
-fun CardImage(modifier: Modifier = Modifier, fileName: String?, getImageFileAction: (String?)->Bitmap?) {
+fun CardImage(
+    modifier: Modifier = Modifier,
+    fileName: String?,
+    getImageFileAction: (String?) -> Bitmap?
+) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        getImageFileAction(fileName)?.let { bitmap->
+        getImageFileAction(fileName)?.let { bitmap ->
             AnimatedVisibility(
                 visible = true,
                 enter = fadeIn(),
@@ -344,15 +370,140 @@ fun CardImage(modifier: Modifier = Modifier, fileName: String?, getImageFileActi
 
 @Composable
 fun EditTextCustom(
+    label: String,
+    spellingState: SpellingCheckState,
     actualText: String,
     modifier: Modifier = Modifier,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    enabled: Boolean = true
 ) {
-    OutlinedTextField(
-        shape = MaterialTheme.shapes.medium,
-        modifier = modifier,
-        value = actualText,
-        onValueChange = onValueChange,
-        singleLine = true,
-    )
+    var outlineTextFieldHeight by remember { mutableStateOf(0) }
+    var textFieldAlpha by remember { mutableStateOf( if (spellingState is SpellingCheckState.None) 1f else 0.0f) }
+
+    SideEffect {
+        if (spellingState == SpellingCheckState.None){
+            textFieldAlpha = 1f
+        } else {
+            textFieldAlpha = 0.0f
+        }
+    }
+
+    Box() {
+        AnimatedVisibility(
+            visible = spellingState != SpellingCheckState.None ,
+            enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(),
+        ) {
+            SpellingText(
+                successState = spellingState == SpellingCheckState.Correct ,
+                text = actualText, modifier = Modifier.offset(x = (8).dp, y = 22.dp)
+            )
+        }
+
+        OutlinedTextField(
+            modifier = Modifier
+                .onGloballyPositioned {
+                    outlineTextFieldHeight = it.size.height
+                },
+            label = {
+                Text(text = label)
+            },
+            textStyle = TextStyle.Default.copy(
+                color = Color.Black.copy(alpha = textFieldAlpha)
+            ),
+            enabled = enabled,
+            shape = MaterialTheme.shapes.medium,
+            value = actualText,
+            onValueChange = onValueChange,
+            singleLine = true,
+            supportingText = {
+                Box(
+                    propagateMinConstraints = true,
+                    modifier = modifier.offset(x = (-4).dp)
+                ) {
+                    if (spellingState is SpellingCheckState.Incorrect){
+                        SpellingText(text = spellingState.suggestion, successState = true)
+                    }
+                }
+
+            }
+        )
+    }
+
+}
+
+
+@Composable
+fun SpellingText(modifier: Modifier = Modifier, text: String, successState: Boolean) {
+
+    val actualSuggestionBackgroundColors by remember {
+        mutableStateOf(
+            CustomisationSpellingTextBackground(successState)
+        )
+    }
+    val localDensity = LocalDensity.current
+    var conteinerHeight by remember { mutableStateOf(0f) }
+    var containerWidth by remember { mutableStateOf(0f) }
+
+    Box(modifier = modifier) {
+        Text(
+            text = text,
+            color = Color.Black,
+            modifier = Modifier
+                .onGloballyPositioned { coordinates ->
+                    conteinerHeight = with(localDensity) { coordinates.size.height.toFloat() }
+                    containerWidth = with(localDensity) { coordinates.size.width.toFloat() }
+                }
+                .drawWithCache {
+                    val brush = Brush.linearGradient(
+                        listOf(
+                            actualSuggestionBackgroundColors.first,
+                            actualSuggestionBackgroundColors.first
+                        )
+                    )
+                    onDrawBehind {
+                        drawRoundRect(
+                            size = Size(
+                                width = containerWidth,
+                                height = conteinerHeight
+                            ),
+                            brush = brush,
+                            cornerRadius = CornerRadius(7.dp.toPx())
+                        )
+                    }
+
+                }
+                .drawWithCache {
+                    val brush = Brush.linearGradient(
+                        listOf(
+                            actualSuggestionBackgroundColors.second,
+                            actualSuggestionBackgroundColors.second
+                        )
+                    )
+                    onDrawBehind {
+                        drawRoundRect(
+                            size = Size(
+                                width = containerWidth,
+                                height = conteinerHeight * 0.9f
+                            ),
+                            brush = brush,
+                            cornerRadius = CornerRadius(7.dp.toPx())
+                        )
+                    }
+                }
+                .padding(horizontal = 4.dp, vertical = 4.dp)
+        )
+    }
+
+
+}
+
+fun CustomisationSpellingTextBackground(successState: Boolean): Pair<Color, Color> {
+
+    return if (successState) {
+        Color(0xFF28A745) to Color(0xFF1EF1B3)
+    } else {
+        Color(0xffdc3545) to Color(0xfff86c6b)
+    }
+
 }

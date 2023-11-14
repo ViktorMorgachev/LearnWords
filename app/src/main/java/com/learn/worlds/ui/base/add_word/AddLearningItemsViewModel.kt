@@ -6,10 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
+import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.remote.CommonLanguage
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.AudioPlayer
+import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.emitIf
 import com.learn.worlds.utils.getMp3File
@@ -39,7 +41,7 @@ class AddLearningItemsViewModel @Inject constructor(
 
     var uiState = AddWordsState(
             nativeText = MutableStateFlow("вселенная"),
-            foreignText = MutableStateFlow("universe")
+            foreignText = MutableStateFlow("unverse")
         )
 
     init {
@@ -69,7 +71,14 @@ class AddLearningItemsViewModel @Inject constructor(
             is AddWordsEvent.OnForeignDataChanged -> saveForeign(addWordsEvent.foreignData)
             is AddWordsEvent.OnNativeDataChanged -> saveNative(addWordsEvent.nativeData)
             is AddWordsEvent.OnSaveLearningItem -> saveData()
-            AddWordsEvent.InitCardData -> initCardData()
+            AddWordsEvent.InitCardData ->{
+                if (uiState.actualSuggestionForeign.value != SpellingCheckState.None){
+                    initCardData()
+                } else {
+                    spellCheckForeign()
+                }
+
+            }
             AddWordsEvent.OnPlayAudio -> playAudio()
             AddWordsEvent.OnStopPlayer -> stopAudio()
             AddWordsEvent.OnPausePlayer -> audioPlayer.pause()
@@ -96,10 +105,22 @@ class AddLearningItemsViewModel @Inject constructor(
         }
 
     }
-
-    //todo  Перед добавлением нового слова обязательно проверить на корректность ввода и исправить и показать изменения в UI
-    private fun spellCheck() {
-
+    private fun spellCheckForeign() {
+        viewModelScope.launch {
+            learnItemsUseCase.spellCheck(spellTextCheck = SpellTextCheck(requestText = uiState.foreignText.value))
+                .catch {
+                    t->Timber.e(t)
+                    showError(Result.Error(errorType = ErrorType.FAILED_TO_CHECK_SPELL_TEXT))
+                }
+                .collectLatest {
+                    if (it is Result.Success){
+                        showForeignSuggestion(it.data.suggestion!!)
+                    }
+                    if (it is Result.Error){
+                        showError(it)
+                    }
+            }
+        }
     }
 
     private fun initCardData() {
@@ -196,8 +217,18 @@ class AddLearningItemsViewModel @Inject constructor(
                 uiState.error.emit(error)
             }
         }
+    }
 
+    private fun showForeignSuggestion(suggestion: String) {
+        viewModelScope.launch {
+            if (suggestion.isNotEmpty()){
+                uiState.actualSuggestionForeign.emit(SpellingCheckState.Incorrect(suggestion = suggestion))
 
+            } else {
+                uiState.actualSuggestionForeign.emit(SpellingCheckState.Correct)
+            }
+
+        }
     }
 
     private fun hideLoading() {
