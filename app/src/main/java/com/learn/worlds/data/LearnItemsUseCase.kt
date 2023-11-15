@@ -65,7 +65,12 @@ class LearnItemsUseCase @Inject constructor(
         var spellCheckActual: SpellTextCheck = spellTextCheck
         learningItemsRepository.spellCheck(spellTextCheck).collectLatest {
             if (it is Result.Success){
-                spellCheckActual = spellCheckActual.copy(suggestion = it.data.suggestion)
+                if (it.data.suggestion?.lowercase() == spellTextCheck.requestText.lowercase()){
+                    spellCheckActual = spellCheckActual.copy(suggestion = "")
+                } else {
+                    spellCheckActual = spellCheckActual.copy(suggestion = it.data.suggestion)
+                }
+
             }
         }
         if (spellCheckActual.suggestion == null){

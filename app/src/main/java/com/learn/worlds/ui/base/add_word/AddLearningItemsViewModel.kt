@@ -112,7 +112,7 @@ class AddLearningItemsViewModel @Inject constructor(
                 }
                 .collectLatest {
                     if (it is Result.Success){
-                        showForeignSuggestion(it.data.suggestion!!)
+                        showForeignSuggestion(it.data.suggestion!!.lowercase())
                     }
                     if (it is Result.Error){
                         showError(it)
