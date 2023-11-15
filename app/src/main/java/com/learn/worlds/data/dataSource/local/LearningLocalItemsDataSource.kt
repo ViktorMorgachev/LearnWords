@@ -15,7 +15,7 @@ class LearningLocalItemsDataSource @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val learningItemDao: LearningItemDao
 ) {
-    val learningItems = learningItemDao.getLearningItemsFlow().flowOn(dispatcher)
+    val learningItems = learningItemDao.getLearningItemsFlow()
    suspend fun fetchDatabaseItems() = flow<List<LearningItemDB>>{
        emit(learningItemDao.getLearningItems())
    }.flowOn(dispatcher)

@@ -93,8 +93,6 @@ class LearnItemsUseCase @Inject constructor(
             Timber.d("cardGeneration getImage: getImageFromFirebase  result: ${file.isImage()}")
             if (file.isImage()){
                 emit(Result.Success(imageName))
-            } else {
-                emit(Result.Error())
             }
             learningItemsRepository.getImageUrlFromApi(imageGeneration).collectLatest {
                 if (it is Result.Success){
@@ -102,22 +100,23 @@ class LearnItemsUseCase @Inject constructor(
                 }
             }
             Timber.d("cardGeneration getImage: getImageUrlFromApi  result: ${imageGeneration.actualFileUrl}")
-            if (imageGeneration.actualFileUrl == null) {
-                emit(Result.Error())
-                return@flow
-            }
-            learningItemsRepository.loadImageFromApi(imageGeneration).collectLatest {}
-            Timber.d("cardGeneration getImage: loadImageFromApi  result: ${imageGeneration.file.isImage()}")
-            if (!imageGeneration.file.isImage()){
-                emit(Result.Error())
-            }
-            learningItemsRepository.uploadImageToFirebase(imageGeneration).collectLatest {
-                Timber.d("cardGeneration getImage: uploadImageToFirebase  result: ${it::class.java}")
-                if (it is Result.Error){
-                    synkPreferences.addImageNameForSync(imageName)
+            if (imageGeneration.actualFileUrl != null) {
+                learningItemsRepository.loadImageFromApi(imageGeneration).collectLatest {}
+                Timber.d("cardGeneration getImage: loadImageFromApi  result: ${imageGeneration.file.isImage()}")
+                if (!imageGeneration.file.isImage()){
+                    emit(Result.Complete)
                 }
+                learningItemsRepository.uploadImageToFirebase(imageGeneration).collectLatest {
+                    Timber.d("cardGeneration getImage: uploadImageToFirebase  result: ${it::class.java}")
+                    if (it is Result.Error){
+                        synkPreferences.addImageNameForSync(imageName)
+                    }
+                }
+                emit(Result.Success(imageName))
+            } else {
+                emit(Result.Complete)
             }
-            emit(Result.Success(imageName))
+
         }
     }.flowOn(dispatcher)
 
@@ -143,22 +142,23 @@ class LearnItemsUseCase @Inject constructor(
                 }
             }
             Timber.d("cardGeneration getTextSpeech: getTextsSpeechUrlFromApi  result: ${textToSpeech.actualFileUrl}")
-            if (textToSpeech.actualFileUrl == null) {
-                emit(Result.Error())
-                return@flow
-            }
-            learningItemsRepository.loadFileSpeechFromApi(textToSpeech).collectLatest {}
-            if (!textToSpeech.file.isMp3File()){
-                emit(Result.Error())
-            }
-            Timber.d("cardGeneration getTextSpeech: loadFileSpeechFromApi  result: ${textToSpeech.file.isMp3File()}")
-            learningItemsRepository.uploadTextSpeechToFirebase(textToSpeech).collectLatest {
-                Timber.d("cardGeneration getTextSpeech: uploadTextSpeechToFirebase  result: ${it::class.java}")
-                if (it is Result.Error){
-                    synkPreferences.addMp3FileNameForSync(mp3FileName)
+            if (textToSpeech.actualFileUrl != null) {
+                learningItemsRepository.loadFileSpeechFromApi(textToSpeech).collectLatest {}
+                if (!textToSpeech.file.isMp3File()){
+                    emit(Result.Complete)
                 }
+                Timber.d("cardGeneration getTextSpeech: loadFileSpeechFromApi  result: ${textToSpeech.file.isMp3File()}")
+                learningItemsRepository.uploadTextSpeechToFirebase(textToSpeech).collectLatest {
+                    Timber.d("cardGeneration getTextSpeech: uploadTextSpeechToFirebase  result: ${it::class.java}")
+                    if (it is Result.Error){
+                        synkPreferences.addMp3FileNameForSync(mp3FileName)
+                    }
+                }
+                emit(Result.Success(mp3FileName))
+            } else {
+                emit(Result.Complete)
             }
-            emit(Result.Success(mp3FileName))
+
         }
     }.flowOn(dispatcher)
 
@@ -206,9 +206,7 @@ class LearnItemsUseCase @Inject constructor(
             }
         }
 
-
-        learningItemsRepository.fetchDataFromNetwork(needIgnoreRemovingItems = true)
-            .collectLatest {
+        learningItemsRepository.fetchDataFromNetwork(needIgnoreRemovingItems = true).collect  {
                 if (it is Result.Success) {
                     remoteData.addAll(it.data)
                 } else {
@@ -238,9 +236,9 @@ class LearnItemsUseCase @Inject constructor(
         learningItemsRepository.writeListToLocalDatabase(dataForLocal).collect {
             synckResult.add(it)
         }
-        learningItemsRepository.writeListToRemoteDatabase(dataForNetwork).collect {
+       /* learningItemsRepository.writeListToRemoteDatabase(dataForNetwork).collect {
             synckResult.add(it)
-        }
+        }*/
         if (synckResult.any { it is Result.Error }) {
             emit(synckResult.first { it is Result.Error })
         } else {

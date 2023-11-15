@@ -59,6 +59,7 @@ class MyApp : Application(), Configuration.Provider {
 
     private fun initTimber(){
         plant(crashReporter)
+        plant(Timber.DebugTree())
     }
 
     private fun runPeriodicallySynchronization(isAuthentificated: Boolean) {

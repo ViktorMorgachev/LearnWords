@@ -224,7 +224,7 @@ fun AddWordsUndependentScreen(
 
                     PlayerButton(
                         onPlayAudioAction = { onPlayAudioAction.invoke() },
-                        speechFileIsPresent = speechFileName != null,
+                        speechFileIsPresent = !speechFileName.isNullOrEmpty(),
                         playerIsPlaying = playerIsPlaying == true
                     )
                     Spacer(Modifier.height(16.dp))

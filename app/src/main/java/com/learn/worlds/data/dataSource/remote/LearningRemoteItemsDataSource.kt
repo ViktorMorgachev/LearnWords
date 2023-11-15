@@ -72,9 +72,11 @@ class LearningRemoteItemsDataSource @Inject constructor(
             val uploadTask = firebaseStorageRef.putBytes(bytes)
             uploadTask.addOnSuccessListener {
                 this@callbackFlow.trySendBlocking(Result.Complete)
+                close()
             }.addOnFailureListener {
                 Timber.e(it)
                 this@callbackFlow.trySendBlocking(Result.Error())
+                close()
             }
             close()
         }
@@ -96,11 +98,12 @@ class LearningRemoteItemsDataSource @Inject constructor(
             val uploadTask = firebaseStorageRef.putBytes(bytes)
             uploadTask.addOnSuccessListener {
                 this@callbackFlow.trySendBlocking(Result.Complete)
+                close()
             }.addOnFailureListener {
                 Timber.e(it)
                 this@callbackFlow.trySendBlocking(Result.Error())
+                close()
             }
-            close()
         }
         awaitClose {
             close()
@@ -125,15 +128,17 @@ class LearningRemoteItemsDataSource @Inject constructor(
                         if (it is StorageException) {
                             if ((it as StorageException).httpResultCode == 404) {
                                 this@callbackFlow.trySendBlocking(Result.Complete)
+                                close()
                             } else {
                                 Timber.e(it)
                                 this@callbackFlow.trySendBlocking(Result.Error())
+                                close()
                             }
                         } else {
                             Timber.e(it)
                             this@callbackFlow.trySendBlocking(Result.Error())
+                            close()
                         }
-                        close()
                     }
             }
             awaitClose {
@@ -158,15 +163,17 @@ class LearningRemoteItemsDataSource @Inject constructor(
                         if (it is StorageException) {
                             if ((it as StorageException).httpResultCode == 404) {
                                 this@callbackFlow.trySendBlocking(Result.Complete)
+                                close()
                             } else {
                                 Timber.e(it)
                                 this@callbackFlow.trySendBlocking(Result.Error())
+                                close()
                             }
                         } else {
                             Timber.e(it)
                             this@callbackFlow.trySendBlocking(Result.Error())
+                            close()
                         }
-                        close()
                     }
             }
             awaitClose {
@@ -300,6 +307,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                             if (it.result != null) {
                                 if (!it.result.exists()) {
                                     trySendBlocking(Result.Success(listOf()))
+                                    close()
                                 } else {
                                     var resultList = listOf<LearningItemAPI>()
                                     resultList =
@@ -307,21 +315,24 @@ class LearningRemoteItemsDataSource @Inject constructor(
                                             .filterNotNull()
                                     trySendBlocking(Result.Success(resultList.filter { it.deletedStatus }
                                         .map { it.timeStampUIID }))
+                                    close()
 
                                 }
                             } else {
                                 trySendBlocking(Result.Success(listOf()))
+                                close()
                             }
                         } else {
                             Timber.e(it.exception, "fetch from remote learning deleted items")
                             trySendBlocking(Result.Error())
+                            close()
                         }
                     }
             } else {
                 Timber.e("database reference = $databaseRef maybe token expired please check")
                 trySendBlocking(Result.Error())
+                close()
             }
-            close()
         }
         awaitClose {
             close()
@@ -330,8 +341,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
     }
 
 
-    suspend fun fetchDataFromNetwork(ignoreRemovingItems: Boolean) =
-        callbackFlow<Result<List<LearningItemAPI>>> {
+    suspend fun fetchDataFromNetwork(ignoreRemovingItems: Boolean) = callbackFlow<Result<List<LearningItemAPI>>> {
             if (!firebaseAuthService.isAuthentificated()) {
                 this@callbackFlow.trySendBlocking(Result.Error(ErrorType.NOT_AUTHENTICATED))
                 close()
@@ -347,28 +357,30 @@ class LearningRemoteItemsDataSource @Inject constructor(
                                         trySendBlocking(Result.Success(listOf()))
                                     } else {
                                         var resultList = listOf<LearningItemAPI>()
-                                        resultList =
-                                            it.result.children.map { it.getValue<LearningItemAPI>() }
-                                                .filterNotNull()
+                                        resultList = it.result.children.map { it.getValue<LearningItemAPI>() }.filterNotNull()
                                         if (ignoreRemovingItems) {
                                             trySendBlocking(Result.Success(resultList.filter { !it.deletedStatus }))
+                                            close()
                                         } else {
                                             trySendBlocking(Result.Success(resultList))
+                                            close()
                                         }
                                     }
                                 } else {
                                     trySendBlocking(Result.Success(listOf()))
+                                    close()
                                 }
                             } else {
                                 Timber.e(it.exception, "fetch from remote learning items")
                                 trySendBlocking(Result.Error())
+                                close()
                             }
                         }
                 } else {
                     Timber.e("database reference = $databaseRef maybe token expired please check")
                     trySendBlocking(Result.Error())
+                    close()
                 }
-                close()
             }
             awaitClose {
                 close()
