@@ -3,6 +3,8 @@ package com.learn.worlds.utils
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import timber.log.Timber
 import kotlin.coroutines.Continuation
@@ -61,5 +63,11 @@ fun <T> Request<T>.asFlow() = callbackFlow {
 
         })
         awaitClose { this@asFlow.cancel() }
+}
+
+suspend fun <T> MutableSharedFlow<T>.emitIf(value: T, condition: ()->Boolean){
+    if (condition.invoke()){
+        emit(value)
+    }
 }
 

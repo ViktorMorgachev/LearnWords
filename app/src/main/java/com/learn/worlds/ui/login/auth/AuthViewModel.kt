@@ -2,7 +2,7 @@ package com.learn.worlds.ui.login.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.learn.worlds.servises.AuthService
+import com.learn.worlds.servises.FirebaseAuthService
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authService: AuthService
+    private val firebaseAuthService: FirebaseAuthService
 ) : ViewModel() {
     val uiState = MutableStateFlow(AuthenticationState())
 
@@ -56,7 +56,7 @@ class AuthViewModel @Inject constructor(
         uiState.value.let {
             if (it.authenticationMode == AuthenticationMode.SIGN_UP) {
                 viewModelScope.launch(Dispatchers.IO) {
-                    val result = authService.signUp(password = it.password!!, email = it.email!!)
+                    val result = firebaseAuthService.signUp(password = it.password!!, email = it.email!!)
                     if (result is Result.Complete) {
                         signUpAction()
                         delay(1000)
@@ -70,7 +70,7 @@ class AuthViewModel @Inject constructor(
                 }
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
-                    val result = authService.signIn(password = it.password!!, email = it.email!!)
+                    val result = firebaseAuthService.signIn(password = it.password!!, email = it.email!!)
                     if (result is Result.Complete) {
                         signInAction()
                         delay(1000)

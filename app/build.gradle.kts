@@ -26,10 +26,12 @@ android {
 
     defaultConfig {
         applicationId = "com.learn.worlds"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 34
-        versionCode = 112
-        versionName = "1.1.2"
+        versionCode = 10202
+        versionName = "1.2.0"
+
+        buildConfigField("String", "EIDEN_BASE_API", "\"https://api.edenai.run\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -66,8 +68,8 @@ android {
         compose = true
         aidl = false
         buildConfig = true
-        renderScript = false
-        shaders = false
+        renderScript = true
+        shaders = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
@@ -80,7 +82,7 @@ android {
 }
 
 dependencies {
-
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(platform(libs.compose.bom))
     androidTestImplementation(platform(libs.compose.bom))
     implementation(platform(libs.firebase.boom))
@@ -107,6 +109,19 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
+
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp3.logging.interceptor)
+
+    // Ktor
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.auth)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.okhttp)
 
     //UI
     implementation(libs.lottie.compose)
@@ -137,6 +152,7 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.datastore)
 
     // Room Database
     implementation(libs.androidx.room.runtime)
