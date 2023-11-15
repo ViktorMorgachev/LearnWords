@@ -123,9 +123,6 @@ fun ShowLearningWordsScreen(
     isWasShowedLoginInformationDialog: Boolean = viewModel.isShowedLoginInfoDialogForUser(),
 ) {
 
-    var actualItems by remember { mutableStateOf(uiState.learningItems) }
-
-
     Surface(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -143,12 +140,6 @@ fun ShowLearningWordsScreen(
                 message = it)
         }
 
-        // Финт ушами из-за боли неразрешимой
-        if (uiState.composeNeedUpdate){
-            actualItems = uiState.learningItems
-            viewModel.handleEvent(ShowWordsEvent.ListWasUpdated)
-        }
-
 
         uiState.changeStatusDialog?.let {
             ChangeStatusDialog(onDismiss = {
@@ -164,7 +155,7 @@ fun ShowLearningWordsScreen(
 
         LearningItemsScreen(modifier = modifier,
             isWasShowedLoginInformationDialog = isWasShowedLoginInformationDialog,
-            learningItems = actualItems,
+            learningItems = uiState.learningItems,
             onDeleteItemAction = {
                 viewModel.handleEvent(ShowWordsEvent.DeleteItemEvent(it))
             },

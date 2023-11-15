@@ -8,6 +8,7 @@ import com.learn.worlds.data.local.AppDatabase
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.db.LearningItemDB
 import com.learn.worlds.data.model.db.LearningItemDao
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
@@ -38,23 +39,23 @@ class SimpleEntityReadWriteTest {
 
     @Test
     @Throws(Exception::class)
-    fun writeUserAndReadInList()  {
+    fun writeUserAndReadInList() = runBlocking  {
         val data = LearningItemDB(nativeData = "девушка", foreignData = "girl", timeStampUIID = 1657977381214)
-        userDao.insertLearningItemTest(data)
-        var items = userDao.getLearningItemsTest()
+        userDao.insertLearningItem(data)
+        var items = userDao.getLearningItems()
         assertThat(items.size, equalTo(1))
     }
 
     @Test
     @Throws(Exception::class)
-    fun writeAndChangeDataAfter()  {
+    fun writeAndChangeDataAfter()  = runBlocking {
         val data = LearningItemDB(nativeData = "котёнок", foreignData = "kitty", timeStampUIID = 1657977381212)
-        userDao.insertLearningItemTest(data)
-        var items = userDao.getLearningItemsTest()
-        userDao.updateLearningItemTest(items.first { it.nativeData == "котёнок" }.copy(
+        userDao.insertLearningItem(data)
+        var items = userDao.getLearningItems()
+        userDao.updateLearningItem(items.first { it.nativeData == "котёнок" }.copy(
             learningStatus = LearningStatus.LEARNED.name
         ))
-        items = userDao.getLearningItemsTest()
+        items = userDao.getLearningItems()
         assertThat(items.first { it.nativeData == "котёнок" }.learningStatus, equalTo(LearningStatus.LEARNED.name))
     }
 }

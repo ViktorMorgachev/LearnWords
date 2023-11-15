@@ -43,7 +43,7 @@ class ShowLearningItemsViewModel @Inject constructor(
 
     private fun updateData() {
         viewModelScope.launch {
-            learnItemsUseCase.actualData().collectLatest { data ->
+            learnItemsUseCase.actualData().flowOn(Dispatchers.IO).collect { data ->
                 Timber.d("actualData: ${data.joinToString(",\n")}")
                 allLearningItems.emit(data)
                 _uiState.emit(uiState.value.copy(

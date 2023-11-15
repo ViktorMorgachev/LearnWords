@@ -31,18 +31,6 @@ interface LearningItemDao {
     @Query("SELECT * from learningItems WHERE id = :id")
     fun getLearningItem(id: Int): Flow<LearningItemDB>
 
-    // Testing
-    @Query("SELECT * FROM learningItems")
-    fun getLearningItemsTest(): List<LearningItemDB>
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    fun insertLearningItemTest(item: LearningItemDB)
-
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertLearningItemsTest(item: List<LearningItemDB>)
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    fun updateLearningItemTest(item: LearningItemDB)
-    @Query("SELECT * from learningItems WHERE id = :id")
-    fun getLearningItemTest(id: Long): LearningItemDB
 }
 
 @Entity(tableName = "learningItems")

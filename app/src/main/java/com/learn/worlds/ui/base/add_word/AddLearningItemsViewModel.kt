@@ -26,15 +26,16 @@ import javax.inject.Inject
 @HiltViewModel
 class AddLearningItemsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    @IoDispatcher private val dispatcher: CoroutineDispatcher,
     private val learnItemsUseCase: LearnItemsUseCase,
     private val audioPlayer: AudioPlayer
 ) : ViewModel() {
 
     var uiState = AddWordsState(
-            nativeText = MutableStateFlow("вселенная"),
-            foreignText = MutableStateFlow("unverse")
+            nativeText = MutableStateFlow(""),
+            foreignText = MutableStateFlow("")
         )
+
+    private var resultCount : Int = 0
 
     init {
         viewModelScope.launch {
@@ -105,12 +106,14 @@ class AddLearningItemsViewModel @Inject constructor(
     }
     private fun spellCheckForeign() {
         viewModelScope.launch {
-            learnItemsUseCase.spellCheck(spellTextCheck = SpellTextCheck(requestText = uiState.foreignText.value))
+            learnItemsUseCase.spellCheck(spellTextCheck = SpellTextCheck(requestText = uiState.foreignText.value.trimEnd()))
                 .catch {
                     t->Timber.e(t)
                     showError(Result.Error(errorType = ErrorType.FAILED_TO_CHECK_SPELL_TEXT))
+                    resultCount++
                 }
                 .collectLatest {
+                    resultCount++
                     if (it is Result.Success){
                         showForeignSuggestion(it.data.suggestion!!.lowercase())
                     }
@@ -121,16 +124,30 @@ class AddLearningItemsViewModel @Inject constructor(
         }
     }
 
+
+    // TODO после переделать на загрузку отдельно анимируя загрузку произношения и загрузку картинки
+    private fun checkCountOfResultAndHideLoadingDialog(){
+        if (resultCount >= 3){
+            hideLoading()
+        }
+    }
+
     private fun initCardData(actualText: String) {
         showLoading()
         viewModelScope.launch {
             learnItemsUseCase.getImage(text = actualText)
                 .catch {
+                    resultCount++
+                    checkCountOfResultAndHideLoadingDialog()
                 Timber.e(it)
-                showError(Result.Error())
+                    showError()
             }.collectLatest {
+                    resultCount++
+                    checkCountOfResultAndHideLoadingDialog()
                 when(it){
-                    Result.Complete -> {}
+                    Result.Complete -> {
+                        setImage("")
+                    }
                     is Result.Error -> showError(it)
                     Result.Loading -> {}
                     is Result.Success -> {
@@ -143,15 +160,20 @@ class AddLearningItemsViewModel @Inject constructor(
         viewModelScope.launch {
             learnItemsUseCase.getTextSpeech(text = actualText, language = CommonLanguage.English)
                 .catch {
+                    resultCount++
+                    checkCountOfResultAndHideLoadingDialog()
                 Timber.e(it)
-                showError(Result.Error())
+                    showError()
             }.collectLatest {
+                    resultCount++
+                    checkCountOfResultAndHideLoadingDialog()
                 when(it){
-                    Result.Complete -> {}
+                    Result.Complete -> {
+                        setTextSpeech("")
+                    }
                     is Result.Error -> showError(it)
                     Result.Loading -> {}
                     is Result.Success -> {
-                        hideLoading()
                         setTextSpeech(it.data)
                     }
                 }
@@ -193,6 +215,7 @@ class AddLearningItemsViewModel @Inject constructor(
     private fun setImage(fileName: String?) {
         viewModelScope.launch {
             uiState.imageFile.emit(fileName)
+
         }
     }
 
@@ -208,7 +231,7 @@ class AddLearningItemsViewModel @Inject constructor(
         }
     }
 
-    private fun showError(error: Result.Error? = null) {
+    private fun showError(error: Result.Error = Result.Error()) {
         if (isNeedShowErrorDialod()){
             viewModelScope.launch {
                 uiState.isLoading.emit(false)

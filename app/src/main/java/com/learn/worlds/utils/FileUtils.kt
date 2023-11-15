@@ -13,6 +13,7 @@ import java.nio.file.Files
 
 fun File.isMp3File(): Boolean{
     try {
+        if (!this.exists()) return false
         val allBytes = Files.readAllBytes(FileSystems.getDefault().getPath(this.path))
         return isMp3Signature(allBytes)
     } catch (t: Throwable) {
@@ -30,7 +31,13 @@ fun File?.toBitmap(): Bitmap?{
 }
 
 fun File?.isImage(): Boolean {
-    return this?.isPngFile()  == true || this?.isJpegFile() == true
+    return try {
+        if (this?.exists() == false) return false
+        this?.isPngFile() == true || this?.isJpegFile() == true
+    } catch (t: NoSuchFileException){
+        false
+    }
+
 }
 
 
