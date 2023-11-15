@@ -4,29 +4,21 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.LearnItemsUseCase
-import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.SpellTextCheck
-import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.remote.CommonLanguage
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.AudioPlayer
 import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
-import com.learn.worlds.utils.emitIf
 import com.learn.worlds.utils.getMp3File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flattenMerge
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -73,7 +65,7 @@ class AddLearningItemsViewModel @Inject constructor(
             is AddWordsEvent.OnSaveLearningItem -> saveData()
             AddWordsEvent.InitCardData ->{
                 if (uiState.actualSuggestionForeign.value != SpellingCheckState.None){
-                    initCardData()
+                    initCardData(actualText = getActualCorrectedText().lowercase())
                 } else {
                     spellCheckForeign()
                 }
@@ -83,6 +75,12 @@ class AddLearningItemsViewModel @Inject constructor(
             AddWordsEvent.OnStopPlayer -> stopAudio()
             AddWordsEvent.OnPausePlayer -> audioPlayer.pause()
         }
+    }
+
+    private fun getActualCorrectedText(): String{
+        return if (uiState.actualSuggestionForeign.value is SpellingCheckState.Incorrect){
+            (uiState.actualSuggestionForeign.value as SpellingCheckState.Incorrect).suggestion
+        } else uiState.foreignText.value.trimEnd()
     }
 
     private fun playAudio() {
@@ -123,10 +121,10 @@ class AddLearningItemsViewModel @Inject constructor(
         }
     }
 
-    private fun initCardData() {
+    private fun initCardData(actualText: String) {
         showLoading()
         viewModelScope.launch {
-            learnItemsUseCase.getImage(text = uiState.foreignText.value.trimEnd())
+            learnItemsUseCase.getImage(text = actualText)
                 .catch {
                 Timber.e(it)
                 showError(Result.Error())
@@ -143,7 +141,7 @@ class AddLearningItemsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            learnItemsUseCase.getTextSpeech(text = uiState.foreignText.value.trimEnd(), language = CommonLanguage.English)
+            learnItemsUseCase.getTextSpeech(text = actualText, language = CommonLanguage.English)
                 .catch {
                 Timber.e(it)
                 showError(Result.Error())
@@ -223,11 +221,10 @@ class AddLearningItemsViewModel @Inject constructor(
         viewModelScope.launch {
             if (suggestion.isNotEmpty()){
                 uiState.actualSuggestionForeign.emit(SpellingCheckState.Incorrect(suggestion = suggestion))
-
             } else {
                 uiState.actualSuggestionForeign.emit(SpellingCheckState.Correct)
             }
-
+            initCardData(getActualCorrectedText().lowercase())
         }
     }
 

@@ -2,6 +2,8 @@ package com.learn.worlds.data.dataSource.remote
 
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import com.google.firebase.database.getValue
 import com.google.firebase.storage.StorageException
 import com.learn.worlds.data.model.base.ImageGeneration
@@ -41,6 +43,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -257,13 +260,30 @@ class LearningRemoteItemsDataSource @Inject constructor(
             val response = ktorHttpClient.get(imageGeneration.actualFileUrl!!)
             if (response.status == HttpStatusCode.OK) {
                 val file = initFile(imageGeneration.file.name)
+                val fileCompressed = initFile("compressed_${imageGeneration.file.name}")
                 saveFile(data = response.readBytes(), file = file)
+                if (file.isImage()){
+                    compressImageFile(file, fileCompressed)
+                    fileCompressed.renameTo(file)
+                }
                 emit(Result.Success(imageGeneration.copy(file = file)))
             } else {
                 Timber.e("Status: ${response.status} RequestTime: ${response.requestTime}")
                 emit(Result.Error())
             }
         }.flowOn(dispatcher)
+
+    private fun compressImageFile(fileFrom: File, fileTo: File) {
+        val quality: Int = 80
+        BitmapFactory.decodeFile(fileFrom.path)?.let { bitmap ->
+            ByteArrayOutputStream().use { byteArrayOutputStream ->
+                FileOutputStream(fileTo.path).use { fileOutputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream)
+                    fileOutputStream.write(byteArrayOutputStream.toByteArray())
+                }
+            }
+        }
+    }
 
 
     suspend fun fetchItemsIdsForRemoving() = callbackFlow<Result<List<Long>>> {
