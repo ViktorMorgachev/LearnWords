@@ -28,8 +28,8 @@ android {
         applicationId = "com.learn.worlds"
         minSdk = 26
         targetSdk = 34
-        versionCode = 10202
-        versionName = "1.2.0"
+        versionCode = 10500
+        versionName = "1.5.0"
 
         buildConfigField("String", "EIDEN_BASE_API", "\"https://api.edenai.run\"")
 
