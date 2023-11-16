@@ -55,3 +55,6 @@ CLEAN ARCHITECTURE, MVI, MVVM, KISS, DRY
 
 If you have any feedback, please reach out to us at https://t.me/AndroDev11
 
+## Screenshots
+
+![App Short Preview](https://drive.google.com/file/d/1IcbfnBk2KEV2ZZny40BKLZnffxtW1UHf/view?usp=sharing)
