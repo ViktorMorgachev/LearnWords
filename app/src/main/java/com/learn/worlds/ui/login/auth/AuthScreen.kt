@@ -32,7 +32,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -62,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.learn.worlds.R
+import com.learn.worlds.ui.common.OutlineButton
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.common.SuccessDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
@@ -227,24 +227,17 @@ fun AuthenticationButton(
     enableAuthentication: Boolean,
     onAuthAction: () -> Unit
 ) {
-    OutlinedButton(
+    OutlineButton(
+        text =  stringResource(
+            if (authenticationMode == AuthenticationMode.SIGN_IN) {
+                R.string.action_sign_in
+            } else {
+                R.string.action_sign_up
+            }),
         modifier = modifier,
         onClick = { onAuthAction.invoke() },
-        enabled = enableAuthentication
-    ) {
-        Text(
-            text = stringResource(
-                if (authenticationMode ==
-                    AuthenticationMode.SIGN_IN
-                ) {
-                    R.string.action_sign_in
-                } else {
-                    R.string.action_sign_up
-                }
-            ),
+        enabled = enableAuthentication)
 
-            )
-    }
 }
 
 

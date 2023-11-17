@@ -8,6 +8,7 @@ import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.remote.CommonLanguage
 import com.learn.worlds.di.IoDispatcher
+import com.learn.worlds.servises.FirebaseAuthService
 import com.learn.worlds.utils.AudioPlayer
 import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
@@ -26,14 +27,17 @@ import javax.inject.Inject
 @HiltViewModel
 class AddLearningItemsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val authService: FirebaseAuthService,
     private val learnItemsUseCase: LearnItemsUseCase,
     private val audioPlayer: AudioPlayer
 ) : ViewModel() {
 
     var uiState = AddWordsState(
             nativeText = MutableStateFlow(""),
-            foreignText = MutableStateFlow("")
+            foreignText = MutableStateFlow(""),
+            authState = MutableStateFlow(authService.authState.value)
         )
+
 
     private var resultCount : Int = 0
 

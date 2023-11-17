@@ -93,6 +93,7 @@ import com.learn.worlds.ui.base.show_words.customization.getCardTextColor
 import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.ActualTopBar
 import com.learn.worlds.ui.common.ChangeStatusDialog
+import com.learn.worlds.ui.common.IconLeftAppBar
 import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
@@ -169,6 +170,7 @@ fun ShowLearningWordsScreen(
             },
             appBar = {
                 ActualTopBar(
+                    iconLeftAppBar = IconLeftAppBar.NavMenuIcon(),
                     title = R.string.list_of_words,
                     actions = mutableListOf(
                         ActionTopBar(
@@ -206,13 +208,6 @@ fun ShowLearningWordsScreen(
                                             })
                                     )
                                 }
-                            }
-                        ),
-                        ActionTopBar(
-                            imageVector = Icons.Default.Sync,
-                            contentDesc = R.string.desc_action_synk_data,
-                            action = {
-                                onNavigate.invoke(Screen.SynchronizationScreen)
                             }
                         )
                     )

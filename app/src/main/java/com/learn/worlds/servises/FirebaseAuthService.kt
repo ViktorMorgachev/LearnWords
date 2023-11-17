@@ -7,12 +7,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
-
 
 
 @Singleton
@@ -22,6 +22,7 @@ class FirebaseAuthService @Inject constructor(
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val auth by lazy { Firebase.auth }
+
     init {
         auth.setLanguageCode("ru")
     }
@@ -34,6 +35,7 @@ class FirebaseAuthService @Inject constructor(
             _authState.emit(isAuthentificated())
         }
     }
+
     fun isAuthentificated(): Boolean {
         return getUserUUID() != null
     }
@@ -54,14 +56,27 @@ class FirebaseAuthService @Inject constructor(
                 }.addOnFailureListener {
                     scope.launch {
                         _authState.emit(false)
-                        continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it)))
+                        continuation.resume(
+                            Result.Error(
+                                firebaseAuthErrorWrapper.getActualErrorText(
+                                    it
+                                )
+                            )
+                        )
                     }
                 }
         }
 
     }
 
-    suspend fun signUp(password: String, email: String):  Result<Any> {
+
+    suspend fun logout() = flow<Result<Nothing>> {
+        auth.signOut()
+        _authState.emit(false)
+        emit(Result.Complete)
+    }
+
+    suspend fun signUp(password: String, email: String): Result<Any> {
         return suspendCancellableCoroutine { continuation ->
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener {
@@ -73,7 +88,13 @@ class FirebaseAuthService @Inject constructor(
                 }.addOnFailureListener {
                     scope.launch {
                         _authState.emit(false)
-                        continuation.resume(Result.Error(firebaseAuthErrorWrapper.getActualErrorText(it)))
+                        continuation.resume(
+                            Result.Error(
+                                firebaseAuthErrorWrapper.getActualErrorText(
+                                    it
+                                )
+                            )
+                        )
                     }
                 }
         }

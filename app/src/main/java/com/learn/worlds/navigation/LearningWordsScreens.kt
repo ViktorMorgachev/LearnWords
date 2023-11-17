@@ -9,10 +9,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.learn.worlds.R
 
 data class BottomItem(val bottomIcon: ImageVector, @StringRes val bottomText: Int, @StringRes val description: Int? = null)
-sealed class Screen(val route: String, val bottomItem: BottomItem? = null) {
+sealed class Screen(val route: String, val bottomItem: BottomItem? = null, val showDrawerIcon: Boolean = false) {
     object LearnScreen : Screen(
         route = "screen_learn",
-        bottomItem = BottomItem(bottomIcon = Icons.Default.Language,  bottomText = R.string.learn))
+        bottomItem = BottomItem(bottomIcon = Icons.Default.Language,  bottomText = R.string.learn), showDrawerIcon = true)
     object AddScreen : Screen(route = "screen_add",
         bottomItem = BottomItem(bottomIcon = Icons.Default.Add, bottomText = R.string.add))
 

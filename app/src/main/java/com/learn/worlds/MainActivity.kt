@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.learn.worlds.navigation.Screen
+import com.learn.worlds.servises.FirebaseAuthService
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import com.learn.worlds.utils.AudioPlayer
 import dagger.hilt.android.AndroidEntryPoint

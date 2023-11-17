@@ -37,7 +37,7 @@ class ShowLearningItemsViewModel @Inject constructor(
 
 
     init {
-        checkForAuthenticated()
+        checkForAuthentificationState()
         updateData()
     }
 
@@ -56,9 +56,10 @@ class ShowLearningItemsViewModel @Inject constructor(
         }
     }
 
-    fun checkForAuthenticated() {
+    fun checkForAuthentificationState() {
         viewModelScope.launch {
             firebaseAuthService.authState.collectLatest {
+                Timber.d("AuthState: ${it}")
                 _uiState.value = uiState.value.copy(
                     isAuthentificated = it
                 )
@@ -68,11 +69,9 @@ class ShowLearningItemsViewModel @Inject constructor(
 
    private fun showErrorDialog(error: Result.Error) {
         viewModelScope.launch {
-            firebaseAuthService.authState.collectLatest {
-                _uiState.value = uiState.value.copy(
-                    errorDialog = error
-                )
-            }
+            _uiState.value = uiState.value.copy(
+                errorDialog = error
+            )
         }
     }
 

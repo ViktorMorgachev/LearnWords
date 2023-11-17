@@ -1,6 +1,7 @@
 package com.learn.worlds.ui.common
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -18,20 +19,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.learn.worlds.NavigationDrawerMediator
 import com.learn.worlds.R
 import com.learn.worlds.utils.stringRes
 
 @Preview
 @Composable
 private fun ActualTopBarPrewiew() {
-    MaterialTheme{
+    MaterialTheme {
         Surface(modifier = Modifier.fillMaxWidth()) {
-            ActualTopBar(title = R.string.learn,
+            ActualTopBar(
+                title = R.string.learn,
                 actions = listOf(
                     ActionTopBar(
                         imageVector = Icons.Default.FilterList,
                         contentDesc = R.string.desc_action_filter_list,
-                        action =  {})))
+                        action = {})
+                )
+            )
         }
     }
 
@@ -39,8 +44,26 @@ private fun ActualTopBarPrewiew() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActualTopBar(@StringRes title: Int?, actions: List<ActionTopBar>) {
+fun ActualTopBar(
+    iconLeftAppBar: IconLeftAppBar? = null,
+    @StringRes title: Int?,
+    actions: List<ActionTopBar>
+) {
     CenterAlignedTopAppBar(
+        navigationIcon = {
+            if (iconLeftAppBar is IconLeftAppBar.NavMenuIcon) {
+                Icon(
+                    modifier = Modifier.clickable { NavigationDrawerMediator.open() },
+                    imageVector = iconLeftAppBar.imageVector, contentDescription = null
+                )
+            }
+            if (iconLeftAppBar is IconLeftAppBar.NavBackIcon) {
+                Icon(
+                    modifier = Modifier.clickable { iconLeftAppBar.action.invoke() },
+                    imageVector = iconLeftAppBar.imageVector, contentDescription = null
+                )
+            }
+        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             titleContentColor = MaterialTheme.colorScheme.primary,
@@ -60,7 +83,7 @@ fun ActualTopBar(@StringRes title: Int?, actions: List<ActionTopBar>) {
                     it.action.invoke()
                 }) {
                     Column {
-                       it.dropDownContent?.invoke()
+                        it.dropDownContent?.invoke()
                     }
                     Icon(
                         imageVector = it.imageVector,

@@ -72,6 +72,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.learn.worlds.R
 import com.learn.worlds.ui.common.LoadingDialog
+import com.learn.worlds.ui.common.OutlineButton
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import com.learn.worlds.utils.getImageFile
@@ -152,6 +153,7 @@ fun AddWordsUndependentScreen(
     val foreignSpellingState = uistate.actualSuggestionForeign.collectAsStateWithLifecycle().value
     val playerIsPlaying = uistate.playerIsPlaying.collectAsStateWithLifecycle().value
     val actualImageFileName = uistate.imageFile.collectAsStateWithLifecycle().value
+    val authState = uistate.authState.collectAsStateWithLifecycle().value
     val speechFileName = uistate.speechFile.collectAsStateWithLifecycle().value
 
 
@@ -238,11 +240,13 @@ fun AddWordsUndependentScreen(
                     .align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                OutlineButton(
-                    text = "Проверить",
-                    onClick = { onInitCardData.invoke() },
-                    enabled = uistate.isCanToGenerate()
-                )
+                if (authState == true){
+                    OutlineButton(
+                        text = "Проверить",
+                        onClick = { onInitCardData.invoke() },
+                        enabled = uistate.isCanToGenerate()
+                    )
+                }
                 OutlineButton(
                     text = "Сохранить",
                     onClick = { onSaveCardData.invoke() },
@@ -254,30 +258,6 @@ fun AddWordsUndependentScreen(
     }
 
 }
-
-@Preview
-@Composable
-fun OutlineButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    enabled: Boolean = true,
-    text: String = ""
-) {
-    OutlinedButton(
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White,
-            contentColor = Color.Black,
-            disabledContentColor = Color.White,
-            disabledContainerColor = Color.Gray
-        ),
-        onClick = onClick,
-        enabled = enabled
-    ) {
-        Text(text = text)
-    }
-}
-
-
 @Composable
 fun PlayerButton(
     modifier: Modifier = Modifier,
