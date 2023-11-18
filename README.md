@@ -44,9 +44,6 @@ CLEAN ARCHITECTURE, MVI, MVVM, KISS, DRY
  - [PNG File Signature Format](Reserch)
  - [Readme generation](https://readme.so/editor)
 
-## Special thanks
-- [Денис Измайлович](https://www.linkedin.com/in/денис-измайлович-63300b282)
-
 
 ## Feedback
 

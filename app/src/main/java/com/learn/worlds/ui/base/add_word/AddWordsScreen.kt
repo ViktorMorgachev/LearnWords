@@ -71,6 +71,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.learn.worlds.R
+import com.learn.worlds.ui.common.DoOnLifecycleEvent
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.OutlineButton
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
@@ -136,7 +137,6 @@ fun AddWordsUndependentScreen(
     onErrorDismissed: () -> Unit,
     onInitCardData: () -> Unit,
     onSaveCardData: () -> Unit,
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current,
     onPlayAudioAction: () -> Unit,
     onForeignDataChanged: (String) -> Unit,
     onNativeDataChanged: (String) -> Unit,
@@ -156,20 +156,9 @@ fun AddWordsUndependentScreen(
     val authState = uistate.authState.collectAsStateWithLifecycle().value
     val speechFileName = uistate.speechFile.collectAsStateWithLifecycle().value
 
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                onStopPlayerAction.invoke()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+    DoOnLifecycleEvent(lifecycleState = Lifecycle.Event.ON_STOP){
+        onStopPlayerAction.invoke()
     }
-
-
 
     Surface(
         modifier = modifier.fillMaxSize(),

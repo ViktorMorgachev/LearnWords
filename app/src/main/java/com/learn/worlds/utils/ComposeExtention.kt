@@ -1,9 +1,14 @@
 package com.learn.worlds.utils
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -35,6 +40,20 @@ sealed class Result<out T> {
 @Composable
 fun stringRes(@StringRes resID: Int?): String {
     return if (resID != null) stringResource(resID) else ""
+}
+
+fun LazyListState.isFirstItemVisible() = firstVisibleItemIndex == 0
+
+@Composable
+fun LazyListState.isScrollingDown(): Boolean {
+    val offset = remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) { derivedStateOf { (firstVisibleItemScrollOffset - offset.intValue) > 0 } }.value
+}
+
+@Composable
+fun LazyListState.isScrollingUp(): Boolean {
+    val offset = remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) { derivedStateOf { (firstVisibleItemScrollOffset - offset.intValue) < 0 } }.value
 }
 
 @Composable

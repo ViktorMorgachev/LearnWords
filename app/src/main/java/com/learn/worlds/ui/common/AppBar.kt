@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import com.learn.worlds.NavigationDrawerMediator
+import com.learn.worlds.NavigationMediator
 import com.learn.worlds.R
 import com.learn.worlds.utils.stringRes
 
@@ -29,7 +29,7 @@ private fun ActualTopBarPrewiew() {
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxWidth()) {
             ActualTopBar(
-                title = R.string.learn,
+                title = R.string.list_of_words,
                 actions = listOf(
                     ActionTopBar(
                         imageVector = Icons.Default.FilterList,
@@ -47,13 +47,13 @@ private fun ActualTopBarPrewiew() {
 fun ActualTopBar(
     iconLeftAppBar: IconLeftAppBar? = null,
     @StringRes title: Int?,
-    actions: List<ActionTopBar>
+    actions: List<ActionTopBar> = listOf()
 ) {
     CenterAlignedTopAppBar(
         navigationIcon = {
             if (iconLeftAppBar is IconLeftAppBar.NavMenuIcon) {
                 Icon(
-                    modifier = Modifier.clickable { NavigationDrawerMediator.open() },
+                    modifier = Modifier.clickable { NavigationMediator.open() },
                     imageVector = iconLeftAppBar.imageVector, contentDescription = null
                 )
             }

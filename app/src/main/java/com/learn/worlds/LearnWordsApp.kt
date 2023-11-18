@@ -42,20 +42,25 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.learn.worlds.navigation.MyNavHost
 import com.learn.worlds.navigation.Screen
-import com.learn.worlds.ui.common.ActionTopBar
 import com.learn.worlds.ui.common.BottomBar
 import com.learn.worlds.utils.stringRes
 import kotlinx.coroutines.launch
 
 
-object NavigationDrawerMediator {
+object NavigationMediator {
 
     private var closeAction: () -> Unit = {}
     private var openAction: () -> Unit = {}
+    private lateinit var navController: NavHostController
 
-    fun init(onCloseDrawer: () -> Unit, onOpenDrawer: () -> Unit) {
+    fun init(onCloseDrawer: () -> Unit, onOpenDrawer: () -> Unit, navCon: NavHostController) {
+        navController = navCon
         closeAction = onCloseDrawer
         openAction = onOpenDrawer
+    }
+
+    fun popBackStack() {
+        navController.popBackStack()
     }
 
     fun close() {
@@ -87,6 +92,7 @@ fun LearnWordsApp(
     val shouldShowBottomBar = navBackStackEntry?.destination?.route in mainBottomsScreens.map { it.route }
     val items = mutableListOf(
         DrawerMenuItem(
+            onClickAction = { navController.navigate(Screen.PreferencesScreen.route) },
             text = stringRes(R.string.settings),
             imageVector = Icons.Filled.Settings
         )
@@ -114,7 +120,8 @@ fun LearnWordsApp(
 
     var selectedItem by remember { mutableStateOf(items[0]) }
 
-    NavigationDrawerMediator.init(
+    NavigationMediator.init(
+        navCon = navController ,
         onCloseDrawer = {
             scope.launch { drawerState.close() }
         }, onOpenDrawer = {
@@ -135,8 +142,8 @@ fun LearnWordsApp(
                         label = { Text(item.text) },
                         selected = item == selectedItem,
                         onClick = {
+                            NavigationMediator.close()
                             item.onClickAction()
-                            NavigationDrawerMediator.close()
                             selectedItem = item
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)

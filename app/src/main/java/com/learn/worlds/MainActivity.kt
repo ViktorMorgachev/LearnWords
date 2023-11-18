@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.learn.worlds.navigation.Screen
-import com.learn.worlds.servises.FirebaseAuthService
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import com.learn.worlds.utils.AudioPlayer
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,6 +20,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var navHostController: NavHostController
     @Inject lateinit var audioPlayer: AudioPlayer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    LearnWordsApp(navHostController, listOf(Screen.LearnScreen, Screen.AddScreen))
+                    LearnWordsApp(navHostController, listOf(Screen.WordsListScreen, Screen.AddScreen))
                 }
             }
         }

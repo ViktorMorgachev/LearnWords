@@ -11,6 +11,8 @@ import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.prefs.UISharedPreferences
 import com.learn.worlds.servises.FirebaseAuthService
+import com.learn.worlds.ui.preferences.PreferenceData
+import com.learn.worlds.ui.preferences.PreferenceValue
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +33,10 @@ class ShowLearningItemsViewModel @Inject constructor(
     private val firebaseAuthService: FirebaseAuthService
 ) : ViewModel() {
 
-    private val _uiState: MutableStateFlow<ShowWordsState> = MutableStateFlow(ShowWordsState())
+    private val _uiState: MutableStateFlow<ShowWordsState> = MutableStateFlow(ShowWordsState(
+        isShowedLoginInfoDialogForUser = uiPreferences.isShowedLoginInfo,
+        isAuthentificated = firebaseAuthService.isAuthentificated(),
+        defaultNativeList = preferences.getPreferenceActualVariant(PreferenceData.DefaultLanguageOfList.key) == PreferenceValue.Native))
     val uiState = _uiState.asStateFlow()
     private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
@@ -42,15 +47,17 @@ class ShowLearningItemsViewModel @Inject constructor(
     }
 
     private fun updateData() {
+        Timber.d("updateData: defaultNativeList =  ${preferences.getPreferenceActualVariant(PreferenceData.DefaultLanguageOfList.key)}")
         viewModelScope.launch {
             learnItemsUseCase.actualData().flowOn(Dispatchers.IO).collect { data ->
                 Timber.d("actualData: ${data.joinToString(",\n")}")
                 allLearningItems.emit(data)
                 _uiState.emit(uiState.value.copy(
-                    composeNeedUpdate = true,
+                    defaultNativeList = preferences.getPreferenceActualVariant(PreferenceData.DefaultLanguageOfList.key) == PreferenceValue.Native,
                     isLoading = false,
                     errorDialog = null,
                     learningItems = getSortedAndFilteringData(data)
+
                 ))
             }
         }
@@ -76,6 +83,7 @@ class ShowLearningItemsViewModel @Inject constructor(
     }
 
 
+
     fun handleEvent(showWordsEvent: ShowWordsEvent) {
         when (showWordsEvent) {
             is ShowWordsEvent.UpdateCardStatusEvent -> {
@@ -93,7 +101,7 @@ class ShowLearningItemsViewModel @Inject constructor(
                 }
             }
 
-            is ShowWordsEvent.DeleteItemEvent -> {
+            is ShowWordsEvent.OnDeleteItemEvent -> {
                 viewModelScope.launch {
                     learnItemsUseCase.deleteWordItem(learningItem = showWordsEvent.learningItem)
                         .collectLatest { result ->
@@ -112,23 +120,12 @@ class ShowLearningItemsViewModel @Inject constructor(
             is ShowWordsEvent.ShowChangeCardStatusDialog -> showChangeStatusDialog(showWordsEvent.learningItem)
             ShowWordsEvent.DismisErrorDialog -> dropErrorDialog()
             ShowWordsEvent.DismisChangeStatusDialog -> dropChangeStatusDialog()
-            ShowWordsEvent.ListWasUpdated -> listWasUpdated()
+            ShowWordsEvent.UpdateData -> {
+                updateData()
+            }
         }
     }
 
-    private fun listWasUpdated(){
-        viewModelScope.launch {
-            _uiState.emit(
-                uiState.value.copy(
-                    composeNeedUpdate = false
-                )
-            )
-        }
-    }
-
-    fun isShowedLoginInfoDialogForUser(): Boolean {
-        return uiPreferences.isShowedLoginInfo
-    }
 
 
     private fun dropChangeStatusDialog() {
@@ -194,7 +191,6 @@ class ShowLearningItemsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.emit(
                 uiState.value.copy(
-                    composeNeedUpdate = true,
                     learningItems = getSortedAndFilteringData(allLearningItems.value)
                 )
             )
@@ -208,7 +204,6 @@ class ShowLearningItemsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.emit(
                 uiState.value.copy(
-                    composeNeedUpdate = true,
                     learningItems = sortedData
                 )
             )

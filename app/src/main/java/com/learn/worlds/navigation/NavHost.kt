@@ -1,6 +1,5 @@
 package com.learn.worlds.navigation
 
-import DemoScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -9,9 +8,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.learn.worlds.ui.base.add_word.AddWordsScreen
 import com.learn.worlds.ui.base.show_words.ShowLearningWordsScreen
-import com.learn.worlds.ui.base.subscribe.SubscribeScreen
 import com.learn.worlds.ui.login.auth.AuthScreen
 import com.learn.worlds.ui.login.sync.SynchronizationScreen
+import com.learn.worlds.ui.preferences.PreferencesScreenBase
 
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) { launchSingleTop = true }
@@ -40,24 +39,21 @@ fun MyNavHost(
                     })
             }
         }
-        navigation(startDestination = Screen.LearnScreen.route, route = "MAIN") {
+        navigation(startDestination = Screen.WordsListScreen.route, route = "MAIN") {
             composable(route = Screen.AddScreen.route) {
                 AddWordsScreen(
                     navigateAfterSuccessWasAdded = { navHostController.navigateUp() },
                     modifier = modifier
                 )
             }
-            composable(route = Screen.LearnScreen.route) {
+            composable(route = Screen.WordsListScreen.route) {
                 ShowLearningWordsScreen(
                     onNavigate = { screen -> navHostController.navigate(screen.route) },
                     modifier = modifier
                 )
             }
-            composable(route = Screen.SubscribeScreen.route) {
-                SubscribeScreen(
-                    onByCoffeeAction = { navHostController.popBackStack() },
-                    modifier = modifier
-                )
+            composable(route = Screen.PreferencesScreen.route) {
+                PreferencesScreenBase(modifier = modifier)
             }
         }
     }
