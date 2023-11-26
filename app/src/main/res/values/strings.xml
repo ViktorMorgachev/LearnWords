@@ -63,14 +63,12 @@
     <string name="error_invalid_login">Проверьте почту или пароль</string>
     <string name="action_already_have_account">У вас уже есть учетная запись?</string>
 
-
-
-
     <!--Common-->
     <string name="try_again">Повторить запрос</string>
     <string name="close">Закрыть</string>
     <string name="ok">ОК</string>
     <string name="auth_error_tittle">Что-то пошло не так</string>
+    <string name="toast_will_be_soon">Скоро данный функционал появится</string>
     <string name="syncronize">Синхронизировать</string>
 
     <!--Errors-->
@@ -83,7 +81,9 @@
     <!--Drawer-->
     <string name="settings">Настройки</string>
     <string name="profile">Профиль</string>
-    <string name="synck">Синхронизировать</string>
+    <string name="synck">Обновить</string>
     <string name="logout">Выйти из аккаунта</string>
+
+    <!---->
 
 </resources>

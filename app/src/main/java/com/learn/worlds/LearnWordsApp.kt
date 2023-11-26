@@ -1,5 +1,7 @@
 package com.learn.worlds
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -32,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
@@ -83,6 +86,7 @@ fun LearnWordsApp(
     navController: NavHostController,
     allScreens: List<Screen>,
     viewModel: ActivityViewModel = hiltViewModel(),
+    context: Context = LocalContext.current,
 ) {
     val mainBottomsScreens = allScreens.filter { it.bottomItem != null }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -98,12 +102,21 @@ fun LearnWordsApp(
         )
     )
 
+   // val willBeSoonText by remember { mutableStateOf(stringResource()) }
+
     if (authState) {
         items.addAll(
             listOf(
                 DrawerMenuItem(
                     text = stringRes(R.string.profile),
-                    imageVector = Icons.Filled.Home
+                    imageVector = Icons.Filled.Home,
+                    onClickAction = {
+                        Toast.makeText(
+                            context,
+                            R.string.toast_will_be_soon,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                 ),
                 DrawerMenuItem(
                     text = stringRes(R.string.synck),

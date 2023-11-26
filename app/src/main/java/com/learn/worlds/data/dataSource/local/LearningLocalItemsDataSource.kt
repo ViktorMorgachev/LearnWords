@@ -45,8 +45,11 @@ class LearningLocalItemsDataSource @Inject constructor(
     suspend fun removeItemsByIDs(learningItemIDs: List<Long>) = flow<Result<Nothing>> {
         Timber.d("removeItemsByIDs: learningItemIDs ${learningItemIDs.joinToString(", ")}}")
         try {
+           val allKeysDatabase =  learningItemDao.getLearningItems().map { it.timeStampUIID }
             learningItemIDs.forEach {
-                learningItemDao.deleteLearningItem(it)
+                if (allKeysDatabase.contains(it)){
+                    learningItemDao.deleteLearningItem(it)
+                }
             }
             emit(Result.Complete)
         } catch (t: Throwable) {
