@@ -24,7 +24,7 @@ interface LearningItemDao {
     @Query("DELETE FROM learningItems WHERE id = :learningItemID")
     fun deleteLearningItem(learningItemID: Long)
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLearningItems(item: List<LearningItemDB>)
     @Update(onConflict = OnConflictStrategy.REPLACE)
     fun updateLearningItem(item: LearningItemDB)

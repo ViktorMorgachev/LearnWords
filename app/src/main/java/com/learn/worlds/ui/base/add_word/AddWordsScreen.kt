@@ -195,7 +195,7 @@ fun AddWordsUndependentScreen(
                         spellingState = foreignSpellingState,
                         label = "Слово на иностраном языке",
                         actualText = foreignText,
-
+                        maxChars = 15,
                         modifier = Modifier.fillMaxWidth(),
                         onValueChange = {
                             onForeignDataChanged.invoke(it)
@@ -204,6 +204,7 @@ fun AddWordsUndependentScreen(
                     )
                     Spacer(Modifier.height(16.dp))
                     EditTextCustom(
+                        maxChars = 15,
                         label = "Перевод",
                         actualText = nativeText,
                         modifier = Modifier.fillMaxWidth(),
@@ -339,10 +340,11 @@ fun CardImage(
 
 @Composable
 fun EditTextCustom(
+    modifier: Modifier = Modifier,
     label: String,
     spellingState: SpellingCheckState,
     actualText: String,
-    modifier: Modifier = Modifier,
+    maxChars: Int = Int.MAX_VALUE,
     onValueChange: (String) -> Unit,
     enabled: Boolean = true
 ) {
@@ -383,7 +385,9 @@ fun EditTextCustom(
             enabled = enabled,
             shape = MaterialTheme.shapes.medium,
             value = actualText,
-            onValueChange = onValueChange,
+            onValueChange = {
+                if (it.length <= maxChars) onValueChange.invoke(it)
+            },
             singleLine = true,
             supportingText = {
                 Box(

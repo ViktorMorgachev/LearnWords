@@ -57,7 +57,7 @@ fun SynchronizationScreen(
     synchronizationState: SynchronizationState = viewModel.uiState.collectAsStateWithLifecycle().value,
     onSyncronizedSucces: () -> Unit,
 ) {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.animation_loading))
+    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.cat_loading))
 
     val scope = rememberCoroutineScope()
 
@@ -99,7 +99,6 @@ fun SynchronizationScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         Box(
-            modifier = Modifier.background(Color(0xFF1ACC80)),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

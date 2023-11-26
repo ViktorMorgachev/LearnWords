@@ -531,7 +531,7 @@ fun CardContent(
                 rotationX = transitionData.rotation
             },
         state = switch,
-        text = actualText,
+        text = actualText.lowercase(),
         cardBackground = transitionData.background,
         textColor = transitionData.textColor,
         onClickedAction = switchAction,
