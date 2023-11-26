@@ -36,7 +36,7 @@ class LearningItemsRepository @Inject constructor(
     private val mockItemsDataSource: LearningMockItemsDataSource
 ) {
 
-    val data: Flow<List<LearningItem>> = localDataSource.learningItems.transform<List<LearningItemDB>, List<LearningItem>>{ emit(it.map { it.toLearningItem() }) }
+    val data: Flow<List<LearningItem>> = mockItemsDataSource.learningItems.transform<List<LearningItemDB>, List<LearningItem>>{ emit(it.map { it.toLearningItem() }) }
 
     suspend fun getDataFromDatabase() = localDataSource.fetchDatabaseItems()
         .transform<List<LearningItemDB>, List<LearningItem>>() { emit(it.map { it.toLearningItem() })

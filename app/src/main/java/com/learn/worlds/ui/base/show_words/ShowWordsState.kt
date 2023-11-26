@@ -1,5 +1,6 @@
 package com.learn.worlds.ui.base.show_words
 
+import androidx.compose.runtime.Immutable
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.utils.Result
 
@@ -13,6 +14,7 @@ sealed class ShowWordsEvent {
     object UpdateData: ShowWordsEvent()
 
 }
+@Immutable
 data class ShowWordsState(
     val learningItems: List<LearningItem> = listOf(),
     val isLoading: Boolean = false,

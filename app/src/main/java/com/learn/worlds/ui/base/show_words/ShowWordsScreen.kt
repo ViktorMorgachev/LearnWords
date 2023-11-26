@@ -37,7 +37,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterList
@@ -56,6 +55,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +63,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -99,8 +100,11 @@ import com.learn.worlds.ui.common.InformationDialog
 import com.learn.worlds.ui.common.LoadingDialog
 import com.learn.worlds.ui.common.SomethingWentWrongDialog
 import com.learn.worlds.ui.theme.LearnWordsTheme
-import com.learn.worlds.utils.isScrollingUp
+import com.learn.worlds.utils.allItemsVisible
+import com.learn.worlds.utils.isScrolledToStart
+import com.learn.worlds.utils.isSmallScrolledUp
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.abs
 
 
@@ -116,7 +120,7 @@ fun ShowLearningWordsScreen(
 ) {
 
 
-    DoOnLifecycleEvent(lifecycleState = Lifecycle.Event.ON_CREATE){
+    DoOnLifecycleEvent(lifecycleState = Lifecycle.Event.ON_CREATE) {
         viewModel.handleEvent(ShowWordsEvent.UpdateData)
     }
 
@@ -133,7 +137,8 @@ fun ShowLearningWordsScreen(
                 onDismiss = {
                     viewModel.handleEvent(ShowWordsEvent.DismisErrorDialog)
                 },
-                message = it)
+                message = it
+            )
         }
 
 
@@ -282,7 +287,7 @@ fun LearningItemsScreen(
         if (learningItems.isNotEmpty()) {
             LearningList(
                 needRememberLastScrollState = true,
-                modifier = Modifier,
+                modifier = Modifier.animateContentSize(),
                 learningItems = learningItems,
                 onDeleteItemAction = onDeleteItemAction,
                 onShowedCardTips = onShowedCardTips,
@@ -311,17 +316,18 @@ fun NotAuthenticatedItemPreview() {
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.background
         ) {
-            NotAuthenticatedItem(onLoginAction = {})
+            LoginButton(onLoginAction = {})
         }
     }
 }
 
 @Composable
-fun NotAuthenticatedItem(
+fun LoginButton(
+    modifier: Modifier = Modifier,
     onLoginAction: () -> Unit
 ) {
 
-    Row(modifier = Modifier.fillMaxWidth()) {
+    Row(modifier = modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.weight(0.1f))
         Card(
             shape = MaterialTheme.shapes.medium,
@@ -644,7 +650,7 @@ private fun CardItem(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun LearningList(
     modifier: Modifier = Modifier,
@@ -657,47 +663,47 @@ private fun LearningList(
     isWasShowedLoginInformationDialog: Boolean = false,
     onLoginAction: () -> Unit,
     showDefaultNative: Boolean,
-    onShowAuthInfoDialog: ()->Unit
+    onShowAuthInfoDialog: () -> Unit
 ) {
     val listState = if (needRememberLastScrollState) rememberLazyListState() else LazyListState()
-    val scrollState = rememberScrollState()
 
-    Column {
 
-        if (!isAuthenticated && listState.isScrollingUp()) {
-            NotAuthenticatedItem(
-                onLoginAction = {
-                    if (isWasShowedLoginInformationDialog) {
-                        onLoginAction.invoke()
-                    } else {
-                        onShowAuthInfoDialog.invoke()
+
+    LazyColumn(
+        modifier = modifier,
+        state = listState,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            if (!isAuthenticated) {
+                LoginButton(
+                    modifier= modifier,
+                    onLoginAction = {
+                        if (isWasShowedLoginInformationDialog) {
+                            onLoginAction.invoke()
+                        } else {
+                            onShowAuthInfoDialog.invoke()
+                        }
                     }
-                }
-            )
-        }
-
-        LazyColumn(
-            state = listState,
-            modifier = modifier,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            items(learningItems, key = { itemID ->
-                itemID.timeStampUIID
-            }) { item ->
-                SwipeableCardItem(
-                    modifier = Modifier
-                        .animateItemPlacement(
-                            tween(durationMillis = 1000)
-                        ),
-                    learningItem = item,
-                    onShowedCardTips = onShowedCardTips,
-                    onDeleteItemAction = {
-                        onDeleteItemAction.invoke(it)
-                    },
-                    showDefaultNative = showDefaultNative,
-                    onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
                 )
             }
+        }
+        items(learningItems, key = { itemID ->
+            itemID.timeStampUIID
+        }) { item ->
+            SwipeableCardItem(
+                modifier = modifier
+                    .animateItemPlacement(
+                        tween(durationMillis = 1000)
+                    ),
+                learningItem = item,
+                onShowedCardTips = onShowedCardTips,
+                onDeleteItemAction = {
+                    onDeleteItemAction.invoke(it)
+                },
+                showDefaultNative = showDefaultNative,
+                onShowDialogChangeCardStatus = onShowDialogChangeCardStatus
+            )
         }
     }
 
