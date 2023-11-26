@@ -1,5 +1,7 @@
 package com.learn.worlds.data.model.base
 
+import timber.log.Timber
+
 enum class LearningStatus{
     LEARNING, LEARNED
 }

@@ -1,10 +1,16 @@
 package com.learn.worlds.utils
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
@@ -20,6 +26,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -37,33 +44,44 @@ fun stringRes(@StringRes resID: Int?): String {
     return if (resID != null) stringResource(resID) else ""
 }
 
-@Composable
-fun <T> Flow<T>.flowWithLifecycleStateInAndCollectAsState(
-    scope: CoroutineScope,
-    initial: T? = null,
-    context: CoroutineContext = EmptyCoroutineContext,
-): State<T?> {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    return remember(this, lifecycleOwner) {
-        this
-            .flowWithLifecycle(
-                lifecycleOwner.lifecycle,
-                Lifecycle.State.STARTED
-            ).stateIn(
-                scope = scope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = initial
-            )
-    }.collectAsState(context)
+fun LazyListState.allItemsVisible() = layoutInfo.visibleItemsInfo.size == layoutInfo.totalItemsCount
+
+
+fun LazyListState.isSmallScrolledUp(): Boolean?{
+    with(layoutInfo){
+        visibleItemsInfo.firstOrNull()?.let {
+            return  viewportStartOffset - it.offset > 0
+        }
+        return null
+    }
 }
 
-data class DeferrableJob(val dispather: CoroutineDispatcher, val delay: Long = 0L, val action: ()->Unit)
+fun LazyListState.isScrolledToEnd(): Boolean? {
+    with(layoutInfo){
+        visibleItemsInfo.lastOrNull()?.let {
+            return  viewportEndOffset - it.offset == it.size
+        }
+        return null
+    }
+}
 
+fun LazyListState.isScrolledToStart(): Boolean? {
+    with(layoutInfo){
+        visibleItemsInfo.firstOrNull()?.let {
+            return  viewportStartOffset - it.offset == 0
+        }
+        return null
+    }
+}
+
+
+
+data class DeferrableJob(val dispather: CoroutineDispatcher, val delay: Long = 0L, val action: ()->Unit)
 /**
  * An extension that allows you to start the list of deferred coroutines postponed
  * */
 @ExperimentalCoroutinesApi
-inline fun CoroutineScope.startDelayed(deferrableJobs: List<DeferrableJob>, delay: Long = 0){
+inline fun  CoroutineScope.startDelayed(deferrableJobs: List<DeferrableJob>, delay: Long = 0){
     launch(Dispatchers.Default) {
         delay(delay)
         deferrableJobs.forEach {

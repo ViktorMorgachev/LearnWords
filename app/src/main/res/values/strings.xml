@@ -5,8 +5,17 @@
     <string name="subscribe">Подписаться</string>
     <string name="demo">Демо</string>
 
+
+    <!--PreferencesScreen-->
+    <string name="prefs_title">Настройки</string>
+    <string name="prefs_group_learn_screen">Экран заучивания слова</string>
+    <string name="prefs_default_language">Язык по умолчанию</string>
+    <string name="prefs_timer_settings">Настройки таймера</string>
+    <string name="prefs_native">Родной</string>
+    <string name="prefs_foreign">Иностранный</string>
+    <string name="prefs_random">Случайно</string>
+
     <!--LearnScreen-->
-    <string name="learn">Учить</string>
     <string name="list_of_words">Список слов</string>
     <string name="filter_all">Все фразы</string>
     <string name="filter_learned">Выученые</string>
@@ -70,4 +79,11 @@
     <string name="error_auth_disabled_account">Аккаунт был отключён администратором</string>
     <string name="error_auth_try_later">Доступ к этой учетной записи был временно отключен из-за множества неудачных попыток входа в систему</string>
     <string name="failed_to_check_spell_text">Не удалось проверить текст на корректность</string>
+
+    <!--Drawer-->
+    <string name="settings">Настройки</string>
+    <string name="profile">Профиль</string>
+    <string name="synck">Синхронизировать</string>
+    <string name="logout">Выйти из аккаунта</string>
+
 </resources>

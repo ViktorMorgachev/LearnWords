@@ -31,6 +31,7 @@ data class AddWordsState(
     val cardWasAdded: MutableStateFlow<Boolean?> = MutableStateFlow(null),
     val speechFile: MutableStateFlow<String?> = MutableStateFlow(null),
     val imageFile: MutableStateFlow<String?> = MutableStateFlow(null),
+    val authState: MutableStateFlow<Boolean?> = MutableStateFlow(null),
     val playerIsPlaying: MutableStateFlow<Boolean?> = MutableStateFlow(null)
 ) {
     fun isCanToSave(): Boolean {
