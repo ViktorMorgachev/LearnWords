@@ -111,8 +111,7 @@ class AddLearningItemsViewModel @Inject constructor(
     private fun spellCheckForeign() {
         viewModelScope.launch {
             learnItemsUseCase.spellCheck(spellTextCheck = SpellTextCheck(requestText = uiState.foreignText.value.trimEnd()))
-                .catch {
-                    t->Timber.e(t)
+                .catch { t->Timber.e(t)
                     showError(Result.Error(errorType = ErrorType.FAILED_TO_CHECK_SPELL_TEXT))
                     resultCount++
                 }
@@ -128,8 +127,6 @@ class AddLearningItemsViewModel @Inject constructor(
         }
     }
 
-
-    // TODO после переделать на загрузку отдельно анимируя загрузку произношения и загрузку картинки
     private fun checkCountOfResultAndHideLoadingDialog(){
         if (resultCount >= 3){
             hideLoading()

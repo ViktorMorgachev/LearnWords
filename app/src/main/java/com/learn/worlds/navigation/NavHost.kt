@@ -1,5 +1,9 @@
 package com.learn.worlds.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -29,7 +33,9 @@ fun MyNavHost(
         navigation(startDestination = Screen.AuthScreen.route, route = "LOGIN") {
             composable(route = Screen.AuthScreen.route) {
                 AuthScreen(
-                    onSyncAction = { navHostController.navigateSingleTopTo(route = Screen.SynchronizationScreen.route) }, modifier = modifier,)
+                    onSyncAction = { navHostController.navigateSingleTopTo(route = Screen.SynchronizationScreen.route) },
+                    modifier = modifier,
+                )
             }
             composable(route = Screen.SynchronizationScreen.route) {
                 SynchronizationScreen(
@@ -40,13 +46,34 @@ fun MyNavHost(
             }
         }
         navigation(startDestination = Screen.WordsListScreen.route, route = "MAIN") {
-            composable(route = Screen.AddScreen.route) {
+            composable(
+                route = Screen.AddScreen.route,
+                enterTransition = {
+                    return@composable slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Start, tween(200)
+                    )
+                },
+                popExitTransition = {
+                    return@composable slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End, tween(200)
+                    )
+                },
+            ) {
                 AddWordsScreen(
                     navigateAfterSuccessWasAdded = { navHostController.navigateUp() },
                     modifier = modifier
                 )
             }
-            composable(route = Screen.WordsListScreen.route) {
+            composable(route = Screen.WordsListScreen.route,
+                enterTransition = {
+                    return@composable fadeIn(tween(500))
+                }, exitTransition = {
+                    return@composable fadeOut(tween(200))
+                }, popEnterTransition = {
+                    return@composable slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.End, tween(200)
+                    )
+                }) {
                 ShowLearningWordsScreen(
                     onNavigate = { screen -> navHostController.navigate(screen.route) },
                     modifier = modifier

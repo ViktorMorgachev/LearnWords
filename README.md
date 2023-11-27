@@ -6,9 +6,10 @@ A little app for learning new words
 
 ## Features
 
-- Light/dark mode suports
+- Light/dark mode supports
 - SignUp/SignIn to account
-- Full synshronization words bettwen devices
+- Full synchronization words between devices
+- Settings screen
 - Learning List with deleting & changing state  
 
 
@@ -26,7 +27,7 @@ I love coffee and wonderful girls. Actual Branch --develop
 
 
 ## 🛠 Technologies
-Kotlin, Jetpack Compose, Hilt, Single Activity, Firebase, Unit Testing database
+Kotlin, Jetpack Compose, Hilt, Ktor, Retrofit, Single Activity, Firebase, Unit Testing database
 
 ## 🛠 Architecture
 CLEAN ARCHITECTURE, MVI, MVVM, KISS, DRY

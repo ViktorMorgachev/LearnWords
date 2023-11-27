@@ -83,6 +83,7 @@
     <string name="profile">Профиль</string>
     <string name="synck">Обновить</string>
     <string name="logout">Выйти из аккаунта</string>
+    <string name="login">Авторизоваться</string>
 
     <!---->
 
