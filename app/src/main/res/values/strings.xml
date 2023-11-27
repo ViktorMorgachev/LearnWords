@@ -69,6 +69,7 @@
     <string name="ok">ОК</string>
     <string name="auth_error_tittle">Что-то пошло не так</string>
     <string name="toast_will_be_soon">Скоро данный функционал появится</string>
+    <string name="toast_need_to_auth_or_registration">Необходимо авторизоваться</string>
     <string name="syncronize">Синхронизировать</string>
 
     <!--Errors-->
@@ -83,6 +84,7 @@
     <string name="profile">Профиль</string>
     <string name="synck">Обновить</string>
     <string name="logout">Выйти из аккаунта</string>
+    <string name="login">Авторизоваться</string>
 
     <!---->
 

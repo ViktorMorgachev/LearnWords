@@ -2,6 +2,7 @@ package com.learn.worlds.ui.base.add_word
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -142,7 +143,8 @@ fun AddWordsUndependentScreen(
     onNativeDataChanged: (String) -> Unit,
     navigateAfterSuccessWasAdded: () -> Unit,
     onGetImageFile: (String?) -> Bitmap?,
-    uistate: AddWordsState = AddWordsState()
+    uistate: AddWordsState = AddWordsState(),
+    context: Context = LocalContext.current
 ) {
 
     val errorsState = uistate.error.collectAsStateWithLifecycle().value
@@ -230,13 +232,20 @@ fun AddWordsUndependentScreen(
                     .align(Alignment.BottomCenter),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                if (authState == true){
-                    OutlineButton(
-                        text = "Проверить",
-                        onClick = { onInitCardData.invoke() },
-                        enabled = uistate.isCanToGenerate()
-                    )
-                }
+                OutlineButton(
+                    text = "Проверить",
+                    onClick = {
+                        if (authState == true){
+                            onInitCardData.invoke()
+                        } else {
+                            Toast.makeText(
+                                context,
+                                R.string.toast_need_to_auth_or_registration,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } },
+                    enabled = uistate.isCanToGenerate()
+                )
                 OutlineButton(
                     text = "Сохранить",
                     onClick = { onSaveCardData.invoke() },

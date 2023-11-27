@@ -355,6 +355,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                                 if (it.result != null) {
                                     if (!it.result.exists()) {
                                         trySendBlocking(Result.Success(listOf()))
+                                        close()
                                     } else {
                                         var resultList = listOf<LearningItemAPI>()
                                         resultList = it.result.children.map { it.getValue<LearningItemAPI>() }.filterNotNull()

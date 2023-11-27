@@ -47,7 +47,10 @@ import com.learn.worlds.navigation.MyNavHost
 import com.learn.worlds.navigation.Screen
 import com.learn.worlds.ui.common.BottomBar
 import com.learn.worlds.utils.stringRes
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 object NavigationMediator {
@@ -93,7 +96,8 @@ fun LearnWordsApp(
     val scope = rememberCoroutineScope()
     val authState = viewModel.authState.collectAsStateWithLifecycle().value
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val shouldShowBottomBar = navBackStackEntry?.destination?.route in mainBottomsScreens.map { it.route }
+    val shouldShowBottomBar =
+        navBackStackEntry?.destination?.route in mainBottomsScreens.map { it.route }
     val items = mutableListOf(
         DrawerMenuItem(
             onClickAction = { navController.navigate(Screen.PreferencesScreen.route) },
@@ -101,8 +105,6 @@ fun LearnWordsApp(
             imageVector = Icons.Filled.Settings
         )
     )
-
-   // val willBeSoonText by remember { mutableStateOf(stringResource()) }
 
     if (authState) {
         items.addAll(
@@ -134,7 +136,7 @@ fun LearnWordsApp(
     var selectedItem by remember { mutableStateOf(items[0]) }
 
     NavigationMediator.init(
-        navCon = navController ,
+        navCon = navController,
         onCloseDrawer = {
             scope.launch { drawerState.close() }
         }, onOpenDrawer = {
@@ -163,21 +165,30 @@ fun LearnWordsApp(
                     )
                 }
                 Spacer(Modifier.weight(1f))
-                if (authState) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(NavigationDrawerItemDefaults.ItemPadding)
-                            .padding(vertical = 16.dp)
-                            .clickable { viewModel.logout() },
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.logout),
-                            style = TextStyle(textDecoration = TextDecoration.Underline),
-                            maxLines = 1,
-                        )
-                    }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(NavigationDrawerItemDefaults.ItemPadding)
+                        .padding(vertical = 16.dp)
+                        .clickable {
+                            scope.launch {
+                                NavigationMediator.close()
+                                delay(200)
+                                if (authState) {
+                                    viewModel.logout()
+                                } else {
+                                    navController.navigate(Screen.AuthScreen.route)
+                                }
+                            }
+                        },
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = if (authState) stringResource(R.string.logout) else stringResource(R.string.login),
+                        style = TextStyle(textDecoration = TextDecoration.Underline),
+                        maxLines = 1,
+                    )
+
                 }
 
 
