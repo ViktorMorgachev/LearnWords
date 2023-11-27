@@ -38,6 +38,8 @@ class AddLearningItemsViewModel @Inject constructor(
             authState = MutableStateFlow(authService.authState.value)
         )
 
+    var actualCorrectedText: String = ""
+
 
     private var resultCount : Int = 0
 
@@ -70,7 +72,7 @@ class AddLearningItemsViewModel @Inject constructor(
             is AddWordsEvent.OnSaveLearningItem -> saveData()
             AddWordsEvent.InitCardData ->{
                 if (uiState.actualSuggestionForeign.value != SpellingCheckState.None){
-                    initCardData(actualText = getActualCorrectedText().lowercase())
+                    initCardData(actualText = actualCorrectedText)
                 } else {
                     spellCheckForeign()
                 }
@@ -80,12 +82,6 @@ class AddLearningItemsViewModel @Inject constructor(
             AddWordsEvent.OnStopPlayer -> stopAudio()
             AddWordsEvent.OnPausePlayer -> audioPlayer.pause()
         }
-    }
-
-    private fun getActualCorrectedText(): String{
-        return if (uiState.actualSuggestionForeign.value is SpellingCheckState.Incorrect){
-            (uiState.actualSuggestionForeign.value as SpellingCheckState.Incorrect).suggestion
-        } else uiState.foreignText.value.trimEnd()
     }
 
     private fun playAudio() {
@@ -222,6 +218,7 @@ class AddLearningItemsViewModel @Inject constructor(
 
     private fun saveForeign(foreignData: String) {
         viewModelScope.launch {
+            actualCorrectedText = foreignData
             uiState.foreignText.emit(foreignData)
         }
     }
@@ -244,11 +241,13 @@ class AddLearningItemsViewModel @Inject constructor(
     private fun showForeignSuggestion(suggestion: String) {
         viewModelScope.launch {
             if (suggestion.isNotEmpty()){
+                actualCorrectedText = suggestion.lowercase()
                 uiState.actualSuggestionForeign.emit(SpellingCheckState.Incorrect(suggestion = suggestion))
             } else {
+                actualCorrectedText = uiState.foreignText.value.lowercase().trimEnd()
                 uiState.actualSuggestionForeign.emit(SpellingCheckState.Correct)
             }
-            initCardData(getActualCorrectedText().lowercase())
+            initCardData(actualCorrectedText)
         }
     }
 
