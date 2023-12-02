@@ -96,8 +96,7 @@ fun LearnWordsApp(
     val scope = rememberCoroutineScope()
     val authState = viewModel.authState.collectAsStateWithLifecycle().value
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val shouldShowBottomBar =
-        navBackStackEntry?.destination?.route in mainBottomsScreens.map { it.route }
+    val shouldShowBottomBar = navBackStackEntry?.destination?.route in mainBottomsScreens.map { it.route }
     val items = mutableListOf(
         DrawerMenuItem(
             onClickAction = { navController.navigate(Screen.PreferencesScreen.route) },
@@ -113,11 +112,7 @@ fun LearnWordsApp(
                     text = stringRes(R.string.profile),
                     imageVector = Icons.Filled.Home,
                     onClickAction = {
-                        Toast.makeText(
-                            context,
-                            R.string.toast_will_be_soon,
-                            Toast.LENGTH_LONG
-                        ).show()
+                        navController.navigate(Screen.ProfileScreen.route)
                     }
                 ),
                 DrawerMenuItem(

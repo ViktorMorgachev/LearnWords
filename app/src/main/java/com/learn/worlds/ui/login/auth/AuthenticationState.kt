@@ -9,6 +9,8 @@ sealed class AuthenticationEvent {
     object ToggleAuthenticationMode: AuthenticationEvent()
     class EmailChanged(val emailAddress: String): AuthenticationEvent()
     class PasswordChanged(val password: String): AuthenticationEvent()
+    class FirstNameChanged(val firstName: String): AuthenticationEvent()
+    class SecondNameChanged(val secondName: String): AuthenticationEvent()
     object Authenticate: AuthenticationEvent()
     object DialogDismiss: AuthenticationEvent()
 }
@@ -33,6 +35,8 @@ data class AuthenticationState(
     val authenticationMode: AuthenticationMode = AuthenticationMode.SIGN_IN,
     val email: String? = null,
     val password: String? = null,
+    val firstName: String? = null,
+    val secondName: String? = null,
     val passwordRequirements: List<PasswordRequirement> = emptyList(),
     val isLoading: Boolean = false,
     val dialogError: Result.Error? = null,
@@ -41,9 +45,7 @@ data class AuthenticationState(
 ){
     fun isFormValid(): Boolean {
         return password?.isNotEmpty() == true && email?.isNotEmpty() == true &&
-                (authenticationMode == AuthenticationMode.SIGN_IN
-                        || passwordRequirements.containsAll(
-                    PasswordRequirement.entries
-                ))
+                (authenticationMode == AuthenticationMode.SIGN_IN ||
+                        (passwordRequirements.containsAll(PasswordRequirement.entries) && firstName?.isNotEmpty() == true && secondName?.isNotEmpty() == true))
     }
 }

@@ -10,6 +10,7 @@ import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.remote.LearningItemAPI
+import com.learn.worlds.data.model.remote.ProfileAPI
 import com.learn.worlds.data.model.remote.request.ImageGenerationRequest
 import com.learn.worlds.data.model.remote.request.SpellingCheckRequest
 import com.learn.worlds.data.model.remote.request.TextToSpeechRequest
@@ -152,7 +153,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 close()
             } else {
                 val firebaseStorageRef = firebaseStorageService.getStorageRef(
-                    path = SpeechFileNameUtils.getPathForFirebaseStorage(textToSpeech.file)
+                    path =  SpeechFileNameUtils.getPathForFirebaseStorage(textToSpeech.file)
                 )
                 Timber.d("firebaseStorageRef: $firebaseStorageRef")
                 firebaseStorageRef.getFile(textToSpeech.file)
@@ -192,7 +193,8 @@ class LearningRemoteItemsDataSource @Inject constructor(
                 val result = apiService.getTextsSpeech(
                     textToSpeechResponseGson = TextToSpeechRequest(
                         text = textToSpeech.file.name.substringBefore(".").substringAfter("_"),
-                        language = languageApi.desc
+                        language = languageApi.desc,
+                        option = textToSpeech.genderType.name.uppercase()
                     )
                 )
                 emit(Result.Success(result))

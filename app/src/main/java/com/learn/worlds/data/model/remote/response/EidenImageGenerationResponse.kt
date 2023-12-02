@@ -2,6 +2,7 @@ package com.learn.worlds.data.model.remote.response
 
 
 import com.google.gson.annotations.SerializedName
+import timber.log.Timber
 
 class EidenImageGenerationResponse : ArrayList<EidenImageGenerationResponse.EidenImageGenerationResponseItem>(){
     data class EidenImageGenerationResponseItem(
@@ -23,6 +24,7 @@ class EidenImageGenerationResponse : ArrayList<EidenImageGenerationResponse.Eide
     }
 
     fun totalCost(): Double{
+        Timber.d("totalCost: ${this.mapNotNull { it.cost }.sum()}")
         return  this.map { it.cost }.filterNotNull().sum()
     }
 

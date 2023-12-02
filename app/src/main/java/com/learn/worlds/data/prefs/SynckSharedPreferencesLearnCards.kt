@@ -2,28 +2,36 @@ package com.learn.worlds.data.prefs
 
 import android.content.SharedPreferences
 import com.learn.worlds.data.model.base.FileNamesForFirebase
+import com.learn.worlds.data.model.base.LocalPreference
 import com.learn.worlds.data.model.remote.LearningItemAPI
+import com.learn.worlds.data.profilePrefs
 import com.learn.worlds.di.SynckPreferences
+import com.learn.worlds.ui.preferences.PreferenceData
+import com.learn.worlds.ui.preferences.PreferenceValue
+import com.learn.worlds.ui.preferences.Preferences
+import com.learn.worlds.ui.preferences.key
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import javax.inject.Inject
 
-class SynckSharedPreferences @Inject constructor(@SynckPreferences private val sharedPrefs: SharedPreferences) {
+class SynckSharedPreferencesLearnCards @Inject constructor(@SynckPreferences private val sharedPrefs: SharedPreferences) {
 
     enum class SynkPreferenceKeys(val desc: String) {
-        LearningItem(desc = "allLearningItemsForSynchronization"), Mp3Files(desc = "allMp3ItemsForSynchronization"), Images("allImagesForSynchronization")
+        LearningItem(desc = "allLearningItemsForSynchronization"),
+        Mp3Files(desc = "allMp3ItemsForSynchronization"),
+        Images("allImagesForSynchronization"),
     }
 
     // Плохой подход немного но при работе с firebase базой напрямую приходится жертвовать приницами SOLID
     /* В данном случае мы должны напрямую как есть при начилии интернета записать в базу напрямую (не забываем что тут firebase)
     * Предложение учитываются) */
 
-    // LearningItems
     fun addWordForSync(learningItemAPI: LearningItemAPI): Boolean {
         val actualListForSyncronization = getActualLearnItemsSynronization().toMutableList()
-        val itemForRemoving =
-            actualListForSyncronization.firstOrNull { it.timeStampUIID == learningItemAPI.timeStampUIID }
+        val itemForRemoving = actualListForSyncronization.firstOrNull { it.timeStampUIID == learningItemAPI.timeStampUIID }
         if (itemForRemoving != null) {
             actualListForSyncronization.remove(itemForRemoving)
         }

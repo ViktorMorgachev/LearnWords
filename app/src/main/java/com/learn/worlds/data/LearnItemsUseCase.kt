@@ -4,18 +4,22 @@ package com.learn.worlds.data
 import android.content.Context
 import com.learn.worlds.data.mappers.toLearningItem
 import com.learn.worlds.data.mappers.toLearningItemAPI
+import com.learn.worlds.data.model.base.GenderType
 import com.learn.worlds.data.model.base.ImageGeneration
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.base.TextToSpeech
 import com.learn.worlds.data.model.remote.CommonLanguage
 import com.learn.worlds.data.model.remote.LearningItemAPI
-import com.learn.worlds.data.prefs.SynckSharedPreferences
+import com.learn.worlds.data.prefs.SynckSharedPreferencesLearnCards
+import com.learn.worlds.data.prefs.SynckSharedPreferencesPreferences
 import com.learn.worlds.data.remote.ai.SpeechFileNameUtils
 import com.learn.worlds.data.repository.LearningItemsRepository
 import com.learn.worlds.data.repository.LearningSynchronizationRepository
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.servises.FirebaseAuthService
+import com.learn.worlds.ui.preferences.PreferenceData
+import com.learn.worlds.ui.preferences.PreferenceValue
 import com.learn.worlds.utils.ErrorType
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.isImage
@@ -26,7 +30,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -38,7 +41,8 @@ class LearnItemsUseCase @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
     @ApplicationContext private val context: Context,
     private val firebaseAuthService: FirebaseAuthService,
-    private val synkPreferences: SynckSharedPreferences,
+    private val synkLearnCardPreferences: SynckSharedPreferencesLearnCards,
+    private val synkPrefsPrefs: SynckSharedPreferencesPreferences,
     private val learningItemsRepository: LearningItemsRepository,
     private val learningSynchronizationRepository: LearningSynchronizationRepository
 ) {
@@ -81,23 +85,23 @@ class LearnItemsUseCase @Inject constructor(
         }
     }
 
-    suspend fun getImage(text: String) = flow<Result<String>> {
+    suspend fun getImage(text: String) = flow<Result<ImageGeneration>> {
         val imageName = "${text}.jpg"
         var imageGeneration = ImageGeneration(file = File(context.cacheDir, imageName))
         val file = imageGeneration.file
 
         Timber.d("cardGeneration getImage: getLocalFile result: ${file.isImage()}")
         if (file.isImage()) {
-            emit(Result.Success(imageName))
+            emit(Result.Success(imageGeneration))
         } else {
             learningItemsRepository.getImageFromFirebase(imageGeneration).collectLatest {}
             Timber.d("cardGeneration getImage: getImageFromFirebase  result: ${file.isImage()}")
             if (file.isImage()) {
-                emit(Result.Success(imageName))
+                emit(Result.Success(imageGeneration))
             }
             learningItemsRepository.getImageUrlFromApi(imageGeneration).collectLatest {
                 if (it is Result.Success) {
-                    imageGeneration = imageGeneration.copy(actualFileUrl = it.data.actualFileUrl)
+                    imageGeneration = it.data.copy(actualFileUrl = it.data.actualFileUrl)
                 }
             }
             Timber.d("cardGeneration getImage: getImageUrlFromApi  result: ${imageGeneration.actualFileUrl}")
@@ -110,10 +114,10 @@ class LearnItemsUseCase @Inject constructor(
                 learningItemsRepository.uploadImageToFirebase(imageGeneration).collectLatest {
                     Timber.d("cardGeneration getImage: uploadImageToFirebase  result: ${it::class.java}")
                     if (it is Result.Error) {
-                        synkPreferences.addImageNameForSync(imageName)
+                        synkLearnCardPreferences.addImageNameForSync(imageName)
                     }
                 }
-                emit(Result.Success(imageName))
+                emit(Result.Success(imageGeneration))
             } else {
                 emit(Result.Complete)
             }
@@ -122,25 +126,36 @@ class LearnItemsUseCase @Inject constructor(
     }.flowOn(dispatcher)
 
 
-    suspend fun getTextSpeech(text: String, language: CommonLanguage) = flow<Result<String>> {
-        val mp3FileName =
-            SpeechFileNameUtils.getFileNameForFirebaseStorage(language = language, name = text)
-        var textToSpeech = TextToSpeech(file = File(context.cacheDir, mp3FileName))
+    private fun getSpeechGenderVariant(): GenderType?{
+        val defaultPreferenceVariant = synkPrefsPrefs.getPreferenceSelectedVariant(PreferenceData.DefaultSpeechSoundGender.key) ?: PreferenceValue.GenderSpeechFemale
+        return if (defaultPreferenceVariant == PreferenceValue.GenderSpeechMale){
+            GenderType.Male
+        } else if (defaultPreferenceVariant == PreferenceValue.GenderSpeechFemale){
+            GenderType.Female
+        } else null
+    }
+
+    suspend fun getTextSpeech(text: String, language: CommonLanguage) = flow<Result<TextToSpeech>> {
+        val speechGender = getSpeechGenderVariant()
+        if (speechGender == null){
+            emit(Result.Error())
+        }
+        val mp3FileName = SpeechFileNameUtils.getFileNameForFirebaseStorage(language = language, name = text, gender = speechGender!!.name.lowercase())
+        var textToSpeech = TextToSpeech(speechFileName = mp3FileName, file = File(context.cacheDir, mp3FileName), genderType = speechGender)
         val file = textToSpeech.file
         Timber.d("cardGeneration getTextSpeech: getLocalFile result: ${file.isMp3File()}")
         if (file.exists() && file.isMp3File()) {
-            emit(Result.Success(mp3FileName))
+            emit(Result.Success(textToSpeech))
         } else {
             learningItemsRepository.getTextsSpeechFromFirebase(textToSpeech).collectLatest {}
             Timber.d("cardGeneration getTextSpeech: getTextsSpeechFromFirebase  result: ${file.isMp3File()}")
             if (file.isMp3File()) {
-                emit(Result.Success(mp3FileName))
+                emit(Result.Success(textToSpeech))
                 return@flow
             }
-
             learningItemsRepository.getTextsSpeechUrlFromApi(textToSpeech).collectLatest {
                 if (it is Result.Success) {
-                    textToSpeech = textToSpeech.copy(actualFileUrl = it.data.actualFileUrl)
+                    textToSpeech = it.data.copy(actualFileUrl = it.data.actualFileUrl)
                 }
             }
             Timber.d("cardGeneration getTextSpeech: getTextsSpeechUrlFromApi  result: ${textToSpeech.actualFileUrl}")
@@ -153,10 +168,10 @@ class LearnItemsUseCase @Inject constructor(
                 learningItemsRepository.uploadTextSpeechToFirebase(textToSpeech).collectLatest {
                     Timber.d("cardGeneration getTextSpeech: uploadTextSpeechToFirebase  result: ${it::class.java}")
                     if (it is Result.Error) {
-                        synkPreferences.addMp3FileNameForSync(mp3FileName)
+                        synkLearnCardPreferences.addMp3FileNameForSync(mp3FileName)
                     }
                 }
-                emit(Result.Success(mp3FileName))
+                emit(Result.Success(textToSpeech))
             } else {
                 emit(Result.Complete)
             }
@@ -164,161 +179,30 @@ class LearnItemsUseCase @Inject constructor(
         }
     }.flowOn(dispatcher)
 
-    /*1. Пишем данные из преференсов как есть заменяя данные в базе удалённой
-    * 2. Чистим локальную базу, учитывая флаг deletedStatus
-    * 3. После уже синхронизируем как обычно*/
-    suspend fun synckItems() = flow<Result<List<LearningItem>>> {
-        val jobsForRunningAndForget = mutableListOf<Deferred<Unit>>()
-        val itemsForRemoving = synkPreferences.getActualLearnItemsSynronization()
-        var resultMarkedItems: Result<Nothing>? = null
-
-        if (itemsForRemoving.isNotEmpty()) {
-            learningSynchronizationRepository.replaceRemoteItems(itemsForRemoving).collectLatest {
-                resultMarkedItems = it
-            }
-            if (resultMarkedItems == null || resultMarkedItems is Result.Error) {
-                emit(Result.Error())
-                return@flow
-            }
-        }
-        synkPreferences.removeAllItemsIdsForSynshronization()
-
-        jobsForRunningAndForget.add(scope.async(start = CoroutineStart.LAZY) {
-            val allMp3FileNames = synkPreferences.getActualMp3NamesItemsSynronization()
-            if (allMp3FileNames.data.isNotEmpty()) {
-                Timber.d("Synchronization: allMp3Files")
-                learningSynchronizationRepository.uploadAllMp3Files(allMp3FileNames).collectLatest {}
-            }
-        })
-
-        jobsForRunningAndForget.add(scope.async(start = CoroutineStart.LAZY){
-            val allImagesForFirebase = synkPreferences.getActualImageNamesItemsSynronization()
-            if (allImagesForFirebase.data.isNotEmpty()) {
-                Timber.d("Synchronization: allImages")
-                learningSynchronizationRepository.uploadImageFiles(allImagesForFirebase).collectLatest {}
-            }
-        })
-
-        jobsForRunningAndForget.add(scope.async(start = CoroutineStart.LAZY){
-            var itemsRemovedIds = listOf<Long>()
-            Timber.d("Synchronization: forRemovingCards start")
-            learningSynchronizationRepository.fetchItemsIdsForRemoving().collectLatest {
-                if (it is Result.Success && it.data.isNotEmpty()) {
-                    itemsRemovedIds = it.data
-                }
-            }
-            if (itemsRemovedIds.isNotEmpty()) {
-                learningItemsRepository.removeItemsFromLocalDatabase(itemsRemovedIds).collect {}
-            }
-            Timber.d("Synchronization: forRemovingCards done")
-        })
-        jobsForRunningAndForget.forEach { it.start() }
-
-        val remoteCardsJob = scope.async(start = CoroutineStart.LAZY){
-            var result: List<LearningItem> = listOf()
-            learningItemsRepository.fetchDataFromNetwork(needIgnoreRemovingItems = true).collectLatest {
-                if (it is Result.Success) {
-                    result =     it.data
-                } else {
-                    result =  listOf()
-                }
-            }
-            result
-        }
-
-        val localCardsJob = scope.async(start = CoroutineStart.LAZY){
-            var result: List<LearningItem> = listOf()
-            learningItemsRepository.getDataFromDatabase().collectLatest {
-                result =   it
-            }
-            result
-        }
-        remoteCardsJob.start()
-        localCardsJob.start()
-
-        val localData = localCardsJob.await()
-        val remoteData = remoteCardsJob.await()
-
-        val dataForNetwork: MutableList<LearningItem> =   mutableListOf()
-        val dataForLocal: MutableList<LearningItem> = mutableListOf()
-
-        localData.plus(remoteData).forEach {
-            if (!localData.contains(it)) {
-                dataForLocal.add(it)
-            }
-            if (!remoteData.contains(it)) {
-                dataForNetwork.add(it)
-            }
-        }
-        Timber.d(
-            "dataForRemote: ${dataForNetwork.joinToString(", ")} \n" +
-                    "dataForLocal: ${dataForLocal.joinToString(", ")}  "
-        )
-
-        val resultToWriteLocalDatabase = scope.async(){
-            var result: Result<Nothing> = Result.Loading
-            Timber.d("Synchronization: writeListToLocalDatabase")
-            if (dataForLocal.isNotEmpty()) {
-                learningItemsRepository.writeListToLocalDatabase(dataForLocal).collect {
-                    result = it
-                }
-            }
-            result
-        }
-
-        val resultToWriteRemoteDatabase = scope.async(){
-            var result: Result<Nothing> = Result.Loading
-            Timber.d("Synchronization: writeListToRemoteDatabase")
-            if (dataForNetwork.isNotEmpty()) {
-                learningItemsRepository.writeListToRemoteDatabase(dataForNetwork).collect {
-                    result = it
-                }
-            }
-            result
-        }
-
-
-        val synckResult = mutableListOf<Result<Nothing>>(
-            resultToWriteLocalDatabase.await(),
-            resultToWriteRemoteDatabase.await())
-
-
-        if (synckResult.any { it is Result.Error }) {
-            emit(synckResult.first { it is Result.Error })
-        } else {
-            if (synckResult.any { it is Result.Complete }) {
-                emit(Result.Success(listOf()))
-            } else {
-                emit(Result.Complete)
-            }
-        }
-    }
-
     suspend fun deleteWordItem(learningItem: LearningItem) = flow<Result<Nothing>> {
         val itemForSynshronization = learningItem.toLearningItemAPI().copy(deletedStatus = true)
         learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
         val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
         if (result is Result.Error) {
-            synkPreferences.addWordForSync(itemForSynshronization)
+            synkLearnCardPreferences.addWordForSync(itemForSynshronization)
         }
         emit(Result.Complete)
     }
 
     private fun getActualItemForSynk(learningItem: LearningItem): LearningItemAPI {
-        var itemForSynshronization = synkPreferences.getActualLearnItemsSynronization()
+        var itemForSynshronization = synkLearnCardPreferences.getActualLearnItemsSynronization()
             .firstOrNull { it.timeStampUIID == learningItem.timeStampUIID }
         return itemForSynshronization ?: learningItem.toLearningItemAPI()
     }
 
     suspend fun changeItemsStatus(learningItem: LearningItem) = flow<Result<Long>> {
-        var itemForSynshronization =
-            getActualItemForSynk(learningItem).copy(learningStatus = learningItem.learningStatus)
+        var itemForSynshronization = getActualItemForSynk(learningItem).copy(learningStatus = learningItem.learningStatus)
         learningItemsRepository.removeItemFromLocalDatabase(learningItem.timeStampUIID).collect {}
         learningItemsRepository.writeToLocalDatabase(itemForSynshronization.toLearningItem())
             .collect {}
         val result = learningSynchronizationRepository.replaceRemoteItem(itemForSynshronization)
         if (result is Result.Error) {
-            synkPreferences.addWordForSync(itemForSynshronization)
+            synkLearnCardPreferences.addWordForSync(itemForSynshronization)
         }
         emit(Result.Success(learningItem.timeStampUIID))
     }

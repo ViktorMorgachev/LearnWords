@@ -2,6 +2,7 @@ package com.learn.worlds.data.model.remote.response
 
 
 import com.google.gson.annotations.SerializedName
+import timber.log.Timber
 
 data class EidenSpellCheckResponse(
     @SerializedName("cohere")
@@ -204,7 +205,8 @@ data class EidenSpellCheckResponse(
     }
 
     fun totalCost(): Double{
-        return  (microsoft?.cost ?: 0.0) + (openai?.cost ?: 0.0)
+        Timber.d("totalCost: ${microsoft?.cost}:${openai?.cost}:${nlpcloud?.cost}")
+        return  (microsoft?.cost ?: 0.0) + (openai?.cost ?: 0.0) + (nlpcloud?.cost ?: 0.0)
     }
 
     fun actualSuggestion() : String?{

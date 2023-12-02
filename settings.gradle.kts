@@ -17,10 +17,9 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
+            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")  }
     }
 }
 
 rootProject.name = "LearnWords"
 include(":app")
- 

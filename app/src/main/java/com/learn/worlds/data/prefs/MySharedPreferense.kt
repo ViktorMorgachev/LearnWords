@@ -26,36 +26,7 @@ class MySharedPreferences @Inject constructor(@MainPreferences private val share
             sharedPrefs.edit().putString("savedFilteringType", value).apply()
         }
 
-    fun savePreference(preferences: Preferences) {
-        Timber.d("savePreference: $preferences")
-        when (preferences) {
-            is Preferences.CheckeablePreference -> {}
-            is Preferences.SelecteablePreference -> {
-                sharedPrefs.edit().putString(preferences.key, preferences.selectedVariant.key()).apply()
-            }
 
-            is Preferences.SliderPreference -> {
-                sharedPrefs.edit().putString(preferences.key, preferences.actualValue.toString())
-                    .apply()
-            }
-        }
-    }
-
-    fun getPreferenceActualVariant(key: String): PreferenceValue? {
-        sharedPrefs.getString(key, null)?.let {
-            return when (it) {
-                PreferenceValue.Foreign.key() -> PreferenceValue.Foreign
-                PreferenceValue.Native.key() -> PreferenceValue.Native
-                PreferenceValue.Random.key() -> PreferenceValue.Random
-                else -> null
-            }
-        }
-        return null
-    }
-
-    fun getPreferenceActualValue(key: String): String? {
-        return sharedPrefs.getString(key, null)
-    }
 
 }
 

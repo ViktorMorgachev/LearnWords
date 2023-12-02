@@ -2,6 +2,8 @@ package com.learn.worlds.servises
 
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.learn.worlds.data.model.base.Profile
+import com.learn.worlds.data.prefs.SynckSharedPreferencesProfile
 import com.learn.worlds.utils.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,16 +18,19 @@ import kotlin.coroutines.resume
 
 
 @Singleton
-class FirebaseAuthService @Inject constructor(
-    private val firebaseAuthErrorWrapper: FirebaseAuthErrorWrapper
+class  FirebaseAuthService @Inject constructor(
+    private val firebaseAuthErrorWrapper: FirebaseAuthErrorWrapper,
+    private val synckPrefsProfile: SynckSharedPreferencesProfile
 ) {
 
     private val scope = CoroutineScope(Dispatchers.IO)
     private val auth by lazy { Firebase.auth }
 
+
     init {
         auth.setLanguageCode("ru")
     }
+
 
     private val _authState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val authState = _authState.asStateFlow()
@@ -36,6 +41,14 @@ class FirebaseAuthService @Inject constructor(
         }
     }
 
+    fun getLocalProfile(): Profile? {
+        if (isAuthentificated()) {
+            return synckPrefsProfile.getProfile()
+        } else {
+            return null
+        }
+    }
+
     fun isAuthentificated(): Boolean {
         return getUserUUID() != null
     }
@@ -43,6 +56,11 @@ class FirebaseAuthService @Inject constructor(
     fun getUserUUID(): String? {
         return auth.currentUser?.uid
     }
+
+    fun getUserEmail(): String? {
+        return auth.currentUser?.email
+    }
+
 
     suspend fun signIn(password: String, email: String): Result<Any> {
         return suspendCancellableCoroutine { continuation ->
@@ -99,6 +117,8 @@ class FirebaseAuthService @Inject constructor(
                 }
         }
     }
+
+
 
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.learn.worlds.ui.preferences.PreferenceValue
@@ -28,6 +29,8 @@ fun PreferenceSpinner(
     modifier: Modifier = Modifier,
     items: List<PreferenceValue>,
     selectedItem: PreferenceValue,
+    textColor: Color = MaterialTheme.colorScheme.onBackground,
+    containerColor: Color = MaterialTheme.colorScheme.background,
     onItemSelected: (PreferenceValue) -> Unit
 ) {
 
@@ -37,7 +40,7 @@ fun PreferenceSpinner(
         Row(Modifier.clickable {
             expanded = !expanded
         }) {
-            Text(text = stringResource(selectedItem.stringRes!!))
+            Text(text = stringResource(selectedItem.stringRes!!), color = textColor)
             Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = null)
         }
         DropdownMenu(
@@ -48,7 +51,7 @@ fun PreferenceSpinner(
             Card(
                 modifier = Modifier.padding(4.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = containerColor
                 )
             ) {
                 items.forEach {
@@ -57,7 +60,7 @@ fun PreferenceSpinner(
                         .clickable {
                             expanded = !expanded
                             onItemSelected.invoke(it)
-                        }, text =  stringResource(it.stringRes)
+                        }, text =  stringResource(it.stringRes),  color = textColor
                     )
                 }
             }

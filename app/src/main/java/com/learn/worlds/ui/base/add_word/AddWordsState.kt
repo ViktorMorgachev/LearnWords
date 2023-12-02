@@ -8,6 +8,7 @@ sealed class AddWordsEvent {
     class OnNativeDataChanged(val nativeData: String) : AddWordsEvent()
     class OnForeignDataChanged(val foreignData: String) : AddWordsEvent()
     object OnSaveLearningItem : AddWordsEvent()
+    object CheckPayments : AddWordsEvent()
     object OnErrorDismissed : AddWordsEvent()
     object InitCardData : AddWordsEvent()
     object OnPlayAudio : AddWordsEvent()
@@ -32,7 +33,9 @@ data class AddWordsState(
     val speechFile: MutableStateFlow<String?> = MutableStateFlow(null),
     val imageFile: MutableStateFlow<String?> = MutableStateFlow(null),
     val authState: MutableStateFlow<Boolean?> = MutableStateFlow(null),
-    val playerIsPlaying: MutableStateFlow<Boolean?> = MutableStateFlow(null)
+    val canUseAICardGeneration: MutableStateFlow<Boolean?> = MutableStateFlow(null),
+    val playerIsPlaying: MutableStateFlow<Boolean?> = MutableStateFlow(null),
+    var spendedDollars: Double = 0.0
 ) {
     fun isCanToSave(): Boolean {
         return foreignText.value.isNotEmpty() && nativeText.value.isNotEmpty()

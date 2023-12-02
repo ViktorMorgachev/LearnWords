@@ -25,5 +25,8 @@ sealed class Screen(val route: String, val bottomItem: BottomItem? = null, val s
 
     object PreferencesScreen: Screen(route = "screen_preferences")
 
+    object ProfileScreenEditing: Screen(route = "screen_profile_editing")
+
     object  SynchronizationScreen: Screen(route = "sync_auth")
+    object  ProfileScreen: Screen(route = "screen_profile")
 }
