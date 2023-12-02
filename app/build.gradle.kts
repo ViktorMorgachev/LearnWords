@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.compose.icons.extended)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.ui.constraint.layout)
     debugImplementation(libs.compose.ui.tooling)
 
 

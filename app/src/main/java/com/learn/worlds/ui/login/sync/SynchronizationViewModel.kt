@@ -3,6 +3,7 @@ package com.learn.worlds.ui.login.sync
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.LearnItemsUseCase
+import com.learn.worlds.data.SyncItemsUseCase
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,12 +20,12 @@ import javax.inject.Inject
 @HiltViewModel
 class SynchronizationViewModel @Inject constructor(
     @IoDispatcher dispatcher: CoroutineDispatcher,
-    private val learningItemsUseCase: LearnItemsUseCase,
+    private val syncItemsUseCase: SyncItemsUseCase,
 ) : ViewModel() {
     val uiState = MutableStateFlow(SynchronizationState())
     init {
         viewModelScope.launch {
-            learningItemsUseCase.synckItems().catch {
+            syncItemsUseCase.synckItems().catch {
                 if (it == CancellationException()) {
                     uiState.value = uiState.value.copy(
                         cancelledByUser = true

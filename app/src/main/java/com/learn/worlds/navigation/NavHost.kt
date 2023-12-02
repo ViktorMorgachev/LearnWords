@@ -15,6 +15,9 @@ import com.learn.worlds.ui.base.show_words.ShowLearningWordsScreen
 import com.learn.worlds.ui.login.auth.AuthScreen
 import com.learn.worlds.ui.login.sync.SynchronizationScreen
 import com.learn.worlds.ui.preferences.PreferencesScreenBase
+import com.learn.worlds.ui.profile.ProfileScreenBase
+import com.learn.worlds.ui.profile.ProfileScreenUI
+import com.learn.worlds.ui.profile.edit.ProfileEditScreen
 
 fun NavHostController.navigateSingleTopTo(route: String) =
     this.navigate(route) { launchSingleTop = true }
@@ -30,6 +33,25 @@ fun MyNavHost(
         startDestination = "MAIN",
         route = "ROOT"
     ) {
+        navigation(startDestination = Screen.WordsListScreen.route, route = "DRAWER") {
+            composable(route = Screen.ProfileScreen.route) {
+                ProfileScreenUI(
+                    modifier = modifier,
+                    navigateToFillProfile = {
+                        navHostController.navigate(Screen.ProfileScreenEditing.route)
+                    },
+                    navigateToBack = {
+                        navHostController.popBackStack()
+                    }
+                )
+            }
+            composable(route = Screen.PreferencesScreen.route) {
+                PreferencesScreenBase(modifier = modifier)
+            }
+            composable(route = Screen.ProfileScreenEditing.route) {
+                ProfileEditScreen(modifier = modifier)
+            }
+        }
         navigation(startDestination = Screen.AuthScreen.route, route = "LOGIN") {
             composable(route = Screen.AuthScreen.route) {
                 AuthScreen(
@@ -78,9 +100,6 @@ fun MyNavHost(
                     onNavigate = { screen -> navHostController.navigate(screen.route) },
                     modifier = modifier
                 )
-            }
-            composable(route = Screen.PreferencesScreen.route) {
-                PreferencesScreenBase(modifier = modifier)
             }
         }
     }

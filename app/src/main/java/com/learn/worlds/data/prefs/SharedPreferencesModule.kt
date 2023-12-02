@@ -33,7 +33,7 @@ object PreferenceModule {
     @SynckPreferences
     @Singleton
     fun provideSynckSharedPreference(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("learnWords_preferences_synck", Context.MODE_PRIVATE)
+        return context.getSharedPreferences("learnWords_preferences_sync", Context.MODE_PRIVATE)
     }
 
 

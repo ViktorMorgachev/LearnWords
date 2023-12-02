@@ -110,6 +110,8 @@ fun AuthScreen(
                     authenticationMode = authenticationState.authenticationMode,
                     email = authenticationState.email,
                     password = authenticationState.password,
+                    firstName = authenticationState.firstName,
+                    secondName = authenticationState.secondName,
                     handleEvent = { viewModel.handleEvent(it) },
                     passwordRequirements = authenticationState.passwordRequirements,
                     enableAuthentication = authenticationState.isFormValid()
@@ -152,6 +154,8 @@ fun AuthenticationForm(
     authenticationMode: AuthenticationMode,
     email: String?,
     password: String?,
+    firstName: String?,
+    secondName: String?,
     handleEvent: (event: AuthenticationEvent) -> Unit,
     passwordRequirements: List<PasswordRequirement>,
     enableAuthentication: Boolean
@@ -191,7 +195,15 @@ fun AuthenticationForm(
                     onDoneClicked = { handleEvent.invoke(AuthenticationEvent.Authenticate) }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-
+                AnimatedVisibility(
+                    visible = authenticationMode == AuthenticationMode.SIGN_UP,
+                    enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(),
+                ) {
+                   Column {
+                       // TODO тут отобразить поля ввода имя и фамилии
+                   }
+                }
                 AnimatedVisibility(
                     visible = authenticationMode == AuthenticationMode.SIGN_UP,
                     enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(),

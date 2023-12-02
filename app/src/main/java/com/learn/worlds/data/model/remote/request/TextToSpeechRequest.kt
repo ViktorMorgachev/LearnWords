@@ -10,7 +10,7 @@ data class TextToSpeechRequest(
     @SerializedName("language")
     val language: String,
     @SerializedName("option")
-    val option: String = "FEMALE",
+    val option: String,
     @SerializedName("providers")
     val providers: String = Provider.IBM.name.lowercase(),
     @SerializedName("audio_format")

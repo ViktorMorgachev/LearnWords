@@ -11,9 +11,18 @@
     <string name="prefs_group_learn_screen">Экран заучивания слова</string>
     <string name="prefs_default_language">Язык по умолчанию</string>
     <string name="prefs_timer_settings">Настройки таймера</string>
+    <string name="prefs_speech_gender">Произношение</string>
     <string name="prefs_native">Родной</string>
+    <string name="prefs_others">Прочее</string>
     <string name="prefs_foreign">Иностранный</string>
     <string name="prefs_random">Случайно</string>
+    <string name="prefs_speech_gender_female">Женский</string>
+    <string name="prefs_speech_gender_male">Мужской</string>
+    <string name="prefs_speech_gender_other">Другой</string>
+    <string name="prefs_profile_gender_female">Женщина</string>
+    <string name="prefs_profile_gender_male">Мужчина</string>
+    <string name="prefs_profile_gender_other">Другое</string>
+    <string name="prefs_profile_gender_hide">Не отображать</string>
 
     <!--LearnScreen-->
     <string name="list_of_words">Список слов</string>
@@ -29,6 +38,16 @@
     <string name="subsribe_title">Купите кофе разработчику и \n пользуйтесь  полной версией на здоровье</string>
     <string name="by_coffee">Купить кофе</string>
 
+
+    <!--Profile Screen-->
+    <string name="gender">Пол</string>
+    <string name="gender_female">Женщина</string>
+    <string name="gender_male">Мужщина</string>
+    <string name="gender_other">Другое</string>
+    <string name="gender_hide">Скрыто</string>
+    <string name="balance">Баланс</string>
+    <string name="information_fill_profile">Необходимо добавить основную информацию профиля</string>
+
     <!--Descriptions-->
     <string name="desc_action_filter_list">Отфильтровать список</string>
     <string name="desc_action_sort_list">Отсортировать список</string>
@@ -39,13 +58,19 @@
 
     <!--Dialogs -->
     <string name="error_someshing_went_wrong">Что-то пошло не так</string>
-    <string name="well">Отлично</string>
-    <string name="next">Далее</string>
-    <string name="yes">Да</string>
     <string name="account_was_sign_up">Успешно зарегистрировались в системе</string>
     <string name="account_was_sig_in">Успешно прошли аутентификацию</string>
     <string name="nothing_to_sync">Нечего синхронизировать</string>
     <string name="change_status_learned">Изменить статус на выученый?</string>
+
+
+    <!--Base -->
+    <string name="well">Отлично</string>
+    <string name="next">Далее</string>
+    <string name="yes">Да</string>
+    <string name="save">Сохранить</string>
+    <string name="fill">Заполнить</string>
+
 
     <!--Auth Screen-->
     <string name="password_requirement_characters">Не менее 8 символов</string>
@@ -63,13 +88,18 @@
     <string name="error_invalid_login">Проверьте почту или пароль</string>
     <string name="action_already_have_account">У вас уже есть учетная запись?</string>
 
+    <!--Profile Edit Screen-->
+    <string name="profile_edit_input_first_name">Ваше имя</string>
+    <string name="profile_edit_input_second_name">Ваша фамилия</string>
+
     <!--Common-->
     <string name="try_again">Повторить запрос</string>
     <string name="close">Закрыть</string>
     <string name="ok">ОК</string>
     <string name="auth_error_tittle">Что-то пошло не так</string>
     <string name="toast_will_be_soon">Скоро данный функционал появится</string>
-    <string name="toast_need_to_auth_or_registration">Необходимо авторизоваться</string>
+    <string name="toast_need_to_auth_or_registration_and_pay">Необходимо авторизоваться и пополнить баланс</string>
+    <string name="toast_balance_limit_need_to_pay">Закончился баланс, необходимо пополнить</string>
     <string name="syncronize">Синхронизировать</string>
 
     <!--Errors-->

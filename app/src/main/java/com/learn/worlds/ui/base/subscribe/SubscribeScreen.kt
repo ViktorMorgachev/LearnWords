@@ -63,10 +63,6 @@ fun SubscribeScreen(modifier: Modifier = Modifier, onByCoffeeAction: ()->Unit, v
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(text = stringRes(R.string.by_coffee))
-                        Icon(
-                            painter = painterResource(id = R.drawable.coffee),
-                            contentDescription = null // decorative element
-                        )
                     }
                 }
 

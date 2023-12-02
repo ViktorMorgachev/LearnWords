@@ -4,11 +4,14 @@ package com.learn.worlds.ui.base.show_words
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.LearnItemsUseCase
+import com.learn.worlds.data.SyncItemsUseCase
 import com.learn.worlds.data.model.base.FilteringType
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.LearningStatus
 import com.learn.worlds.data.model.base.SortingType
 import com.learn.worlds.data.prefs.MySharedPreferences
+import com.learn.worlds.data.prefs.SynckSharedPreferencesLearnCards
+import com.learn.worlds.data.prefs.SynckSharedPreferencesPreferences
 import com.learn.worlds.data.prefs.UISharedPreferences
 import com.learn.worlds.servises.FirebaseAuthService
 import com.learn.worlds.ui.preferences.PreferenceData
@@ -29,14 +32,16 @@ import javax.inject.Inject
 class ShowLearningItemsViewModel @Inject constructor(
     private val learnItemsUseCase: LearnItemsUseCase,
     private val preferences: MySharedPreferences,
+    private val synckPrefsPreferences: SynckSharedPreferencesPreferences,
     private val uiPreferences: UISharedPreferences,
+    private val syncItemsUseCase: SyncItemsUseCase,
     private val firebaseAuthService: FirebaseAuthService
 ) : ViewModel() {
 
     private val _uiState: MutableStateFlow<ShowWordsState> = MutableStateFlow(ShowWordsState(
         isShowedLoginInfoDialogForUser = uiPreferences.isShowedLoginInfo,
         isAuthentificated = firebaseAuthService.isAuthentificated(),
-        defaultNativeList = preferences.getPreferenceActualVariant(PreferenceData.DefaultLanguageOfList.key) == PreferenceValue.Native))
+        defaultNativeList = synckPrefsPreferences.getPreferenceSelectedVariant(PreferenceData.DefaultLanguageOfList.key) == PreferenceValue.Native))
     val uiState = _uiState.asStateFlow()
     private val allLearningItems: MutableStateFlow<List<LearningItem>> = MutableStateFlow(listOf())
 
@@ -44,22 +49,24 @@ class ShowLearningItemsViewModel @Inject constructor(
     init {
         checkForAuthentificationState()
         updateData()
+
     }
 
     private fun updateData() {
-        Timber.d("updateData: defaultNativeList =  ${preferences.getPreferenceActualVariant(PreferenceData.DefaultLanguageOfList.key)}")
+        Timber.d("updateData: defaultNativeList =  ${synckPrefsPreferences.getPreferenceSelectedVariant(PreferenceData.DefaultLanguageOfList.key)}")
         viewModelScope.launch {
             learnItemsUseCase.actualData().flowOn(Dispatchers.IO).collect { data ->
                 Timber.d("actualData: ${data.joinToString(",\n")}")
                 allLearningItems.emit(data)
                 _uiState.emit(uiState.value.copy(
-                    defaultNativeList = preferences.getPreferenceActualVariant(PreferenceData.DefaultLanguageOfList.key) == PreferenceValue.Native,
+                    defaultNativeList = synckPrefsPreferences.getPreferenceSelectedVariant(PreferenceData.DefaultLanguageOfList.key) == PreferenceValue.Native,
                     isLoading = false,
                     errorDialog = null,
                     learningItems = getSortedAndFilteringData(data)
-
                 ))
+                syncItemsUseCase.synckItems().collect{}
             }
+
         }
     }
 
