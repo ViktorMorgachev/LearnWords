@@ -5,9 +5,10 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.learn.worlds.data.LearnItemsUseCase
+import com.learn.worlds.data.SyncItemsUseCase
 import com.learn.worlds.data.remote.SynchronizationWorker
 
-class SynchronizationWorkerFactory (private val learningItemsUseCase: LearnItemsUseCase
+class SynchronizationWorkerFactory (private val syncItemsUseCase: SyncItemsUseCase
 ) : WorkerFactory() {
 
     override fun createWorker(
@@ -15,7 +16,7 @@ class SynchronizationWorkerFactory (private val learningItemsUseCase: LearnItems
         workerClassName: String,
         workerParameters: WorkerParameters
     ): CoroutineWorker {
-        return SynchronizationWorker(appContext, workerParameters, learningItemsUseCase)
+        return SynchronizationWorker(appContext, workerParameters, syncItemsUseCase)
 
     }
 }

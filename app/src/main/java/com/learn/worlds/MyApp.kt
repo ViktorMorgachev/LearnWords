@@ -16,7 +16,9 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.Logger
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.learn.worlds.data.AnonimBalanceUseCase
 import com.learn.worlds.data.LearnItemsUseCase
+import com.learn.worlds.data.SyncItemsUseCase
 import com.learn.worlds.data.prefs.MySharedPreferences
 import com.learn.worlds.data.remote.SynchronizationWorker
 import com.learn.worlds.di.SynchronizationWorkerFactory
@@ -34,8 +36,10 @@ class MyApp : Application(), Configuration.Provider {
 
     @Inject lateinit var preferences: MySharedPreferences
     @Inject lateinit var hiltWorkerFactory: HiltWorkerFactory
-    @Inject lateinit var learnItemsUseCase: LearnItemsUseCase
+    @Inject lateinit var syncItemsUseCase: SyncItemsUseCase
     @Inject lateinit var crashReporter: CrashReporter
+    @Inject lateinit var anonimBalanceUseCase: AnonimBalanceUseCase
+
 
     override fun onCreate() {
         super.onCreate()
@@ -50,7 +54,7 @@ class MyApp : Application(), Configuration.Provider {
     override fun getWorkManagerConfiguration(): Configuration {
 
         val myWorkerFactory = DelegatingWorkerFactory()
-        myWorkerFactory.addFactory(SynchronizationWorkerFactory(learnItemsUseCase))
+        myWorkerFactory.addFactory(SynchronizationWorkerFactory(syncItemsUseCase))
         return Configuration.Builder()
             .setWorkerFactory(myWorkerFactory)
             .setMinimumLoggingLevel(Log.VERBOSE)
@@ -65,7 +69,7 @@ class MyApp : Application(), Configuration.Provider {
     private fun runPeriodicallySynchronization(isAuthentificated: Boolean) {
         val workManager = WorkManager.getInstance(this)
         if (!isAuthentificated) {
-            workManager.cancelUniqueWork(uniqueSyncronizationUniqueWorkName)
+             anonimBalanceUseCase.checkDeviceIDStatusAndRegisterIfNeeds()
             return
         }
         val constraints = Constraints.Builder()

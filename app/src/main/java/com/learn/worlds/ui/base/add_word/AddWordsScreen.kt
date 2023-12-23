@@ -1,6 +1,7 @@
 package com.learn.worlds.ui.base.add_word
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -27,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +37,6 @@ import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,15 +56,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -83,7 +79,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Preview
 @Composable
-private fun AddWordsScreenPrewiew() {
+private fun AddWordsScreenPrewiewLight() {
     LearnWordsTheme {
         AddWordsUndependentScreen(
             uistate = AddWordsState(
@@ -99,6 +95,30 @@ private fun AddWordsScreenPrewiew() {
             onInitCardData = {},
             onPlayAudioAction = {},
             onSaveCardData = {},
+            checkPaymentsStatusAction = {},
+            onGetImageFile = { null })
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Composable
+private fun AddWordsScreenPrewiewDark() {
+    LearnWordsTheme {
+        AddWordsUndependentScreen(
+            uistate = AddWordsState(
+                actualSuggestionForeign = MutableStateFlow(SpellingCheckState.None),
+                nativeText = MutableStateFlow("Что-то"),
+                foreignText = MutableStateFlow("Somthing")
+            ),
+            navigateAfterSuccessWasAdded = {},
+            onErrorDismissed = {},
+            onStopPlayerAction = {},
+            onForeignDataChanged = {},
+            onNativeDataChanged = {},
+            onInitCardData = {},
+            onPlayAudioAction = {},
+            onSaveCardData = {},
+            checkPaymentsStatusAction = {},
             onGetImageFile = { null })
     }
 }
@@ -127,7 +147,8 @@ fun AddWordsScreen(
         onInitCardData = { handleEventMediator(AddWordsEvent.InitCardData) },
         onSaveCardData = { handleEventMediator(AddWordsEvent.OnSaveLearningItem) },
         navigateAfterSuccessWasAdded = navigateAfterSuccessWasAdded,
-        uistate = uistate
+        uistate = uistate,
+        checkPaymentsStatusAction = { handleEventMediator(AddWordsEvent.CheckPayments) }
     )
 }
 
@@ -135,6 +156,7 @@ fun AddWordsScreen(
 fun AddWordsUndependentScreen(
     modifier: Modifier = Modifier,
     onStopPlayerAction: () -> Unit,
+    checkPaymentsStatusAction: ()->Unit,
     onErrorDismissed: () -> Unit,
     onInitCardData: () -> Unit,
     onSaveCardData: () -> Unit,
@@ -156,11 +178,16 @@ fun AddWordsUndependentScreen(
     val playerIsPlaying = uistate.playerIsPlaying.collectAsStateWithLifecycle().value
     val actualImageFileName = uistate.imageFile.collectAsStateWithLifecycle().value
     val authState = uistate.authState.collectAsStateWithLifecycle().value
+    val canUseAIApi = uistate.canUseAICardGeneration.collectAsStateWithLifecycle().value
     val speechFileName = uistate.speechFile.collectAsStateWithLifecycle().value
 
-    DoOnLifecycleEvent(lifecycleState = Lifecycle.Event.ON_STOP){
+    DoOnLifecycleEvent(lifecycleState = Lifecycle.Event.ON_STOP) {
         onStopPlayerAction.invoke()
     }
+    DoOnLifecycleEvent(lifecycleState = Lifecycle.Event.ON_RESUME) {
+        checkPaymentsStatusAction.invoke()
+    }
+
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -184,7 +211,7 @@ fun AddWordsUndependentScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 16.dp)
                     .align(alignment = Alignment.TopCenter)
             ) {
                 Column(
@@ -235,15 +262,16 @@ fun AddWordsUndependentScreen(
                 OutlineButton(
                     text = "Проверить",
                     onClick = {
-                        if (authState == true){
+                        if (canUseAIApi == true){
                             onInitCardData.invoke()
                         } else {
-                            Toast.makeText(
-                                context,
-                                R.string.toast_need_to_auth_or_registration,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } },
+                            if (authState == false){
+                                Toast.makeText(context, R.string.toast_need_to_auth_or_registration_and_pay, Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, R.string.toast_balance_limit_need_to_pay, Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    },
                     enabled = uistate.isCanToGenerate()
                 )
                 OutlineButton(
@@ -257,6 +285,7 @@ fun AddWordsUndependentScreen(
     }
 
 }
+
 @Composable
 fun PlayerButton(
     modifier: Modifier = Modifier,
@@ -358,10 +387,10 @@ fun EditTextCustom(
     enabled: Boolean = true
 ) {
     var outlineTextFieldHeight by remember { mutableStateOf(0) }
-    var textFieldAlpha by remember { mutableStateOf( if (spellingState is SpellingCheckState.None) 1f else 0.0f) }
+    var textFieldAlpha by remember { mutableStateOf(if (spellingState is SpellingCheckState.None) 1f else 0.0f) }
 
     SideEffect {
-        if (spellingState == SpellingCheckState.None){
+        if (spellingState == SpellingCheckState.None) {
             textFieldAlpha = 1f
         } else {
             textFieldAlpha = 0.0f
@@ -370,12 +399,12 @@ fun EditTextCustom(
 
     Box() {
         AnimatedVisibility(
-            visible = spellingState != SpellingCheckState.None ,
+            visible = spellingState != SpellingCheckState.None,
             enter = slideInHorizontally(initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(),
             exit = slideOutHorizontally(targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(),
         ) {
             SpellingText(
-                successState = spellingState == SpellingCheckState.Correct ,
+                successState = spellingState == SpellingCheckState.Correct,
                 text = actualText, modifier = Modifier.offset(x = (8).dp, y = 22.dp)
             )
         }
@@ -389,7 +418,7 @@ fun EditTextCustom(
                 Text(text = label)
             },
             textStyle = TextStyle.Default.copy(
-                color = Color.Black.copy(alpha = textFieldAlpha)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = textFieldAlpha)
             ),
             enabled = enabled,
             shape = MaterialTheme.shapes.medium,
@@ -403,7 +432,7 @@ fun EditTextCustom(
                     propagateMinConstraints = true,
                     modifier = modifier.offset(x = (-4).dp)
                 ) {
-                    if (spellingState is SpellingCheckState.Incorrect){
+                    if (spellingState is SpellingCheckState.Incorrect) {
                         SpellingText(text = spellingState.suggestion, successState = true)
                     }
                 }

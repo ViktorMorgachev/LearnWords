@@ -17,12 +17,12 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@OptIn(DelicateCoroutinesApi::class)
 @Singleton
 class AudioPlayer @Inject constructor(
     @ApplicationContext private val context: Context,
     @MainDispatcher private val dispatcher: CoroutineDispatcher,){
 
-    @OptIn(DelicateCoroutinesApi::class)
     private val scope = CoroutineScope(GlobalScope.coroutineContext + dispatcher)
 
     private var player: MediaPlayer? = null

@@ -1,5 +1,7 @@
 package com.learn.worlds.ui.preferences
 
+import android.graphics.drawable.VectorDrawable
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,9 +44,14 @@ import com.learn.worlds.utils.stringRes
 enum class PreferenceValue(@StringRes val stringRes: Int) {
     Native(stringRes = R.string.prefs_native),
     Foreign(stringRes = R.string.prefs_foreign),
-    Random(stringRes = R.string.prefs_random)
+    Random(stringRes = R.string.prefs_random),
+    GenderSpeechMale(stringRes = R.string.prefs_speech_gender_male),
+    GenderSpeechFemale(stringRes = R.string.prefs_speech_gender_female),
+    GenderProfileFemale(stringRes = R.string.prefs_profile_gender_female),
+    GenderProfileMale(stringRes = R.string.prefs_profile_gender_male),
+    GenderProfileOther(stringRes = R.string.prefs_profile_gender_other),
+    GenderProfileHide(stringRes = R.string.prefs_profile_gender_hide),
 }
-
 enum class PreferenceData(@StringRes val prefName: Int, val key: String) {
     DefaultLanguageOfList(
         prefName = R.string.prefs_default_language,
@@ -56,6 +64,14 @@ enum class PreferenceData(@StringRes val prefName: Int, val key: String) {
     DefaultTimerOfMemorization(
         prefName = R.string.prefs_timer_settings,
         key = "default_timer_of_memorization"
+    ),
+    DefaultSpeechSoundGender(
+        prefName = R.string.prefs_speech_gender,
+        key = "default_speech_sound_gender"
+    ),
+    DefaultProfileGender(
+        prefName = R.string.gender,
+        key = "default_profile_gender"
     )
 }
 
@@ -63,7 +79,7 @@ fun PreferenceValue.key(): String {
     return this.name.lowercase()
 }
 
-sealed class Preferences(@StringRes open val groupName: Int?, open val key: String) {
+sealed class Preferences(@StringRes open val groupName: Int? = null, open val key: String) {
 
     data class SelecteablePreference(
         override val groupName: Int? = null,
@@ -71,6 +87,13 @@ sealed class Preferences(@StringRes open val groupName: Int?, open val key: Stri
         var selectedVariant: PreferenceValue,
         val preferenceData: PreferenceData,
     ) : Preferences(groupName, preferenceData.key)
+
+    data class ProfilePreference(
+        val variants: List<PreferenceValue>,
+        var selectedVariant: PreferenceValue,
+        val preferenceData: PreferenceData,
+        @DrawableRes val icon: Int,
+    ) : Preferences(key = preferenceData.key)
 
     data class CheckeablePreference(
         override val groupName: Int? = null,
@@ -118,6 +141,15 @@ fun PreferencesScreenPreview() {
                     range = 60..120,
                     actualValue = "60",
                     groupName = R.string.prefs_group_learn_screen,
+                ),
+                Preferences.SelecteablePreference(
+                    variants = listOf(
+                        PreferenceValue.GenderSpeechFemale,
+                        PreferenceValue.GenderSpeechMale
+                    ),
+                    groupName = R.string.prefs_others,
+                    selectedVariant = PreferenceValue.GenderSpeechFemale,
+                    preferenceData = PreferenceData.DefaultSpeechSoundGender
                 )
             )
         )
@@ -350,5 +382,6 @@ fun SelecteablePreference(
             onSelectedVariant.invoke(selectedVariant)
         }
     }
-
 }
+
+

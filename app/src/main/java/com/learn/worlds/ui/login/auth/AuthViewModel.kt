@@ -2,7 +2,15 @@ package com.learn.worlds.ui.login.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.learn.worlds.data.ProfileUseCase
+import com.learn.worlds.data.model.base.AccountType
+import com.learn.worlds.data.model.base.Balance
+import com.learn.worlds.data.model.base.BalanceType
+import com.learn.worlds.data.model.base.LocalPreference
+import com.learn.worlds.data.model.base.Profile
 import com.learn.worlds.servises.FirebaseAuthService
+import com.learn.worlds.ui.preferences.PreferenceData
+import com.learn.worlds.ui.preferences.PreferenceValue
 import com.learn.worlds.utils.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -13,9 +21,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val firebaseAuthService: FirebaseAuthService
+    private val firebaseAuthService: FirebaseAuthService,
+    private val profileUseCase: ProfileUseCase
 ) : ViewModel() {
-    val uiState = MutableStateFlow(AuthenticationState())
+    val uiState = MutableStateFlow(AuthenticationState(firstName = "User", secondName = "User"))
 
     private fun toggleAuthenticationMode() {
         val authenticationMode = uiState.value.authenticationMode
@@ -38,6 +47,8 @@ class AuthViewModel @Inject constructor(
             is AuthenticationEvent.PasswordChanged -> updatePassword(authenticationEvent.password)
             is AuthenticationEvent.Authenticate -> authenticate()
             is AuthenticationEvent.DialogDismiss -> dismissDialogs()
+            is AuthenticationEvent.FirstNameChanged -> updateFirstName(authenticationEvent.firstName)
+            is AuthenticationEvent.SecondNameChanged -> updateSecondName(authenticationEvent.secondName)
         }
     }
 
@@ -61,6 +72,9 @@ class AuthViewModel @Inject constructor(
                         signUpAction()
                         delay(1000)
                         dismissDialogs()
+                        with(uiState.value) {
+                            profileUseCase.addProfile(firstName = firstName!!, secondName = secondName!!)
+                        }
                         syncronizeData()
                     }
                     if (result is Result.Error) {
@@ -70,7 +84,8 @@ class AuthViewModel @Inject constructor(
                 }
             } else {
                 viewModelScope.launch(Dispatchers.IO) {
-                    val result = firebaseAuthService.signIn(password = it.password!!, email = it.email!!)
+                    val result =
+                        firebaseAuthService.signIn(password = it.password!!, email = it.email!!)
                     if (result is Result.Complete) {
                         signInAction()
                         delay(1000)
@@ -100,6 +115,17 @@ class AuthViewModel @Inject constructor(
         )
     }
 
+    private fun updateFirstName(firstName: String) {
+        uiState.value = uiState.value.copy(
+            firstName = firstName
+        )
+    }
+
+    private fun updateSecondName(secondName: String) {
+        uiState.value = uiState.value.copy(
+            firstName = secondName
+        )
+    }
 
     private fun signInAction() {
         uiState.value = uiState.value.copy(

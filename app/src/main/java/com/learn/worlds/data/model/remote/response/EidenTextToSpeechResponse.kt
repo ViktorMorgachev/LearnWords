@@ -2,6 +2,7 @@ package com.learn.worlds.data.model.remote.response
 
 
 import com.google.gson.annotations.SerializedName
+import timber.log.Timber
 
 data class EidenTextToSpeechResponse(
     @SerializedName("amazon")
@@ -96,6 +97,7 @@ data class EidenTextToSpeechResponse(
     )
 
     fun totalCost(): Double{
+        Timber.d("totalCost: ${ibm?.cost}:${google?.cost}")
         return  (ibm?.cost ?: 0.0) + (google?.cost ?: 0.0)
     }
 

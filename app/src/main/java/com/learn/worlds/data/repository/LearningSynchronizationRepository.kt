@@ -5,7 +5,7 @@ import com.learn.worlds.data.dataSource.mock.LearningMockItemsDataSource
 import com.learn.worlds.data.dataSource.remote.LearningRemoteItemsDataSource
 import com.learn.worlds.data.model.base.FileNamesForFirebase
 import com.learn.worlds.data.model.remote.LearningItemAPI
-import com.learn.worlds.data.prefs.SynckSharedPreferences
+import com.learn.worlds.data.prefs.SynckSharedPreferencesLearnCards
 import com.learn.worlds.di.IoDispatcher
 import com.learn.worlds.utils.Result
 import com.learn.worlds.utils.isImage
@@ -23,7 +23,7 @@ import javax.inject.Singleton
 class LearningSynchronizationRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
-    private val synkPreferences: SynckSharedPreferences,
+    private val synkPreferences: SynckSharedPreferencesLearnCards,
     private val remoteDataSource: LearningRemoteItemsDataSource,
     private val mockItemsDataSource: LearningMockItemsDataSource
 ) {

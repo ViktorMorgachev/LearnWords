@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.learn.worlds.R
+import com.learn.worlds.ui.profile.edit.ProfileEditScreenPreview
 import com.learn.worlds.utils.Result
 
 @Preview
@@ -59,6 +60,7 @@ fun LoadingDialog(
 }
 
 
+
 @Preview
 @Composable
 fun SuccessDialogPrewiew(
@@ -77,6 +79,7 @@ fun InfoDialogPrewiew(
 @Composable
 fun InformationDialog(
     message: String,
+    onNextButtonText: String = stringResource(R.string.close),
     onDismiss: () -> Unit = {},
     onNextAction: (() -> Unit)? = null
 ) {

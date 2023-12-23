@@ -26,11 +26,7 @@ I love coffee and wonderful girls. Actual Branch --develop
 [![AGPL License](https://img.shields.io/badge/license-AGPL-red.svg)](http://www.gnu.org/licenses/agpl-3.0)
 
 
-## 🛠 Technologies
-Kotlin, Jetpack Compose, Hilt, Ktor, Retrofit, Single Activity, Firebase, Unit Testing database
-
-## 🛠 Architecture
-CLEAN ARCHITECTURE, MVI, MVVM, KISS, DRY
+ 
 
 
 ## Acknowledgements
