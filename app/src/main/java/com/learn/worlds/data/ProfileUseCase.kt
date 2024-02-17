@@ -44,9 +44,6 @@ class ProfileUseCase @Inject constructor(
         }
         return allProfilePrefs
     }
-
-    // Вызывается только при создании профиля а именно при регистрации новой почты,
-    // но чтобы избежать финансовых потерь, учтём deviceID анонимного пользователя
     suspend fun addProfile(firstName: String, secondName: String) = flow<Result<Any>> {
 
         val actualEmail = firebaseAuthService.getUserEmail()

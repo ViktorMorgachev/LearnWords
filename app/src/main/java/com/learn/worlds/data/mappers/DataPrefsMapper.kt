@@ -33,45 +33,54 @@ fun FirebaseKey.toPreferenceData(): PreferenceData {
         timer_value_of_memorization -> DefaultTimerOfMemorization
         speech_sound_gender -> DefaultSpeechSoundGender
         profile_gender -> DefaultProfileGender
-
+        add_card_native_language -> DefaultNativeLanguage
+        add_card_learning_language -> DefaultLearningLanguage
     }
 }
 
 fun PreferenceData.toFirebaseKey(): FirebaseKey {
     return when (this) {
-        PreferenceData.DefaultLanguageOfList -> language_of_list
-        PreferenceData.DefaultLanguageOfMemorization -> language_of_memorization
-        PreferenceData.DefaultTimerOfMemorization -> timer_value_of_memorization
-        PreferenceData.DefaultSpeechSoundGender -> speech_sound_gender
-        PreferenceData.DefaultProfileGender -> profile_gender
+        DefaultLanguageOfList -> language_of_list
+        DefaultLanguageOfMemorization -> language_of_memorization
+        DefaultTimerOfMemorization -> timer_value_of_memorization
+        DefaultSpeechSoundGender -> speech_sound_gender
+        DefaultProfileGender -> profile_gender
+        DefaultLearningLanguage -> add_card_learning_language
+        DefaultNativeLanguage -> add_card_native_language
     }
 }
 
 fun FirebaseValue.toPreferenceValue(): PreferenceValue {
     return when (this) {
-        FirebaseValue.Native -> PreferenceValue.Native
-        FirebaseValue.Foreign -> PreferenceValue.Foreign
-        FirebaseValue.Random -> PreferenceValue.Random
-        FirebaseValue.GenderSpeechMale -> PreferenceValue.GenderSpeechMale
-        FirebaseValue.GenderSpeechFemale -> PreferenceValue.GenderSpeechFemale
-        FirebaseValue.GenderProfileFemale -> PreferenceValue.GenderProfileFemale
-        FirebaseValue.GenderProfileMale -> PreferenceValue.GenderProfileMale
-        FirebaseValue.GenderProfileOther -> PreferenceValue.GenderProfileOther
-        FirebaseValue.GenderProfileHide -> PreferenceValue.GenderProfileHide
+        Native -> PreferenceValue.Native
+        Foreign -> PreferenceValue.Foreign
+        Random -> PreferenceValue.Random
+        GenderSpeechMale -> PreferenceValue.GenderSpeechMale
+        GenderSpeechFemale -> PreferenceValue.GenderSpeechFemale
+        GenderProfileFemale -> PreferenceValue.GenderProfileFemale
+        GenderProfileMale -> PreferenceValue.GenderProfileMale
+        GenderProfileOther -> PreferenceValue.GenderProfileOther
+        GenderProfileHide -> PreferenceValue.GenderProfileHide
+        Russian -> PreferenceValue.Russian
+        English -> PreferenceValue.English
+        French -> PreferenceValue.French
     }
 }
 
 fun PreferenceValue.toFirebaseValue(): FirebaseValue {
     return when (this) {
-        PreferenceValue.Native ->  FirebaseValue.Native
-        PreferenceValue.Foreign   -> FirebaseValue.Foreign
-        PreferenceValue.Random -> FirebaseValue.Random
-        PreferenceValue.GenderSpeechMale -> FirebaseValue.GenderSpeechMale
-        PreferenceValue.GenderSpeechFemale -> FirebaseValue.GenderSpeechFemale
-        PreferenceValue.GenderProfileFemale -> FirebaseValue.GenderProfileFemale
-        PreferenceValue.GenderProfileMale -> FirebaseValue.GenderProfileMale
-        PreferenceValue.GenderProfileOther -> FirebaseValue.GenderProfileOther
-        PreferenceValue.GenderProfileHide -> FirebaseValue.GenderProfileHide
+        PreferenceValue.Native ->  Native
+        PreferenceValue.Foreign -> Foreign
+        PreferenceValue.Random -> Random
+        PreferenceValue.GenderSpeechMale -> GenderSpeechMale
+        PreferenceValue.GenderSpeechFemale -> GenderSpeechFemale
+        PreferenceValue.GenderProfileFemale -> GenderProfileFemale
+        PreferenceValue.GenderProfileMale -> GenderProfileMale
+        PreferenceValue.GenderProfileOther -> GenderProfileOther
+        PreferenceValue.GenderProfileHide -> GenderProfileHide
+        PreferenceValue.Russian -> Russian
+        PreferenceValue.English -> English
+        PreferenceValue.French -> French
     }
 }
 

@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
 
 data class SpellingCheckRequest(
     @SerializedName("language")
-    val language: String = "en",
+    val language: String,
     @SerializedName("providers")
     val providers: String = Provider.NLPCLOUD.name.lowercase(),
     @SerializedName("fallback_providers")

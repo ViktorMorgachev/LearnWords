@@ -56,6 +56,9 @@ class SynckSharedPreferencesPreferences @Inject constructor(@SynckPreferences pr
                 PreferenceValue.GenderProfileFemale.key() -> PreferenceValue.GenderProfileFemale
                 PreferenceValue.GenderProfileHide.key() -> PreferenceValue.GenderProfileHide
                 PreferenceValue.GenderProfileOther.key() -> PreferenceValue.GenderProfileOther
+                PreferenceValue.French.key() -> PreferenceValue.French
+                PreferenceValue.English.key() -> PreferenceValue.English
+                PreferenceValue.Russian.key() -> PreferenceValue.Russian
                 else -> null
             }
         }

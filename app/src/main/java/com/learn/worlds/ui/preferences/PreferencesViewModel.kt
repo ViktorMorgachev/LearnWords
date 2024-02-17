@@ -48,15 +48,36 @@ class PreferencesViewModel @Inject constructor(
                 PreferenceValue.GenderSpeechFemale,
                 PreferenceValue.GenderSpeechMale
             ),
-            groupName = R.string.prefs_others,
+            groupName = R.string.prefs_group_add_card,
             selectedVariant = synckPrefsPreferences.getPreferenceSelectedVariant(PreferenceData.DefaultSpeechSoundGender.key) ?:  PreferenceValue.GenderSpeechFemale,
             preferenceData = PreferenceData.DefaultSpeechSoundGender
+        ),
+        Preferences.SelecteablePreference(
+            variants = listOf(
+                PreferenceValue.English,
+                PreferenceValue.Russian,
+                PreferenceValue.French
+            ),
+            groupName = R.string.prefs_group_add_card,
+            selectedVariant = synckPrefsPreferences.getPreferenceSelectedVariant(PreferenceData.DefaultLearningLanguage.key) ?:  PreferenceValue.English,
+            preferenceData = PreferenceData.DefaultLearningLanguage
+        ),
+        Preferences.SelecteablePreference(
+            variants = listOf(
+                PreferenceValue.English,
+                PreferenceValue.Russian,
+                PreferenceValue.French
+            ),
+            groupName = R.string.prefs_group_add_card,
+            selectedVariant = synckPrefsPreferences.getPreferenceSelectedVariant(PreferenceData.DefaultNativeLanguage.key) ?:  PreferenceValue.Russian,
+            preferenceData = PreferenceData.DefaultNativeLanguage
         )
        ))
     )
     val uiState = _uiState.asStateFlow()
 
 
+    // todo тут учесть частный случай и бросить ошибку в случае попытки сохранения одинакового языка изучения и нативного языка
     fun handleEvent(event: PreferencesEvent) {
         viewModelScope.launch {
             if (event is PreferencesEvent.onUpdatePreferences) {
