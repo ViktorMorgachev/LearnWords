@@ -9,7 +9,11 @@
     <!--PreferencesScreen-->
     <string name="prefs_title">Настройки</string>
     <string name="prefs_group_learn_screen">Экран заучивания слова</string>
+    <string name="prefs_group_add_card">Экран добавления карточки</string>
     <string name="prefs_default_language">Язык по умолчанию</string>
+    <string name="prefs_default_learning_language">Изучаемый язык</string>
+    <string name="prefs_default_native_language">Родной язык</string>
+    <string name="prefs_learning_language">Изучаемый язык</string>
     <string name="prefs_timer_settings">Настройки таймера</string>
     <string name="prefs_speech_gender">Произношение</string>
     <string name="prefs_native">Родной</string>
@@ -117,5 +121,17 @@
     <string name="login">Авторизоваться</string>
 
     <!---->
+
+    <!--Languages-->
+    <string name="english">Английский</string>
+    <string name="french">Французский</string>
+    <string name="russian">Русский</string>
+
+
+    <string-array name="languages_array_desc">
+        <item>fr</item>
+        <item>en</item>
+        <item>ru</item>
+    </string-array>
 
 </resources>

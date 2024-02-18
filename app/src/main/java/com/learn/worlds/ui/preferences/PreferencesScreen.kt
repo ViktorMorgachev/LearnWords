@@ -1,6 +1,5 @@
 package com.learn.worlds.ui.preferences
 
-import android.graphics.drawable.VectorDrawable
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -25,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,7 +38,6 @@ import com.learn.worlds.ui.common.PreferenceSpinner
 import com.learn.worlds.ui.theme.LearnWordsTheme
 import com.learn.worlds.utils.stringRes
 
-
 enum class PreferenceValue(@StringRes val stringRes: Int) {
     Native(stringRes = R.string.prefs_native),
     Foreign(stringRes = R.string.prefs_foreign),
@@ -51,11 +48,22 @@ enum class PreferenceValue(@StringRes val stringRes: Int) {
     GenderProfileMale(stringRes = R.string.prefs_profile_gender_male),
     GenderProfileOther(stringRes = R.string.prefs_profile_gender_other),
     GenderProfileHide(stringRes = R.string.prefs_profile_gender_hide),
+    Russian(stringRes = R.string.russian),
+    English(stringRes = R.string.english),
+    French(stringRes = R.string.french)
 }
 enum class PreferenceData(@StringRes val prefName: Int, val key: String) {
     DefaultLanguageOfList(
         prefName = R.string.prefs_default_language,
         key = "default_language_of_list"
+    ),
+    DefaultLearningLanguage(
+        prefName = R.string.prefs_default_learning_language,
+        key = "default_learning_language"
+    ),
+    DefaultNativeLanguage(
+        prefName = R.string.prefs_default_native_language,
+        key = "default_native_language"
     ),
     DefaultLanguageOfMemorization(
         prefName = R.string.prefs_default_language,
@@ -144,13 +152,34 @@ fun PreferencesScreenPreview() {
                 ),
                 Preferences.SelecteablePreference(
                     variants = listOf(
+                        PreferenceValue.English,
+                        PreferenceValue.Russian,
+                        PreferenceValue.French
+                    ),
+                    groupName = R.string.prefs_group_add_card,
+                    selectedVariant = PreferenceValue.English,
+                    preferenceData = PreferenceData.DefaultLearningLanguage
+                ),
+                Preferences.SelecteablePreference(
+                    variants = listOf(
+                        PreferenceValue.English,
+                        PreferenceValue.Russian,
+                        PreferenceValue.French
+                    ),
+                    groupName = R.string.prefs_group_add_card,
+                    selectedVariant = PreferenceValue.Russian,
+                    preferenceData = PreferenceData.DefaultNativeLanguage
+                ),
+                Preferences.SelecteablePreference(
+                    variants = listOf(
                         PreferenceValue.GenderSpeechFemale,
                         PreferenceValue.GenderSpeechMale
                     ),
-                    groupName = R.string.prefs_others,
+                    groupName = R.string.prefs_group_add_card,
                     selectedVariant = PreferenceValue.GenderSpeechFemale,
                     preferenceData = PreferenceData.DefaultSpeechSoundGender
                 )
+
             )
         )
     }

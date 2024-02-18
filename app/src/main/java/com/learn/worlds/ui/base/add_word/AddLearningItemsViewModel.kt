@@ -6,13 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.learn.worlds.data.AnonimBalanceUseCase
 import com.learn.worlds.data.LearnItemsUseCase
 import com.learn.worlds.data.ProfileUseCase
-import com.learn.worlds.data.SyncItemsUseCase
+import com.learn.worlds.data.mappers.toCommonLanguage
 import com.learn.worlds.data.model.base.LearningItem
 import com.learn.worlds.data.model.base.Profile
 import com.learn.worlds.data.model.base.SpellTextCheck
 import com.learn.worlds.data.model.remote.CommonLanguage
+import com.learn.worlds.data.prefs.SynckSharedPreferencesPreferences
 import com.learn.worlds.defaultBalanceCooficient
 import com.learn.worlds.servises.FirebaseAuthService
+import com.learn.worlds.ui.preferences.PreferenceData
+import com.learn.worlds.ui.preferences.PreferenceValue
 import com.learn.worlds.utils.AudioPlayer
 import com.learn.worlds.utils.BalanceProvider
 import com.learn.worlds.utils.ErrorType
@@ -36,6 +39,7 @@ class AddLearningItemsViewModel @Inject constructor(
     private val audioPlayer: AudioPlayer,
     private val profileUseCase: ProfileUseCase,
     private val balanceProvider: BalanceProvider,
+    private val synkPrefsPrefs: SynckSharedPreferencesPreferences,
     private val anonimBalanceUseCase: AnonimBalanceUseCase
 ) : ViewModel() {
 
@@ -80,7 +84,7 @@ class AddLearningItemsViewModel @Inject constructor(
             is AddWordsEvent.OnForeignDataChanged -> saveForeign(addWordsEvent.foreignData)
             is AddWordsEvent.OnNativeDataChanged -> saveNative(addWordsEvent.nativeData)
             is AddWordsEvent.OnSaveLearningItem -> saveData()
-            AddWordsEvent.InitCardData ->{
+            AddWordsEvent.InitCardData -> {
                 if (uiState.actualSuggestionForeign.value != SpellingCheckState.None){
                     initCardData(actualText = actualCorrectedText)
                 } else {
@@ -138,23 +142,28 @@ class AddLearningItemsViewModel @Inject constructor(
 
     }
     private fun spellCheckForeign() {
-        viewModelScope.launch {
-            learnItemsUseCase.spellCheck(spellTextCheck = SpellTextCheck(requestText = uiState.foreignText.value.trimEnd()))
-                .catch { t->Timber.e(t)
-                    showError(Result.Error(errorType = ErrorType.FAILED_TO_CHECK_SPELL_TEXT))
-                    resultCount++
-                }
-                .collectLatest {
-                    resultCount++
-                    if (it is Result.Success){
-                        incrementCost(it.data.cost)
-                        showForeignSuggestion(it.data.suggestion!!.lowercase())
+        getSelectedForeignLanguage(errorAction = {
+            showError(Result.Error())
+        }){
+            viewModelScope.launch {
+                learnItemsUseCase.spellCheck(spellTextCheck = SpellTextCheck(requestText = uiState.foreignText.value.trimEnd(), language = it))
+                    .catch { t -> Timber.e(t)
+                        showError(Result.Error(errorType = ErrorType.FAILED_TO_CHECK_SPELL_TEXT))
+                        resultCount++
                     }
-                    if (it is Result.Error){
-                        showError(it)
+                    .collectLatest {
+                        resultCount++
+                        if (it is Result.Success){
+                            incrementCost(it.data.cost)
+                            showForeignSuggestion(it.data.suggestion!!.lowercase())
+                        }
+                        if (it is Result.Error){
+                            showError(it)
+                        }
                     }
             }
         }
+
     }
 
     private fun incrementCost(cost: Double?){
@@ -190,32 +199,46 @@ class AddLearningItemsViewModel @Inject constructor(
                     is Result.Success -> {
                         hideLoading()
                         incrementCost(it.data.totalCost)
-                        setImage(it.data.actualFileUrl)
+                        setImage(fileName = it.data.file.name)
                     }
                 }
             }
         }
-        viewModelScope.launch {
-            learnItemsUseCase.getTextSpeech(text = actualText, language = CommonLanguage.English).catch {
+        getSelectedForeignLanguage(errorAction = {
+            showError(Result.Error())
+        }){
+            viewModelScope.launch {
+                learnItemsUseCase.getTextSpeech(text = actualText, language = it).catch {
                     resultCount++
                     checkCountOfResultAndHideLoadingDialog()
-                Timber.e(it)
+                    Timber.e(it)
                     showError()
-            }.collectLatest {
+                }.collectLatest {
                     resultCount++
                     checkCountOfResultAndHideLoadingDialog()
-                when(it){
-                    Result.Complete -> {
-                        setTextSpeech("")
-                    }
-                    is Result.Error -> showError(it)
-                    Result.Loading -> {}
-                    is Result.Success -> {
-                        incrementCost(it.data.totalCost)
-                        setTextSpeech(it.data.speechFileName)
+                    when(it){
+                        Result.Complete -> {
+                            setTextSpeech("")
+                        }
+                        is Result.Error -> showError(it)
+                        Result.Loading -> {}
+                        is Result.Success -> {
+                            incrementCost(it.data.totalCost)
+                            setTextSpeech(it.data.speechFileName)
+                        }
                     }
                 }
             }
+        }
+
+    }
+
+    private fun getSelectedForeignLanguage(errorAction: ()->Unit, succesAction: (CommonLanguage)->Unit) {
+        val selectedLanguage =  (synkPrefsPrefs.getPreferenceSelectedVariant(PreferenceData.DefaultLearningLanguage.key) ?: PreferenceValue.English).toCommonLanguage()
+        if (selectedLanguage == null){
+            errorAction.invoke()
+        } else {
+            succesAction.invoke(selectedLanguage)
         }
     }
 
@@ -253,7 +276,6 @@ class AddLearningItemsViewModel @Inject constructor(
     private fun setImage(fileName: String?) {
         viewModelScope.launch {
             uiState.imageFile.emit(fileName)
-
         }
     }
 

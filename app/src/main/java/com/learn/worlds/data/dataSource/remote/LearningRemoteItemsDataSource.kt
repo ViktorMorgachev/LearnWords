@@ -208,7 +208,7 @@ class LearningRemoteItemsDataSource @Inject constructor(
 
     suspend fun spellingCheck(spellTextCheck: SpellTextCheck) = flow<Result<EidenSpellCheckResponse>> {
         try {
-            val result =  apiService.spellCheck(spellingCheckRequest = SpellingCheckRequest(text = spellTextCheck.requestText))
+            val result =  apiService.spellCheck(spellingCheckRequest = SpellingCheckRequest(text = spellTextCheck.requestText, language = spellTextCheck.language.desc))
             emit(Result.Success(result))
         } catch (t: Throwable){
             Timber.e(t)
