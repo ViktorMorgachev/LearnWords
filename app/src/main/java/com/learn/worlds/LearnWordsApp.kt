@@ -183,10 +183,7 @@ fun LearnWordsApp(
                         style = TextStyle(textDecoration = TextDecoration.Underline),
                         maxLines = 1,
                     )
-
                 }
-
-
             }
         }) {
         Scaffold(

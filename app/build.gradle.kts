@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.googleServices)
     alias(libs.plugins.firebaseCrashlyticsPlugin)
     alias(libs.plugins.kotlinSerializationPlugin)
-
 }
 
 android {
